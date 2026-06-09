@@ -10,6 +10,8 @@ import { v2 as cloudinary } from "cloudinary";
 import adminModule from "./admin_module.js";
 import vipModule from "./vip_module.js";
 import annonceModule from "./annonce_module.js";
+import favoriteModule from "./favorite_module.js";
+
 import { loadSearch } from "./search_loader.js";
 import { loadFeed } from "./feed_loader.js";
 import { loadNotifications } from "./notification_loader.js";
@@ -43,13 +45,14 @@ cloudinary.config({
 });
 
 // =========================
-// ROUTES MODULES
+// ROUTES
 // =========================
 app.use("/api", adminModule);
 app.use("/api", vipModule);
 app.use("/api", annonceModule);
+app.use("/api", favoriteModule);
 
-// loaders
+// LOADERS
 loadSearch(app);
 loadFeed(app);
 loadNotifications(app);
@@ -140,5 +143,5 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log("🚀 NIA RDC SERVER RUNNING ON PORT", PORT);
+  console.log("🚀 NIA RDC SERVER READY ON PORT", PORT);
 });

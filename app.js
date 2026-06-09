@@ -1,20 +1,18 @@
 const API = "https://TON-SERVER.onrender.com/api";
 
-/* =========================
-   NAVIGATION PROPRE
-========================= */
-function show(page){
+/* =====================
+   NAVIGATION STABLE
+===================== */
+function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
   document.getElementById(page).classList.remove("hidden");
+
+  if(page === "home") loadFeed();
 }
 
-function goLogin(){ show("login"); }
-function goRegister(){ show("register"); }
-function goHome(){ show("home"); }
-
-/* =========================
+/* =====================
    FEED
-========================= */
+===================== */
 async function loadFeed(){
   const res = await fetch(`${API}/feed`);
   const data = await res.json();
@@ -24,7 +22,7 @@ async function loadFeed(){
 
   data.forEach(a => {
     feed.innerHTML += `
-      <div class="card">
+      <div style="background:white;padding:10px;margin:10px;border-radius:10px">
         <h4>${a.titre}</h4>
         <img src="${a.image_url || ''}" width="100%">
         <p>${a.ville || ''}</p>
@@ -33,13 +31,13 @@ async function loadFeed(){
   });
 }
 
-/* =========================
-   AUTH
-========================= */
+/* =====================
+   LOGIN
+===================== */
 async function login(){
   const res = await fetch(`${API}/auth/login`, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
       telephone: login_tel.value,
       password: login_pass.value
@@ -48,18 +46,21 @@ async function login(){
 
   const data = await res.json();
 
-  if(data.error) return alert("Erreur");
+  if(data.error) return alert("Erreur login");
 
   localStorage.setItem("user", JSON.stringify(data));
+
   alert("Connecté");
-  goHome();
-  loadFeed();
+  go("home");
 }
 
+/* =====================
+   REGISTER
+===================== */
 async function register(){
   await fetch(`${API}/auth/register`, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
       telephone: reg_tel.value,
       password: reg_pass.value
@@ -67,19 +68,20 @@ async function register(){
   });
 
   alert("Compte créé");
-  goLogin();
+  go("login");
 }
 
-/* =========================
-   PUBLISH (LOCKED)
-========================= */
+/* =====================
+   PUBLISH
+===================== */
 async function publier(){
   const user = JSON.parse(localStorage.getItem("user"));
+
   if(!user) return alert("Connecte-toi");
 
   await fetch(`${API}/annonces`, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
       user_id: user.id,
       titre: titre.value,
@@ -90,37 +92,35 @@ async function publier(){
     })
   });
 
-  alert("Annonce publiée");
-  goHome();
+  alert("Publié !");
+  go("home");
   loadFeed();
 }
 
-/* =========================
-   ADMIN HOLD SYSTEM (10s)
-========================= */
-let holdTimer;
+/* =====================
+   ADMIN HOLD 10s + VIBRATION
+===================== */
+let timer;
 
-function startAdminHold(){
-  holdTimer = setTimeout(() => {
-    if (navigator.vibrate) navigator.vibrate(200);
-    show("admin");
+function adminHoldStart(){
+  timer = setTimeout(() => {
+    if(navigator.vibrate) navigator.vibrate(200);
+    go("admin");
   }, 10000);
 }
 
-function stopAdminHold(){
-  clearTimeout(holdTimer);
+function adminHoldStop(){
+  clearTimeout(timer);
 }
 
-/* =========================
-   ADMIN LOGIN SIMPLE
-========================= */
+/* =====================
+   ADMIN CHECK
+===================== */
 async function checkAdmin(){
-  const code = admin_code.value;
-
   const res = await fetch(`${API}/admin/login`, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ code })
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ code: admin_code.value })
   });
 
   const data = await res.json();
@@ -128,10 +128,10 @@ async function checkAdmin(){
   if(data.success){
     alert("ADMIN OK");
   } else {
-    alert("Code invalide");
+    alert("Code faux");
   }
 }
 
 /* INIT */
+go("home");
 loadFeed();
-goHome();

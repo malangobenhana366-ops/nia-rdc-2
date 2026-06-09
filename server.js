@@ -11,10 +11,10 @@ import adminModule from "./admin_module.js";
 import vipModule from "./vip_module.js";
 import annonceModule from "./annonce_module.js";
 import favoriteModule from "./favorite_module.js";
+import notificationModule from "./notification_module.js";
 
 import { loadSearch } from "./search_loader.js";
 import { loadFeed } from "./feed_loader.js";
-import { loadNotifications } from "./notification_loader.js";
 import { loadChat } from "./chat_loader.js";
 import { loadRealtime } from "./realtime_loader.js";
 import { loadDashboard } from "./dashboard_loader.js";
@@ -51,11 +51,11 @@ app.use("/api", adminModule);
 app.use("/api", vipModule);
 app.use("/api", annonceModule);
 app.use("/api", favoriteModule);
+app.use("/api", notificationModule);
 
 // LOADERS
 loadSearch(app);
 loadFeed(app);
-loadNotifications(app);
 loadChat(app);
 loadRealtime(app);
 loadDashboard(app);
@@ -131,17 +131,17 @@ app.post("/auth/login", async (req, res) => {
 });
 
 // =========================
-// HEALTH CHECK
+// HEALTH
 // =========================
 app.get("/", (req, res) => {
   res.json({ status: "NIA RDC RUNNING 🚀" });
 });
 
 // =========================
-// START SERVER
+// START
 // =========================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log("🚀 NIA RDC SERVER READY ON PORT", PORT);
+  console.log("🚀 NIA RDC READY");
 });

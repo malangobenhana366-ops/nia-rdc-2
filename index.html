@@ -5,27 +5,68 @@
 <title>NIA RDC</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#f4f4f4}
+body{margin:0;font-family:Arial;background:#f5f5f5}
 
-header{background:#111;color:white;padding:10px;text-align:center}
+/* HEADER */
+header{
+background:#111;color:white;
+padding:12px;
+text-align:center;
+font-weight:bold;
+}
 
+/* CONTAINER */
 .container{padding:10px}
 
-.card{background:white;margin:10px 0;padding:10px;border-radius:8px}
+/* CARDS */
+.card{
+background:white;
+padding:10px;
+margin:10px 0;
+border-radius:10px;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
 
-input,textarea{width:100%;margin:5px 0;padding:10px}
+/* INPUTS */
+input,textarea,select{
+width:100%;
+padding:10px;
+margin:5px 0;
+}
 
-button{width:100%;padding:10px;background:black;color:white;border:none}
+/* BUTTON */
+button{
+width:100%;
+padding:10px;
+background:black;
+color:white;
+border:none;
+margin-top:5px;
+cursor:pointer;
+}
 
+/* VIP TAG */
+.vip{
+color:gold;
+font-weight:bold;
+}
+
+/* BANNER ADS */
 #banner{
-position:fixed;bottom:0;width:100%;background:#ddd;text-align:center;padding:8px
+position:fixed;
+bottom:0;
+width:100%;
+background:#ddd;
+text-align:center;
+padding:8px;
 }
 </style>
+
 </head>
 
 <body>
 
-<header>NIA RDC 🚀</header>
+<header>NIA RDC 🚀 Marketplace</header>
 
 <div class="container">
 
@@ -45,14 +86,23 @@ position:fixed;bottom:0;width:100%;background:#ddd;text-align:center;padding:8px
 <h3>Publier annonce</h3>
 
 <input id="titre" placeholder="Titre">
-<textarea id="desc"></textarea>
-<input id="prix" placeholder="Prix jour">
-<input id="ville" placeholder="Ville">
-<input id="cat" placeholder="Catégorie">
-<textarea id="cond" placeholder="Conditions"></textarea>
+<textarea id="desc" placeholder="Description"></textarea>
 
-<input id="cphone" placeholder="Contact phone">
-<input id="cname" placeholder="Contact name">
+<input id="prix_jour" placeholder="Prix jour">
+<input id="prix_heure" placeholder="Prix heure">
+<input id="prix_semaine" placeholder="Prix semaine">
+<input id="prix_mois" placeholder="Prix mois">
+
+<input id="ville" placeholder="Ville">
+<input id="commune" placeholder="Commune">
+<input id="quartier" placeholder="Quartier">
+
+<input id="categorie" placeholder="Catégorie">
+
+<textarea id="conditions" placeholder="Conditions de location"></textarea>
+
+<input id="contact_phone" placeholder="Téléphone contact">
+<input id="contact_name" placeholder="Nom contact">
 
 <button onclick="create()">Publier</button>
 
@@ -63,13 +113,16 @@ position:fixed;bottom:0;width:100%;background:#ddd;text-align:center;padding:8px
 
 </div>
 
-<div id="banner">AdSense Banner (fixed bottom)</div>
+<div id="banner">AdSense Banner Fixed</div>
 
 <script>
 
 const API="http://localhost:5000";
 let user=null;
 
+// ======================
+// REGISTER
+// ======================
 function register(){
 fetch(API+"/auth/register",{
 method:"POST",
@@ -78,9 +131,14 @@ body:JSON.stringify({
 telephone:tel.value,
 password:pass.value
 })
-}).then(r=>r.json()).then(console.log);
+}).then(r=>r.json()).then(d=>{
+alert("Compte créé");
+});
 }
 
+// ======================
+// LOGIN
+// ======================
 function login(){
 fetch(API+"/auth/login",{
 method:"POST",
@@ -91,13 +149,16 @@ password:pass.value
 })
 }).then(r=>r.json()).then(u=>{
 user=u;
-me.innerText="Connecté: "+u.telephone;
+me.innerHTML = "Connecté: " + u.telephone + (u.is_vip ? " <span class='vip'>VIP</span>" : "");
 load();
 });
 }
 
+// ======================
+// CREATE ANNONCE
+// ======================
 function create(){
-if(!user)return alert("login first");
+if(!user) return alert("Connecte-toi");
 
 fetch(API+"/annonces",{
 method:"POST",
@@ -106,17 +167,30 @@ body:JSON.stringify({
 user_id:user.id,
 titre:titre.value,
 description:desc.value,
-prix_jour:prix.value,
+
+prix_jour:prix_jour.value,
+prix_heure:prix_heure.value,
+prix_semaine:prix_semaine.value,
+prix_mois:prix_mois.value,
+
 ville:ville.value,
-categorie:cat.value,
-conditions_location:cond.value,
-contact_phone:cphone.value,
-contact_name:cname.value,
+commune:commune.value,
+quartier:quartier.value,
+
+categorie:categorie.value,
+conditions_location:conditions.value,
+
+contact_phone:contact_phone.value,
+contact_name:contact_name.value,
+
 status:"disponible"
 })
 }).then(()=>load());
 }
 
+// ======================
+// LOAD ANNONCES
+// ======================
 function load(){
 fetch(API+"/annonces")
 .then(r=>r.json())
@@ -127,8 +201,15 @@ list.innerHTML+=`
 <div class="card">
 <h3>${a.titre}</h3>
 <p>${a.description}</p>
-<b>${a.prix_jour}$/jour</b>
-<p>${a.ville}</p>
+
+<p><b>${a.prix_jour || 0}$ / jour</b></p>
+
+<p>${a.ville} - ${a.commune}</p>
+
+<p>Status: ${a.status}</p>
+
+<p>${a.conditions_location || ""}</p>
+
 </div>`;
 });
 });

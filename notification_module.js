@@ -2,38 +2,89 @@ import express from "express";
 
 const router = express.Router();
 
-/**
- * CREATE NOTIFICATION
- */
-router.post("/notify", async (req, res) => {
+/*
+========================================
+CREER NOTIFICATION
+========================================
+*/
+
+router.post("/notifications", async (req, res) => {
   const db = req.app.locals.db;
 
-  const { user_id, type, message } = req.body;
+  try {
+    const {
+      user_id,
+      type,
+      message
+    } = req.body;
 
-  const result = await db.query(
-    `INSERT INTO notifications (user_id, type, message)
-     VALUES ($1,$2,$3)
-     RETURNING *`,
-    [user_id, type, message]
-  );
+    const result = await db.query(
+      `INSERT INTO notifications (user_id, type, message, is_read, created_at)
+       VALUES ($1,$2,$3,false,NOW())
+       RETURNING *`,
+      [user_id, type, message]
+    );
 
-  res.json(result.rows[0]);
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur création notification"
+    });
+  }
 });
 
-/**
- * GET USER NOTIFICATIONS
- */
+/*
+========================================
+LIRE NOTIFICATIONS USER
+========================================
+*/
+
 router.get("/notifications/:user_id", async (req, res) => {
   const db = req.app.locals.db;
 
-  const result = await db.query(
-    `SELECT * FROM notifications
-     WHERE user_id=$1
-     ORDER BY created_at DESC`,
-    [req.params.user_id]
-  );
+  try {
+    const result = await db.query(
+      `SELECT *
+       FROM notifications
+       WHERE user_id=$1
+       ORDER BY created_at DESC`,
+      [req.params.user_id]
+    );
 
-  res.json(result.rows);
+    res.json(result.rows);
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur récupération notifications"
+    });
+  }
+});
+
+/*
+========================================
+MARQUER COMME LU
+========================================
+*/
+
+router.put("/notifications/read/:id", async (req, res) => {
+  const db = req.app.locals.db;
+
+  try {
+    await db.query(
+      `UPDATE notifications
+       SET is_read=true
+       WHERE id=$1`,
+      [req.params.id]
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur update notification"
+    });
+  }
 });
 
 export default router;

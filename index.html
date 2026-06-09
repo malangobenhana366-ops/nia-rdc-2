@@ -1,151 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>NIA RDC</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIA RDC</title>
 
-<style>
-body{margin:0;font-family:Arial;background:#f4f4f4}
-header{background:#111;color:#fff;padding:10px;text-align:center}
-.container{padding:10px}
-.card{background:#fff;margin:10px 0;padding:10px;border-radius:10px}
-input,textarea{width:100%;padding:10px;margin:5px 0}
-button{width:100%;padding:10px;background:#000;color:#fff;border:none}
-img{width:100%;border-radius:10px;margin-top:5px}
-</style>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
 </head>
 
 <body>
 
-<header>NIA RDC 🚀</header>
+<header>
+  <h2>NIA RDC 🚀</h2>
 
-<div class="container">
+  <div class="nav">
+    <button onclick="showFeed()">Accueil</button>
+    <button onclick="showLogin()">Connexion</button>
+    <button onclick="showRegister()">Inscription</button>
+    <button onclick="showPublish()">Publier</button>
+  </div>
+</header>
 
-<input id="tel" placeholder="Téléphone">
-<input id="pass" type="password" placeholder="Mot de passe">
-
-<button onclick="register()">Créer compte</button>
-<button onclick="login()">Connexion</button>
-
-<p id="me"></p>
-
-<hr>
-
-<h3>Publier annonce</h3>
-
-<input id="titre" placeholder="Titre">
-<textarea id="desc"></textarea>
-
-<input id="prix_jour" placeholder="Prix jour">
-<input id="ville" placeholder="Ville">
-<input id="categorie" placeholder="Catégorie">
-<textarea id="cond"></textarea>
-
-<input id="cphone" placeholder="Contact phone">
-<input id="cname" placeholder="Contact name">
-
-<input type="file" id="image">
-
-<button onclick="create()">Publier</button>
-
-<hr>
-
-<div id="list"></div>
-
+<!-- FEED -->
+<div class="container" id="feedBox">
+  <h3>📦 Annonces récentes</h3>
+  <div id="feed"></div>
 </div>
 
-<script>
+<!-- LOGIN -->
+<div class="container hidden" id="loginBox">
+  <h3>Connexion</h3>
+  <input id="login_tel" placeholder="Téléphone">
+  <input id="login_pass" type="password" placeholder="Mot de passe">
+  <button onclick="login()">Se connecter</button>
+</div>
 
-const API="http://localhost:5000";
-let user=null;
+<!-- REGISTER -->
+<div class="container hidden" id="registerBox">
+  <h3>Inscription</h3>
+  <input id="reg_tel" placeholder="Téléphone">
+  <input id="reg_pass" type="password" placeholder="Mot de passe">
+  <button onclick="register()">Créer compte</button>
+</div>
 
-// AUTH
-function register(){
-fetch(API+"/auth/register",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-telephone:tel.value,
-password:pass.value
-})
-});
-}
+<!-- PUBLISH -->
+<div class="container hidden" id="publishBox">
+  <h3>Publier annonce</h3>
 
-function login(){
-fetch(API+"/auth/login",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-telephone:tel.value,
-password:pass.value
-})
-})
-.then(r=>r.json())
-.then(u=>{
-user=u;
-me.innerText="Connecté "+u.telephone;
-load();
-});
-}
+  <input id="titre" placeholder="Titre">
+  <textarea id="desc" placeholder="Description"></textarea>
+  <input id="ville" placeholder="Ville">
+  <input id="categorie" placeholder="Catégorie">
+  <input id="image" placeholder="URL image">
 
-// CREATE + IMAGE
-async function create(){
-
-let image_url="";
-
-const file=document.getElementById("image").files[0];
-
-if(file){
-const form=new FormData();
-form.append("image",file);
-
-const res=await fetch(API+"/upload",{method:"POST",body:form});
-const data=await res.json();
-image_url=data.url;
-}
-
-fetch(API+"/annonces",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-user_id:user.id,
-titre:titre.value,
-description:desc.value,
-prix_jour:prix_jour.value,
-ville:ville.value,
-categorie:categorie.value,
-conditions_location:cond.value,
-contact_phone:cphone.value,
-contact_name:cname.value,
-image_url:image_url
-})
-}).then(()=>load());
-}
-
-// LOAD
-function load(){
-fetch(API+"/annonces")
-.then(r=>r.json())
-.then(d=>{
-list.innerHTML="";
-d.forEach(a=>{
-list.innerHTML+=`
-<div class="card">
-<h3>${a.titre}</h3>
-
-${a.image_url ? `<img src="${a.image_url}">` : ""}
-
-<p>${a.description}</p>
-<b>${a.prix_jour}</b>
-<p>${a.ville}</p>
-</div>`;
-});
-});
-}
-
-load();
-
-</script>
+  <button onclick="publier()">Publier</button>
+</div>
 
 </body>
 </html>

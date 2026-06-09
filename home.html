@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>NIA RDC - Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f4f4f4;
+}
+
+/* HEADER */
+header{
+  background:#111;
+  color:#fff;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.logo{
+  font-weight:bold;
+}
+
+/* ACTION BUTTONS */
+.actions{
+  display:flex;
+  gap:10px;
+  padding:10px;
+}
+
+button{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+}
+
+.publish{background:#00c853;color:#fff}
+.search{background:#2979ff;color:#fff}
+.vip{background:gold;color:#000}
+
+/* FEED */
+.container{
+  padding:10px;
+}
+
+.card{
+  background:#fff;
+  border-radius:10px;
+  margin-bottom:10px;
+  overflow:hidden;
+  cursor:pointer;
+}
+
+.card img{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+}
+
+.card-content{
+  padding:10px;
+}
+
+.price{
+  color:#00c853;
+  font-weight:bold;
+}
+
+.vip-badge{
+  background:gold;
+  padding:3px 6px;
+  border-radius:5px;
+  font-size:12px;
+}
+
+/* BOTTOM ADS */
+.ad-banner{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:#ddd;
+  text-align:center;
+  padding:10px;
+  font-size:12px;
+}
+</style>
+
+</head>
+
+<body>
+
+<header>
+  <div class="logo">NIA RDC</div>
+  <div>Marketplace</div>
+</header>
+
+<div class="actions">
+  <button class="publish" onclick="alert('Publish page')">Publier</button>
+  <button class="search" onclick="alert('Search page')">Rechercher</button>
+  <button class="vip" onclick="alert('VIP page')">VIP</button>
+</div>
+
+<div class="container" id="feed"></div>
+
+<div class="ad-banner">
+  Publicité
+</div>
+
+<script>
+
+const API = "http://localhost:5000/api";
+
+async function loadFeed(){
+
+  const res = await fetch(API + "/feed");
+  const data = await res.json();
+
+  const feed = document.getElementById("feed");
+
+  data.forEach(a => {
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.onclick = () => {
+      alert("Ouvrir annonce ID: " + a.id);
+    };
+
+    card.innerHTML = `
+      <img src="${a.image_url || 'https://via.placeholder.com/400'}" />
+      <div class="card-content">
+        <h3>${a.titre}</h3>
+        <p class="price">${a.prix_jour || "Prix non défini"} $</p>
+        <p>${a.ville || ""}</p>
+        ${a.boosted ? '<span class="vip-badge">VIP</span>' : ''}
+      </div>
+    `;
+
+    feed.appendChild(card);
+  });
+
+}
+
+loadFeed();
+
+</script>
+
+</body>
+</html>

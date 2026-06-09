@@ -2,46 +2,115 @@ import express from "express";
 
 const router = express.Router();
 
-/**
- * ACTIVER VIP
- * (simulation logique, pas paiement)
- */
-router.post("/vip/activate", async (req, res) => {
-  const { user_id } = req.body;
+/*
+========================================
+DEMANDER PASSAGE VIP
+========================================
+*/
 
-  await req.app.locals.db.query(
-    "UPDATE users SET is_vip=true WHERE id=$1",
-    [user_id]
-  );
+router.post("/vip/request", async (req, res) => {
+  const db = req.app.locals.db;
 
-  res.json({ ok: true, message: "VIP ACTIVÉ" });
+  try {
+    const {
+      user_id,
+      type // "user" ou "annonce"
+    } = req.body;
+
+    const result = await db.query(
+      `INSERT INTO vip_requests (user_id, type, status, created_at)
+       VALUES ($1,$2,'pending',NOW())
+       RETURNING *`,
+      [user_id, type]
+    );
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur demande VIP"
+    });
+  }
 });
 
-/**
- * BOOST ANNONCE VIP
- * augmente visibilité
- */
-router.post("/vip/boost/:id", async (req, res) => {
-  const { id } = req.params;
+/*
+========================================
+ACTIVER VIP USER
+========================================
+*/
 
-  await req.app.locals.db.query(
-    "UPDATE annonces SET boosted=true WHERE id=$1",
-    [id]
-  );
+router.post("/vip/activate-user", async (req, res) => {
+  const db = req.app.locals.db;
 
-  res.json({ ok: true, message: "ANNONCE BOOSTÉE" });
+  try {
+    const { user_id } = req.body;
+
+    await db.query(
+      `UPDATE users
+       SET is_vip = true
+       WHERE id = $1`,
+      [user_id]
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur activation VIP user"
+    });
+  }
 });
 
-/**
- * LISTE VIP PRIORISÉE
- */
-router.get("/vip/annonces", async (req, res) => {
-  const result = await req.app.locals.db.query(`
-    SELECT * FROM annonces
-    ORDER BY boosted DESC, created_at DESC
-  `);
+/*
+========================================
+BOOST ANNONCE VIP
+========================================
+*/
 
-  res.json(result.rows);
+router.post("/vip/boost-annonce", async (req, res) => {
+  const db = req.app.locals.db;
+
+  try {
+    const { annonce_id } = req.body;
+
+    await db.query(
+      `UPDATE annonces
+       SET boosted = true
+       WHERE id = $1`,
+      [annonce_id]
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur boost annonce"
+    });
+  }
+});
+
+/*
+========================================
+LISTE VIP REQUESTS (ADMIN FUTUR)
+========================================
+*/
+
+router.get("/vip/requests", async (req, res) => {
+  const db = req.app.locals.db;
+
+  try {
+    const result = await db.query(
+      `SELECT * FROM vip_requests
+       ORDER BY created_at DESC`
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur liste VIP"
+    });
+  }
 });
 
 export default router;

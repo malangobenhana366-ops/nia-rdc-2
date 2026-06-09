@@ -6,8 +6,10 @@ import bcrypt from "bcrypt";
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 
+// MODULES
 import adminModule from "./admin_module.js";
 import vipModule from "./vip_module.js";
+import annonceModule from "./annonce_module.js";
 import { loadSearch } from "./search_loader.js";
 import { loadFeed } from "./feed_loader.js";
 import { loadNotifications } from "./notification_loader.js";
@@ -21,7 +23,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// DB
+// =========================
+// DATABASE
+// =========================
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
@@ -29,17 +33,23 @@ const pool = new pg.Pool({
 
 app.locals.db = pool;
 
+// =========================
 // CLOUDINARY
+// =========================
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_API_SECRET
 });
 
-// MODULES
+// =========================
+// ROUTES MODULES
+// =========================
 app.use("/api", adminModule);
 app.use("/api", vipModule);
+app.use("/api", annonceModule);
 
+// loaders
 loadSearch(app);
 loadFeed(app);
 loadNotifications(app);
@@ -47,19 +57,46 @@ loadChat(app);
 loadRealtime(app);
 loadDashboard(app);
 
-// HEALTH
-app.get("/", (req, res) => {
-  res.json({ status: "NIA RDC FULL SYSTEM ACTIVE 🚀" });
-});
+// =========================
+// UPLOAD IMAGE
+// =========================
+app.post(
+  "/upload",
+  multer({ storage: multer.memoryStorage() }).single("image"),
+  async (req, res) => {
+    try {
+      const file = req.file;
 
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { folder: "nia_rdc" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        ).end(file.buffer);
+      });
+
+      res.json({ url: result.secure_url });
+
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+// =========================
 // AUTH
+// =========================
 app.post("/auth/register", async (req, res) => {
   const { telephone, password } = req.body;
 
   const hash = await bcrypt.hash(password, 10);
 
   const result = await pool.query(
-    "INSERT INTO users (telephone, password) VALUES ($1,$2) RETURNING id, telephone, is_vip, is_admin",
+    `INSERT INTO users (telephone, password)
+     VALUES ($1,$2)
+     RETURNING id, telephone, is_vip, is_admin`,
     [telephone, hash]
   );
 
@@ -90,31 +127,18 @@ app.post("/auth/login", async (req, res) => {
   });
 });
 
-// UPLOAD IMAGE
-app.post("/upload", multer({ storage: multer.memoryStorage() }).single("image"), async (req, res) => {
-  try {
-    const file = req.file;
-
-    const result = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        { folder: "nia_rdc" },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      ).end(file.buffer);
-    });
-
-    res.json({ url: result.secure_url });
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// =========================
+// HEALTH CHECK
+// =========================
+app.get("/", (req, res) => {
+  res.json({ status: "NIA RDC RUNNING 🚀" });
 });
 
-// START
+// =========================
+// START SERVER
+// =========================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log("🚀 NIA RDC FULL SYSTEM RUNNING");
+  console.log("🚀 NIA RDC SERVER RUNNING ON PORT", PORT);
 });

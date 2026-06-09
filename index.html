@@ -11,51 +11,60 @@
 
 <body>
 
+<!-- HEADER MINIMAL -->
 <header>
-  <h2>NIA RDC 🚀</h2>
+  <div id="logo" onmousedown="startAdminHold()" onmouseup="stopAdminHold()">
+    NIA RDC 🚀
+  </div>
 
-  <div class="nav">
-    <button onclick="showFeed()">Accueil</button>
-    <button onclick="showLogin()">Connexion</button>
-    <button onclick="showRegister()">Inscription</button>
-    <button onclick="showPublish()">Publier</button>
+  <div>
+    <button onclick="goLogin()">Connexion</button>
+    <button onclick="goRegister()">Inscription</button>
   </div>
 </header>
 
-<!-- FEED -->
-<div class="container" id="feedBox">
-  <h3>📦 Annonces récentes</h3>
+<!-- FEED (HOME ONLY) -->
+<section id="home" class="page">
+  <h3>📦 Annonces</h3>
   <div id="feed"></div>
-</div>
+</section>
 
 <!-- LOGIN -->
-<div class="container hidden" id="loginBox">
+<section id="login" class="page hidden">
   <h3>Connexion</h3>
   <input id="login_tel" placeholder="Téléphone">
   <input id="login_pass" type="password" placeholder="Mot de passe">
   <button onclick="login()">Se connecter</button>
-</div>
+</section>
 
 <!-- REGISTER -->
-<div class="container hidden" id="registerBox">
+<section id="register" class="page hidden">
   <h3>Inscription</h3>
   <input id="reg_tel" placeholder="Téléphone">
   <input id="reg_pass" type="password" placeholder="Mot de passe">
   <button onclick="register()">Créer compte</button>
-</div>
+</section>
 
 <!-- PUBLISH -->
-<div class="container hidden" id="publishBox">
-  <h3>Publier annonce</h3>
+<section id="publish" class="page hidden">
+  <h3>Publier</h3>
 
   <input id="titre" placeholder="Titre">
   <textarea id="desc" placeholder="Description"></textarea>
   <input id="ville" placeholder="Ville">
   <input id="categorie" placeholder="Catégorie">
-  <input id="image" placeholder="URL image">
+  <input id="image" placeholder="Image URL">
 
-  <button onclick="publier()">Publier</button>
-</div>
+  <button onclick="publier()">Publier annonce</button>
+</section>
+
+<!-- ADMIN (CACHÉ) -->
+<section id="admin" class="page hidden">
+  <h3>ADMIN PANEL</h3>
+
+  <input id="admin_code" placeholder="Code admin">
+  <button onclick="checkAdmin()">Entrer</button>
+</section>
 
 </body>
 </html>

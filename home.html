@@ -6,95 +6,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#f4f4f4;
-}
-
-header{
-  background:#111;
-  color:#fff;
-  padding:15px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.logo{
-  font-weight:bold;
-}
-
-.actions{
-  display:flex;
-  gap:10px;
-  padding:10px;
-}
-
-button{
-  flex:1;
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
+body{margin:0;font-family:Arial;background:#f4f4f4}
+header{background:#111;color:#fff;padding:15px;display:flex;justify-content:space-between}
+.actions{display:flex;gap:10px;padding:10px}
+button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:bold}
 .publish{background:#00c853;color:#fff}
 .search{background:#2979ff;color:#fff}
 .vip{background:gold;color:#000}
-
-.container{
-  padding:10px;
-}
-
-.card{
-  background:#fff;
-  border-radius:10px;
-  margin-bottom:10px;
-  overflow:hidden;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.card:active{
-  transform:scale(0.98);
-  opacity:0.8;
-}
-
-.card img{
-  width:100%;
-  height:180px;
-  object-fit:cover;
-}
-
-.card-content{
-  padding:10px;
-}
-
-.price{
-  color:#00c853;
-  font-weight:bold;
-}
-
-.vip-badge{
-  background:gold;
-  padding:3px 6px;
-  border-radius:5px;
-  font-size:12px;
-  display:inline-block;
-  margin-top:5px;
-}
-
-.ad-banner{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  background:#ddd;
-  text-align:center;
-  padding:10px;
-  font-size:12px;
-}
+.container{padding:10px}
+.card{background:#fff;margin-bottom:10px;border-radius:10px;overflow:hidden;cursor:pointer}
+.card img{width:100%;height:180px;object-fit:cover}
+.card-content{padding:10px}
+.price{color:#00c853;font-weight:bold}
+.ad{position:fixed;bottom:0;width:100%;background:#ddd;text-align:center;padding:10px}
 </style>
 
 </head>
@@ -102,27 +26,30 @@ button{
 <body>
 
 <header>
-  <div class="logo">NIA RDC</div>
+  <div>NIA RDC</div>
   <div>Marketplace</div>
 </header>
 
 <div class="actions">
-  <button class="publish">Publier</button>
-  <button class="search">Rechercher</button>
-  <button class="vip">VIP</button>
+  <button class="publish" onclick="go('publish.html')">Publier</button>
+  <button class="search" onclick="go('search.html')">Rechercher</button>
+  <button class="vip" onclick="go('vip.html')">VIP</button>
 </div>
 
 <div class="container" id="feed"></div>
 
-<div class="ad-banner">
-  Publicité
-</div>
+<div class="ad">Publicité</div>
 
 <script>
 
-const API = "http://localhost:5000/api";
+const API = "https://nia-backend.onrender.com/api"; // FIX PRODUCTION
 
-async function loadFeed(){
+function go(page){
+  window.location.href = page;
+}
+
+async function load(){
+
   const res = await fetch(API + "/feed");
   const data = await res.json();
 
@@ -133,19 +60,17 @@ async function loadFeed(){
     const card = document.createElement("div");
     card.className = "card";
 
-    // NAVIGATION PROPRE (RÈGLE RESPECTÉE)
     card.onclick = () => {
-      if (!a.id) return;
-      window.location.href = "annonce.html?id=" + encodeURIComponent(a.id);
+      if(!a.id) return;
+      window.location.href = "annonce.html?id=" + a.id;
     };
 
     card.innerHTML = `
-      <img src="${a.image_url || 'https://via.placeholder.com/400'}" />
+      <img src="${a.image_url || 'https://via.placeholder.com/400'}">
       <div class="card-content">
-        <h3>${a.titre || ''}</h3>
-        <p class="price">${a.prix_jour || ''} $</p>
-        <p>${a.ville || ''}</p>
-        ${a.boosted ? '<span class="vip-badge">VIP</span>' : ''}
+        <h3>${a.titre}</h3>
+        <div class="price">${a.prix_jour || ''}</div>
+        <div>${a.ville || ''}</div>
       </div>
     `;
 
@@ -153,7 +78,7 @@ async function loadFeed(){
   });
 }
 
-loadFeed();
+load();
 
 </script>
 

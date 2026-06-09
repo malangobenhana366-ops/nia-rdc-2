@@ -1,132 +1,137 @@
 const API = "https://TON-SERVER.onrender.com/api";
 
-/* =====================
-   NAVIGATION
-===================== */
-function hideAll(){
-  document.getElementById("feedBox").classList.add("hidden");
-  document.getElementById("loginBox").classList.add("hidden");
-  document.getElementById("registerBox").classList.add("hidden");
-  document.getElementById("publishBox").classList.add("hidden");
+/* =========================
+   NAVIGATION PROPRE
+========================= */
+function show(page){
+  document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+  document.getElementById(page).classList.remove("hidden");
 }
 
-function showFeed(){
-  hideAll();
-  document.getElementById("feedBox").classList.remove("hidden");
-  loadFeed();
-}
+function goLogin(){ show("login"); }
+function goRegister(){ show("register"); }
+function goHome(){ show("home"); }
 
-function showLogin(){
-  hideAll();
-  document.getElementById("loginBox").classList.remove("hidden");
-}
-
-function showRegister(){
-  hideAll();
-  document.getElementById("registerBox").classList.remove("hidden");
-}
-
-function showPublish(){
-  hideAll();
-  document.getElementById("publishBox").classList.remove("hidden");
-}
-
-/* =====================
+/* =========================
    FEED
-===================== */
+========================= */
 async function loadFeed(){
   const res = await fetch(`${API}/feed`);
   const data = await res.json();
 
-  const container = document.getElementById("feed");
-  container.innerHTML = "";
+  const feed = document.getElementById("feed");
+  feed.innerHTML = "";
 
   data.forEach(a => {
-    container.innerHTML += `
+    feed.innerHTML += `
       <div class="card">
-        <img src="${a.image_url || ''}" />
         <h4>${a.titre}</h4>
+        <img src="${a.image_url || ''}" width="100%">
         <p>${a.ville || ''}</p>
-        <p>${a.prix_jour || ''} $</p>
       </div>
     `;
   });
 }
 
-/* =====================
-   REGISTER
-===================== */
-async function register(){
-  const telephone = document.getElementById("reg_tel").value;
-  const password = document.getElementById("reg_pass").value;
-
-  const res = await fetch(`${API}/auth/register`, {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ telephone, password })
-  });
-
-  const data = await res.json();
-
-  if(data.error) return alert(data.error);
-
-  alert("Compte créé !");
-}
-
-/* =====================
-   LOGIN
-===================== */
+/* =========================
+   AUTH
+========================= */
 async function login(){
-  const telephone = document.getElementById("login_tel").value;
-  const password = document.getElementById("login_pass").value;
-
   const res = await fetch(`${API}/auth/login`, {
     method: "POST",
     headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ telephone, password })
+    body: JSON.stringify({
+      telephone: login_tel.value,
+      password: login_pass.value
+    })
   });
 
   const data = await res.json();
 
-  if(data.error) return alert(data.error);
+  if(data.error) return alert("Erreur");
 
   localStorage.setItem("user", JSON.stringify(data));
-
-  alert("Connexion réussie !");
-  showFeed();
+  alert("Connecté");
+  goHome();
+  loadFeed();
 }
 
-/* =====================
-   PUBLISH
-===================== */
-async function publier(){
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  if(!user){
-    return alert("Connecte-toi d'abord");
-  }
-
-  const annonce = {
-    user_id: user.id,
-    titre: document.getElementById("titre").value,
-    description: document.getElementById("desc").value,
-    ville: document.getElementById("ville").value,
-    categorie: document.getElementById("categorie").value,
-    image_url: document.getElementById("image").value,
-    contact_nom: "user",
-    contact_tel: user.telephone
-  };
-
-  const res = await fetch(`${API}/annonces`, {
+async function register(){
+  await fetch(`${API}/auth/register`, {
     method: "POST",
     headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(annonce)
+    body: JSON.stringify({
+      telephone: reg_tel.value,
+      password: reg_pass.value
+    })
+  });
+
+  alert("Compte créé");
+  goLogin();
+}
+
+/* =========================
+   PUBLISH (LOCKED)
+========================= */
+async function publier(){
+  const user = JSON.parse(localStorage.getItem("user"));
+  if(!user) return alert("Connecte-toi");
+
+  await fetch(`${API}/annonces`, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      user_id: user.id,
+      titre: titre.value,
+      description: desc.value,
+      ville: ville.value,
+      categorie: categorie.value,
+      image_url: image.value
+    })
+  });
+
+  alert("Annonce publiée");
+  goHome();
+  loadFeed();
+}
+
+/* =========================
+   ADMIN HOLD SYSTEM (10s)
+========================= */
+let holdTimer;
+
+function startAdminHold(){
+  holdTimer = setTimeout(() => {
+    if (navigator.vibrate) navigator.vibrate(200);
+    show("admin");
+  }, 10000);
+}
+
+function stopAdminHold(){
+  clearTimeout(holdTimer);
+}
+
+/* =========================
+   ADMIN LOGIN SIMPLE
+========================= */
+async function checkAdmin(){
+  const code = admin_code.value;
+
+  const res = await fetch(`${API}/admin/login`, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ code })
   });
 
   const data = await res.json();
 
-  if(data.error) return alert("Erreur publication");
-
-  alert("Annonce publiée !");
-  showFeed();
+  if(data.success){
+    alert("ADMIN OK");
+  } else {
+    alert("Code invalide");
+  }
 }
+
+/* INIT */
+loadFeed();
+goHome();

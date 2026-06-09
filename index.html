@@ -11,21 +11,27 @@
 
 <body>
 
-<!-- HEADER MINIMAL -->
+<!-- TOP BAR -->
 <header>
-  <div id="logo" onmousedown="startAdminHold()" onmouseup="stopAdminHold()">
-    NIA RDC 🚀
-  </div>
+  <div id="logo">NIA RDC 🚀</div>
 
-  <div>
-    <button onclick="goLogin()">Connexion</button>
-    <button onclick="goRegister()">Inscription</button>
+  <!-- ENGRENAGE ADMIN -->
+  <div id="gear" onmousedown="adminHoldStart()" onmouseup="adminHoldStop()">
+    ⚙️
   </div>
 </header>
 
-<!-- FEED (HOME ONLY) -->
+<!-- NAV -->
+<nav>
+  <button onclick="go('home')">Accueil</button>
+  <button onclick="go('login')">Connexion</button>
+  <button onclick="go('register')">Inscription</button>
+  <button onclick="go('publish')">Publier</button>
+</nav>
+
+<!-- HOME -->
 <section id="home" class="page">
-  <h3>📦 Annonces</h3>
+  <h3>Feed</h3>
   <div id="feed"></div>
 </section>
 
@@ -34,7 +40,7 @@
   <h3>Connexion</h3>
   <input id="login_tel" placeholder="Téléphone">
   <input id="login_pass" type="password" placeholder="Mot de passe">
-  <button onclick="login()">Se connecter</button>
+  <button onclick="login()">Connexion</button>
 </section>
 
 <!-- REGISTER -->
@@ -55,13 +61,12 @@
   <input id="categorie" placeholder="Catégorie">
   <input id="image" placeholder="Image URL">
 
-  <button onclick="publier()">Publier annonce</button>
+  <button onclick="publier()">Publier</button>
 </section>
 
-<!-- ADMIN (CACHÉ) -->
+<!-- ADMIN -->
 <section id="admin" class="page hidden">
-  <h3>ADMIN PANEL</h3>
-
+  <h3>ADMIN</h3>
   <input id="admin_code" placeholder="Code admin">
   <button onclick="checkAdmin()">Entrer</button>
 </section>

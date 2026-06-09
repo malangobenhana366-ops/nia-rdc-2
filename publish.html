@@ -2,62 +2,15 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Publier une annonce - NIA RDC</title>
+<title>Publish</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:#f4f4f4;
-}
-
-.container{
-  padding:15px;
-}
-
-h2{
-  margin-bottom:10px;
-}
-
-input, textarea, select{
-  width:100%;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
-
-button{
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:8px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.publish{
-  background:#00c853;
-  color:#fff;
-}
-
-.draft{
-  background:#2979ff;
-  color:#fff;
-  margin-top:10px;
-}
-
-.preview{
-  margin-top:10px;
-  padding:10px;
-  background:#fff;
-  border-radius:8px;
-}
-
-small{
-  color:#666;
-}
+body{margin:0;font-family:Arial;background:#f4f4f4}
+.container{padding:15px}
+input,textarea,select{width:100%;padding:10px;margin-bottom:10px}
+button{width:100%;padding:12px;border:none;border-radius:8px;font-weight:bold}
+.publish{background:#00c853;color:#fff}
 </style>
 
 </head>
@@ -66,102 +19,73 @@ small{
 
 <div class="container">
 
-<h2>Publier une annonce</h2>
+<h2>Publier</h2>
 
-<input id="titre" placeholder="Titre de l'annonce">
+<input id="titre" placeholder="Titre">
+<textarea id="desc" placeholder="Description"></textarea>
 
-<textarea id="description" placeholder="Description"></textarea>
-
-<select id="categorie">
-  <option>Matériel</option>
-  <option>Service</option>
-  <option>Événement</option>
-  <option>Autre</option>
+<select id="cat">
+<option>Matériel</option>
+<option>Service</option>
+<option>Autre</option>
 </select>
 
-<input id="prix_jour" placeholder="Prix par jour">
-
+<input id="prix" placeholder="Prix">
 <input id="ville" placeholder="Ville">
-<input id="commune" placeholder="Commune">
-<input id="quartier" placeholder="Quartier">
 
-<textarea id="conditions" placeholder="Conditions de location"></textarea>
+<textarea id="cond" placeholder="Conditions de location"></textarea>
 
-<input id="contact_nom" placeholder="Nom du contact">
-<input id="contact_tel" placeholder="Téléphone du contact">
+<input type="file" id="img">
 
-<input type="file" id="image">
-
-<small>Standard: 3 images max | VIP: illimité</small>
-
-<button class="publish" onclick="publier()">Publier</button>
-<button class="draft" onclick="brouillon()">Enregistrer brouillon</button>
-
-<div class="preview" id="preview"></div>
+<button class="publish" onclick="send()">Publier</button>
 
 </div>
 
 <script>
 
-const API = "http://localhost:5000/api";
+const API = "https://nia-backend.onrender.com/api";
 
-async function uploadImage(file){
+async function upload(file){
 
-  const formData = new FormData();
-  formData.append("image", file);
+  const fd = new FormData();
+  fd.append("image", file);
 
-  const res = await fetch("http://localhost:5000/upload", {
+  const res = await fetch("https://nia-backend.onrender.com/upload", {
     method:"POST",
-    body:formData
+    body:fd
   });
 
-  const data = await res.json();
-  return data.url;
+  return await res.json();
 }
 
-async function publier(){
+async function send(){
 
-  const file = document.getElementById("image").files[0];
+  const file = document.getElementById("img").files[0];
 
-  let imageUrl = "";
+  let imgUrl = "";
 
   if(file){
-    imageUrl = await uploadImage(file);
+    const up = await upload(file);
+    imgUrl = up.url;
   }
 
-  const payload = {
-    user_id: localStorage.getItem("user_id"),
-    titre: document.getElementById("titre").value,
-    description: document.getElementById("description").value,
-    categorie: document.getElementById("categorie").value,
-    prix_jour: document.getElementById("prix_jour").value,
-    ville: document.getElementById("ville").value,
-    commune: document.getElementById("commune").value,
-    quartier: document.getElementById("quartier").value,
-    conditions_location: document.getElementById("conditions").value,
-    contact_nom: document.getElementById("contact_nom").value,
-    contact_tel: document.getElementById("contact_tel").value,
-    image_url: imageUrl,
-    statut: "published"
-  };
-
-  const res = await fetch(API + "/annonces", {
+  await fetch(API + "/annonces", {
     method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify(payload)
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      titre: document.getElementById("titre").value,
+      description: document.getElementById("desc").value,
+      categorie: document.getElementById("cat").value,
+      prix_jour: document.getElementById("prix").value,
+      ville: document.getElementById("ville").value,
+      conditions_location: document.getElementById("cond").value,
+      image_url: imgUrl,
+      user_id: localStorage.getItem("user_id"),
+      statut:"published"
+    })
   });
 
-  const data = await res.json();
-
-  document.getElementById("preview").innerHTML =
-    "Annonce publiée avec succès ID: " + data.id;
-}
-
-function brouillon(){
-
-  alert("Brouillon sauvegardé (logique backend à activer ensuite)");
+  alert("Annonce publiée");
 }
 
 </script>

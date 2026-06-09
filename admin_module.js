@@ -2,74 +2,125 @@ import express from "express";
 
 const router = express.Router();
 
-/**
- * ADMIN LOGIN
- */
+/*
+========================================
+LOGIN ADMIN SIMPLE (CODE SECRET)
+========================================
+*/
+
 router.post("/admin/login", async (req, res) => {
-  const { telephone, password } = req.body;
+  const { code } = req.body;
 
-  const db = req.app.locals.db;
+  const ADMIN_CODE = "BEN4002ET4200";
 
-  const result = await db.query(
-    "SELECT * FROM users WHERE telephone=$1",
-    [telephone]
-  );
-
-  const user = result.rows[0];
-
-  if (!user || !user.is_admin) {
-    return res.status(403).json({ error: "Not admin" });
+  if (code !== ADMIN_CODE) {
+    return res.status(403).json({ error: "Code invalide" });
   }
 
-  const ok = password === user.password;
-
-  if (!ok) return res.status(400).json({ error: "Wrong password" });
-
-  res.json({ id: user.id, telephone: user.telephone });
-});
-
-/**
- * STATS GLOBAL PLATFORM
- */
-router.get("/admin/stats", async (req, res) => {
-  const db = req.app.locals.db;
-
-  const users = await db.query("SELECT COUNT(*) FROM users");
-  const annonces = await db.query("SELECT COUNT(*) FROM annonces");
-  const vip = await db.query("SELECT COUNT(*) FROM users WHERE is_vip=true");
-
   res.json({
-    users: users.rows[0].count,
-    annonces: annonces.rows[0].count,
-    vip: vip.rows[0].count
+    success: true,
+    role: "admin"
   });
 });
 
-/**
- * DELETE ANNONCE
- */
+/*
+========================================
+STATS GLOBAL PLATFORM
+========================================
+*/
+
+router.get("/admin/stats", async (req, res) => {
+  const db = req.app.locals.db;
+
+  try {
+    const users = await db.query("SELECT COUNT(*) FROM users");
+    const annonces = await db.query("SELECT COUNT(*) FROM annonces");
+    const vip = await db.query("SELECT COUNT(*) FROM users WHERE is_vip=true");
+
+    const views = await db.query("SELECT SUM(nombre_vues) FROM annonces");
+
+    res.json({
+      users: users.rows[0].count,
+      annonces: annonces.rows[0].count,
+      vip: vip.rows[0].count,
+      views: views.rows[0].sum || 0
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur stats admin"
+    });
+  }
+});
+
+/*
+========================================
+SUPPRIMER ANNONCE
+========================================
+*/
+
 router.delete("/admin/annonce/:id", async (req, res) => {
   const db = req.app.locals.db;
 
-  await db.query(
-    "DELETE FROM annonces WHERE id=$1",
-    [req.params.id]
-  );
+  try {
+    await db.query(
+      "DELETE FROM annonces WHERE id=$1",
+      [req.params.id]
+    );
 
-  res.json({ ok: true });
+    res.json({ success: true });
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur suppression annonce"
+    });
+  }
 });
 
-/**
- * LIST USERS
- */
+/*
+========================================
+LISTE USERS
+========================================
+*/
+
 router.get("/admin/users", async (req, res) => {
   const db = req.app.locals.db;
 
-  const result = await db.query(
-    "SELECT id, telephone, is_vip, is_admin FROM users"
-  );
+  try {
+    const result = await db.query(
+      "SELECT id, telephone, is_vip, is_admin FROM users ORDER BY id DESC"
+    );
 
-  res.json(result.rows);
+    res.json(result.rows);
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur users"
+    });
+  }
+});
+
+/*
+========================================
+LISTE ANNONCES
+========================================
+*/
+
+router.get("/admin/annonces", async (req, res) => {
+  const db = req.app.locals.db;
+
+  try {
+    const result = await db.query(
+      "SELECT * FROM annonces ORDER BY created_at DESC"
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur annonces admin"
+    });
+  }
 });
 
 export default router;

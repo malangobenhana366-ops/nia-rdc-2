@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>NIA RDC</title>
+
+  <style>
+    body { font-family: Arial; margin:0; background:#f4f4f4; }
+
+    header {
+      background:#111;
+      color:white;
+      padding:10px;
+      text-align:center;
+    }
+
+    .container { padding:10px; }
+
+    input, textarea, select {
+      width:100%;
+      margin:5px 0;
+      padding:10px;
+    }
+
+    button {
+      padding:10px;
+      background:black;
+      color:white;
+      border:none;
+      width:100%;
+      margin-top:5px;
+    }
+
+    .card {
+      background:white;
+      padding:10px;
+      margin:10px 0;
+      border-radius:8px;
+    }
+
+    #formBox {
+      background:white;
+      padding:10px;
+      margin-bottom:20px;
+      border-radius:8px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  NIA RDC 🚀
+</header>
+
+<div class="container">
+
+  <!-- FORMULAIRE PUBLICATION -->
+  <div id="formBox">
+    <h3>Publier une annonce</h3>
+
+    <input id="titre" placeholder="Titre">
+    <textarea id="description" placeholder="Description"></textarea>
+    <input id="prix" type="number" placeholder="Prix par jour">
+
+    <input id="ville" placeholder="Ville">
+
+    <input id="categorie" placeholder="Catégorie">
+
+    <textarea id="conditions" placeholder="Conditions de location"></textarea>
+
+    <input id="contact_phone" placeholder="Téléphone contact">
+    <input id="contact_name" placeholder="Nom contact">
+
+    <button onclick="createAnnonce()">Publier</button>
+  </div>
+
+  <!-- LISTE -->
+  <div id="list"></div>
+
+</div>
+
+<script>
+
+const API = "http://localhost:5000";
+
+// =======================
+// CHARGER ANNONCES
+// =======================
+function loadAnnonces(){
+  fetch(API + "/annonces")
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+
+      data.forEach(a => {
+        list.innerHTML += `
+          <div class="card">
+            <h3>${a.titre}</h3>
+            <p>${a.description}</p>
+            <b>${a.prix_jour} $ / jour</b>
+            <p>${a.ville}</p>
+            <small>${a.status}</small>
+          </div>
+        `;
+      });
+    });
+}
+
+// =======================
+// CREER ANNONCE
+// =======================
+function createAnnonce(){
+  const data = {
+    titre: document.getElementById("titre").value,
+    description: document.getElementById("description").value,
+    prix_jour: document.getElementById("prix").value,
+    ville: document.getElementById("ville").value,
+    categorie: document.getElementById("categorie").value,
+    conditions_location: document.getElementById("conditions").value,
+    contact_phone: document.getElementById("contact_phone").value,
+    contact_name: document.getElementById("contact_name").value,
+    status: "disponible"
+  };
+
+  fetch(API + "/annonces", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(() => {
+    loadAnnonces();
+  });
+}
+
+// INIT
+loadAnnonces();
+
+</script>
+
+</body>
+</html>

@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // ======================
-// DATABASE
+// DB
 // ======================
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -19,72 +19,57 @@ const pool = new pg.Pool({
 });
 
 // ======================
-// HEALTH CHECK
+// HEALTH
 // ======================
 app.get("/", (req, res) => {
-  res.json({ status: "NIA RDC API READY 🚀" });
+  res.json({ status: "NIA RDC READY 🚀" });
 });
 
-// ======================
-// AUTH
-// ======================
 
-// REGISTER
+// ======================
+// AUTH (LOGIN / REGISTER)
+// ======================
 app.post("/auth/register", async (req, res) => {
-  try {
-    const { telephone, password } = req.body;
+  const { telephone, password } = req.body;
 
-    const hash = await bcrypt.hash(password, 10);
+  const hash = await bcrypt.hash(password, 10);
 
-    const result = await pool.query(
-      "INSERT INTO users (telephone, password) VALUES ($1,$2) RETURNING id, telephone, is_vip",
-      [telephone, hash]
-    );
+  const result = await pool.query(
+    "INSERT INTO users (telephone, password) VALUES ($1,$2) RETURNING id, telephone, is_vip, is_admin",
+    [telephone, hash]
+  );
 
-    res.json(result.rows[0]);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+  res.json(result.rows[0]);
 });
 
-// LOGIN
 app.post("/auth/login", async (req, res) => {
-  try {
-    const { telephone, password } = req.body;
+  const { telephone, password } = req.body;
 
-    const result = await pool.query(
-      "SELECT * FROM users WHERE telephone=$1",
-      [telephone]
-    );
+  const result = await pool.query(
+    "SELECT * FROM users WHERE telephone=$1",
+    [telephone]
+  );
 
-    if (!result.rows[0]) {
-      return res.status(400).json({ error: "User not found" });
-    }
+  const user = result.rows[0];
 
-    const user = result.rows[0];
+  if (!user) return res.status(400).json({ error: "User not found" });
 
-    const ok = await bcrypt.compare(password, user.password);
-    if (!ok) {
-      return res.status(400).json({ error: "Wrong password" });
-    }
+  const ok = await bcrypt.compare(password, user.password);
 
-    res.json({
-      id: user.id,
-      telephone: user.telephone,
-      is_vip: user.is_vip,
-      is_admin: user.is_admin
-    });
+  if (!ok) return res.status(400).json({ error: "Wrong password" });
 
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+  res.json({
+    id: user.id,
+    telephone: user.telephone,
+    is_vip: user.is_vip,
+    is_admin: user.is_admin
+  });
 });
 
-// ======================
-// ANNONCES
-// ======================
 
-// GET ALL
+// ======================
+// ANNONCES (CORE)
+// ======================
 app.get("/annonces", async (req, res) => {
   const result = await pool.query(
     "SELECT * FROM annonces ORDER BY created_at DESC"
@@ -92,92 +77,52 @@ app.get("/annonces", async (req, res) => {
   res.json(result.rows);
 });
 
-// CREATE (VIP LOGIC INCLUDED)
 app.post("/annonces", async (req, res) => {
-  try {
-    const {
-      user_id,
-      titre,
-      description,
-      categorie,
-      prix_heure,
-      prix_jour,
-      prix_semaine,
-      prix_mois,
-      ville,
-      commune,
-      quartier,
+  const {
+    user_id,
+    titre,
+    description,
+    categorie,
+    prix_heure,
+    prix_jour,
+    prix_semaine,
+    prix_mois,
+    ville,
+    commune,
+    quartier,
+    conditions_location,
+    contact_phone,
+    contact_name,
+    status
+  } = req.body;
+
+  const result = await pool.query(
+    `INSERT INTO annonces (
+      user_id, titre, description, categorie,
+      prix_heure, prix_jour, prix_semaine, prix_mois,
+      ville, commune, quartier,
       conditions_location,
-      contact_phone,
-      contact_name,
+      contact_phone, contact_name,
       status
-    } = req.body;
+    )
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+    RETURNING *`,
+    [
+      user_id, titre, description, categorie,
+      prix_heure, prix_jour, prix_semaine, prix_mois,
+      ville, commune, quartier,
+      conditions_location,
+      contact_phone, contact_name,
+      status || "disponible"
+    ]
+  );
 
-    // user check
-    const userRes = await pool.query(
-      "SELECT * FROM users WHERE id=$1",
-      [user_id]
-    );
-
-    const user = userRes.rows[0];
-
-    if (!user) {
-      return res.status(400).json({ error: "User not found" });
-    }
-
-    // LIMIT STANDARD
-    if (!user.is_vip) {
-      const count = await pool.query(
-        "SELECT COUNT(*) FROM annonces WHERE user_id=$1",
-        [user_id]
-      );
-
-      if (parseInt(count.rows[0].count) >= 2) {
-        return res.status(403).json({
-          error: "Limite atteinte. VIP requis."
-        });
-      }
-    }
-
-    const result = await pool.query(
-      `INSERT INTO annonces (
-        user_id, titre, description, categorie,
-        prix_heure, prix_jour, prix_semaine, prix_mois,
-        ville, commune, quartier,
-        conditions_location,
-        contact_phone, contact_name,
-        status
-      )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
-      RETURNING *`,
-      [
-        user_id,
-        titre,
-        description,
-        categorie,
-        prix_heure,
-        prix_jour,
-        prix_semaine,
-        prix_mois,
-        ville,
-        commune,
-        quartier,
-        conditions_location,
-        contact_phone,
-        contact_name,
-        status || "disponible"
-      ]
-    );
-
-    res.json(result.rows[0]);
-
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+  res.json(result.rows[0]);
 });
 
+
 // ======================
-// VIEWS SYSTEM
+// VIEWS (prévu stats)
 // ======================
 app.post("/annonces/:id/view", async (req, res) => {
   await pool.query(
@@ -188,8 +133,9 @@ app.post("/annonces/:id/view", async (req, res) => {
   res.json({ ok: true });
 });
 
+
 // ======================
-// FAVORIS
+// FAVORIS (prévu UI)
 // ======================
 app.post("/favoris", async (req, res) => {
   const { user_id, annonce_id } = req.body;
@@ -202,8 +148,9 @@ app.post("/favoris", async (req, res) => {
   res.json(result.rows[0]);
 });
 
+
 // ======================
-// CONTACT LOG
+// CONTACT LOG (prévu)
 // ======================
 app.post("/contact", async (req, res) => {
   const { user_id, annonce_id, contact_phone } = req.body;
@@ -216,8 +163,9 @@ app.post("/contact", async (req, res) => {
   res.json(result.rows[0]);
 });
 
+
 // ======================
-// REPORT
+// REPORT SYSTEM (prévu modération)
 // ======================
 app.post("/report", async (req, res) => {
   const { user_id, annonce_id, reason } = req.body;
@@ -230,11 +178,37 @@ app.post("/report", async (req, res) => {
   res.json(result.rows[0]);
 });
 
+
+// ======================
+// ADMIN (structure déjà prête)
+// ======================
+app.post("/admin/login", async (req, res) => {
+  const { telephone, password } = req.body;
+
+  const result = await pool.query(
+    "SELECT * FROM users WHERE telephone=$1",
+    [telephone]
+  );
+
+  const user = result.rows[0];
+
+  if (!user || !user.is_admin) {
+    return res.status(403).json({ error: "Not admin" });
+  }
+
+  const ok = await bcrypt.compare(password, user.password);
+
+  if (!ok) return res.status(400).json({ error: "Wrong password" });
+
+  res.json({ id: user.id, telephone: user.telephone });
+});
+
+
 // ======================
 // START
 // ======================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log("NIA RDC FULL BACKEND RUNNING 🚀 PORT " + PORT);
+  console.log("NIA RDC FULL SYSTEM RUNNING 🚀");
 });

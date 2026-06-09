@@ -19,17 +19,13 @@ body{
 
 .card{
   background:#222;
-  padding:15px;
+  padding:12px;
   margin-bottom:10px;
   border-radius:10px;
 }
 
-h2{
-  margin:10px 0;
-}
-
 button{
-  padding:8px 12px;
+  padding:8px 10px;
   border:none;
   border-radius:6px;
   cursor:pointer;
@@ -54,14 +50,14 @@ input{
 
 <div class="container">
 
-<h2>🔐 Admin Login</h2>
+<h2>🔐 Admin Panel</h2>
 
 <input id="code" placeholder="Code admin">
 <button class="primary" onclick="login()">Connexion</button>
 
 <div id="panel" style="display:none">
 
-<h2>📊 Stats</h2>
+<h2>📊 Stats globales</h2>
 <div class="card" id="stats"></div>
 
 <h2>👤 Users</h2>
@@ -76,8 +72,13 @@ input{
 
 <script>
 
-const API = "http://localhost:5000/api";
+const API = "https://nia-backend.onrender.com/api";
 
+/*
+========================================
+LOGIN ADMIN
+========================================
+*/
 async function login(){
 
   const code = document.getElementById("code").value;

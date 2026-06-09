@@ -11,6 +11,9 @@ import vipModule from "./vip_module.js";
 import { loadSearch } from "./search_loader.js";
 import { loadFeed } from "./feed_loader.js";
 import { loadNotifications } from "./notification_loader.js";
+import { loadChat } from "./chat_loader.js";
+import { loadRealtime } from "./realtime_loader.js";
+import { loadDashboard } from "./dashboard_loader.js";
 
 dotenv.config();
 
@@ -33,15 +36,16 @@ cloudinary.config({
   api_secret: process.env.CLOUD_API_SECRET
 });
 
-// MULTER
-const upload = multer({ storage: multer.memoryStorage() });
-
 // MODULES
 app.use("/api", adminModule);
 app.use("/api", vipModule);
+
 loadSearch(app);
 loadFeed(app);
 loadNotifications(app);
+loadChat(app);
+loadRealtime(app);
+loadDashboard(app);
 
 // HEALTH
 app.get("/", (req, res) => {
@@ -108,111 +112,9 @@ app.post("/upload", multer({ storage: multer.memoryStorage() }).single("image"),
   }
 });
 
-// ANNONCES
-app.get("/annonces", async (req, res) => {
-  const result = await pool.query(
-    "SELECT * FROM annonces ORDER BY created_at DESC"
-  );
-
-  res.json(result.rows);
-});
-
-app.post("/annonces", async (req, res) => {
-  const {
-    user_id,
-    titre,
-    description,
-    categorie,
-    prix_jour,
-    ville,
-    commune,
-    quartier,
-    conditions_location,
-    contact_phone,
-    contact_name,
-    status,
-    image_url
-  } = req.body;
-
-  const result = await pool.query(
-    `INSERT INTO annonces (
-      user_id, titre, description, categorie,
-      prix_jour, ville, commune, quartier,
-      conditions_location,
-      contact_phone, contact_name,
-      status, image_url
-    )
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-    RETURNING *`,
-    [
-      user_id,
-      titre,
-      description,
-      categorie,
-      prix_jour,
-      ville,
-      commune,
-      quartier,
-      conditions_location,
-      contact_phone,
-      contact_name,
-      status || "disponible",
-      image_url || null
-    ]
-  );
-
-  res.json(result.rows[0]);
-});
-
-// VIEWS
-app.post("/annonces/:id/view", async (req, res) => {
-  await pool.query(
-    "UPDATE annonces SET views = views + 1 WHERE id=$1",
-    [req.params.id]
-  );
-
-  res.json({ ok: true });
-});
-
-// FAVORIS
-app.post("/favoris", async (req, res) => {
-  const { user_id, annonce_id } = req.body;
-
-  const result = await pool.query(
-    "INSERT INTO favoris (user_id, annonce_id) VALUES ($1,$2) RETURNING *",
-    [user_id, annonce_id]
-  );
-
-  res.json(result.rows[0]);
-});
-
-// CONTACT
-app.post("/contact", async (req, res) => {
-  const { user_id, annonce_id, contact_phone } = req.body;
-
-  const result = await pool.query(
-    "INSERT INTO contacts (user_id, annonce_id, contact_phone) VALUES ($1,$2,$3) RETURNING *",
-    [user_id, annonce_id, contact_phone]
-  );
-
-  res.json(result.rows[0]);
-});
-
-// REPORT
-app.post("/report", async (req, res) => {
-  const { user_id, annonce_id, reason } = req.body;
-
-  const result = await pool.query(
-    "INSERT INTO reports (user_id, annonce_id, reason) VALUES ($1,$2,$3) RETURNING *",
-    [user_id, annonce_id, reason]
-  );
-
-  res.json(result.rows[0]);
-});
-
 // START
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log("🚀 NIA RDC RUNNING FULL SYSTEM");
+  console.log("🚀 NIA RDC FULL SYSTEM RUNNING");
 });

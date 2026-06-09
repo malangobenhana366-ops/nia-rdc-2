@@ -1,0 +1,71 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #eef1f6;
+}
+
+/* HEADER */
+header {
+  background: #111;
+  color: white;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav button {
+  margin: 3px;
+}
+
+/* BUTTONS */
+button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+/* CONTAINER */
+.container {
+  width: 92%;
+  max-width: 600px;
+  margin: 20px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+/* INPUTS */
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* HIDE */
+.hidden {
+  display: none;
+}
+
+/* FEED CARDS */
+.card {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 8px;
+}
+
+.card img {
+  width: 100%;
+  border-radius: 8px;
+}

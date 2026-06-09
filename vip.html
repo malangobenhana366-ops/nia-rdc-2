@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>VIP NIA RDC</title>
+
+<style>
+body{font-family:Arial;background:#111;color:white;margin:0}
+.container{padding:10px}
+.card{background:#222;padding:10px;margin:10px 0;border-radius:10px}
+button{width:100%;padding:10px;background:gold;border:none}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>VIP CENTER 🚀</h2>
+
+<input id="uid" placeholder="User ID">
+
+<button onclick="activate()">Activer VIP</button>
+
+<hr>
+
+<h3>Annonces VIP</h3>
+<div id="list"></div>
+
+</div>
+
+<script>
+
+const API="http://localhost:5000/api";
+
+// ACTIVATE VIP
+function activate(){
+fetch(API+"/vip/activate",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({user_id:uid.value})
+});
+}
+
+// LOAD VIP ADS
+function load(){
+fetch(API+"/vip/annonces")
+.then(r=>r.json())
+.then(d=>{
+list.innerHTML="";
+d.forEach(a=>{
+list.innerHTML+=`
+<div class="card">
+<h3>${a.titre}</h3>
+<p>${a.description}</p>
+<p>🔥 BOOST: ${a.boosted ? "OUI" : "NON"}</p>
+</div>`;
+});
+});
+}
+
+load();
+
+</script>
+
+</body>
+</html>

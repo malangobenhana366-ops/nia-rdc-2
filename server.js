@@ -10,6 +10,7 @@ import adminModule from "./admin_module.js";
 import vipModule from "./vip_module.js";
 import { loadSearch } from "./search_loader.js";
 import { loadFeed } from "./feed_loader.js";
+import { loadNotifications } from "./notification_loader.js";
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ app.use("/api", adminModule);
 app.use("/api", vipModule);
 loadSearch(app);
 loadFeed(app);
+loadNotifications(app);
 
 // HEALTH
 app.get("/", (req, res) => {
@@ -85,7 +87,7 @@ app.post("/auth/login", async (req, res) => {
 });
 
 // UPLOAD IMAGE
-app.post("/upload", upload.single("image"), async (req, res) => {
+app.post("/upload", multer({ storage: multer.memoryStorage() }).single("image"), async (req, res) => {
   try {
     const file = req.file;
 

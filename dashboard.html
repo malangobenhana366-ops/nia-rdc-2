@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard - NIA RDC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f4f4f4;
+}
+
+header{
+  background:#111;
+  color:#fff;
+  padding:15px;
+  text-align:center;
+}
+
+.container{
+  padding:10px;
+}
+
+.card{
+  background:#fff;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:8px;
+}
+
+button{
+  padding:8px 10px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.primary{background:#2979ff;color:#fff}
+.danger{background:red;color:#fff}
+.success{background:#00c853;color:#fff}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<header>
+  <h2>Mon Dashboard</h2>
+</header>
+
+<div class="container">
+
+<h3>📊 Mes stats</h3>
+<div class="card" id="stats"></div>
+
+<h3>📢 Mes annonces</h3>
+<div id="annonces"></div>
+
+<h3>❤️ Favoris</h3>
+<div id="favorites"></div>
+
+</div>
+
+<script>
+
+const API = "http://localhost:5000/api";
+const user_id = localStorage.getItem("user_id");
+
+/*
+========================================
+STATS USER
+========================================
+*/
+async function loadStats(){
+
+  const res = await fetch(API + "/admin/stats"); // simplifié version MVP
+  const data = await res.json();
+
+  document.getElementById("stats").innerHTML = `
+    Total utilisateurs: ${data.users}<br>
+    Total annonces: ${data.annonces}<br>
+    VIP actifs: ${data.vip}
+  `;
+}
+
+/*
+========================================
+MES ANNONCES
+========================================
+*/
+async function loadAnnonces(){
+
+  const res = await fetch(API + "/search?"); // fallback feed global
+  const data = await res.json();
+
+  const mine = data.filter(a => a.user_id == user_id);
+
+  document.getElementById("annonces").innerHTML = mine.map(a => `
+    <div class="card">
+      <b>${a.titre}</b><br>
+      ${a.ville}<br><br>
+
+      <button class="danger" onclick="deleteAnnonce(${a.id})">Supprimer</button>
+    </div>
+  `).join("");
+}
+
+/*
+========================================
+FAVORIS
+========================================
+*/
+async function loadFavorites(){
+
+  const res = await fetch(API + "/favorites/" + user_id);
+  const data = await res.json();
+
+  document.getElementById("favorites").innerHTML = data.map(f => `
+    <div class="card">
+      <b>${f.titre}</b><br>
+      ${f.ville}
+    </div>
+  `).join("");
+}
+
+/*
+========================================
+SUPPRESSION ANNONCE
+========================================
+*/
+async function deleteAnnonce(id){
+
+  await fetch("http://localhost:5000/api/admin/annonce/" + id, {
+    method:"DELETE"
+  });
+
+  loadAnnonces();
+}
+
+loadStats();
+loadAnnonces();
+loadFavorites();
+
+</script>
+
+</body>
+</html>

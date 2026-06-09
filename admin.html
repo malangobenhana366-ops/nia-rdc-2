@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+
+<style>
+body{font-family:Arial;background:#111;color:white;margin:0}
+.container{padding:10px}
+.card{background:#222;padding:10px;margin:10px 0;border-radius:10px}
+input,button{width:100%;padding:10px;margin:5px 0}
+button{background:red;color:white;border:none}
+.stats{background:#333;padding:10px}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>ADMIN LOGIN</h2>
+
+<input id="tel" placeholder="Téléphone">
+<input id="pass" type="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<hr>
+
+<div id="panel" style="display:none">
+
+<h2>STATS</h2>
+<div class="stats" id="stats"></div>
+
+<h3>USERS</h3>
+<div id="users"></div>
+
+<h3>ANNONCES</h3>
+<div id="annonces"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const API="http://localhost:5000/api";
+let admin=null;
+
+// LOGIN
+function login(){
+fetch(API+"/admin/login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+telephone:tel.value,
+password:pass.value
+})
+})
+.then(r=>r.json())
+.then(u=>{
+admin=u;
+panel.style.display="block";
+loadStats();
+loadUsers();
+loadAnnonces();
+});
+}
+
+// STATS
+function loadStats(){
+fetch(API+"/admin/stats")
+.then(r=>r.json())
+.then(d=>{
+stats.innerHTML=`
+Users: ${d.users}<br>
+Annonces: ${d.annonces}<br>
+VIP: ${d.vip}
+`;
+});
+}
+
+// USERS
+function loadUsers(){
+fetch(API+"/admin/users")
+.then(r=>r.json())
+.then(d=>{
+users.innerHTML="";
+d.forEach(u=>{
+users.innerHTML+=`
+<div class="card">
+${u.telephone}
+VIP: ${u.is_vip}
+</div>`;
+});
+});
+}
+
+// ANNONCES
+function loadAnnonces(){
+fetch(API+"/annonces")
+.then(r=>r.json())
+.then(d=>{
+annonces.innerHTML="";
+d.forEach(a=>{
+annonces.innerHTML+=`
+<div class="card">
+<h3>${a.titre}</h3>
+<button onclick="del(${a.id})">DELETE</button>
+</div>`;
+});
+});
+}
+
+// DELETE
+function del(id){
+fetch(API+"/admin/annonce/"+id,{
+method:"DELETE"
+}).then(()=>loadAnnonces());
+}
+
+</script>
+
+</body>
+</html>

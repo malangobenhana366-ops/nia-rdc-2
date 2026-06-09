@@ -1,10 +1,10 @@
 body {
   margin: 0;
   font-family: Arial;
-  background: #f4f6f9;
+  background: #f2f4f8;
 }
 
-/* HEADER CLEAN */
+/* HEADER */
 header {
   background: #111;
   color: white;
@@ -14,15 +14,18 @@ header {
   align-items: center;
 }
 
-#logo {
-  font-weight: bold;
-  font-size: 18px;
+#gear {
+  font-size: 22px;
   cursor: pointer;
 }
 
-/* PAGES */
-.page {
-  padding: 20px;
+/* NAV */
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+  background: #fff;
 }
 
 /* BUTTONS */
@@ -30,10 +33,13 @@ button {
   background: #007bff;
   color: white;
   border: none;
-  padding: 12px 16px;
-  margin: 5px;
+  padding: 12px 15px;
   border-radius: 8px;
-  cursor: pointer;
+}
+
+/* PAGES */
+.page {
+  padding: 20px;
 }
 
 /* INPUT */
@@ -43,15 +49,7 @@ input, textarea {
   margin: 8px 0;
 }
 
-/* HIDE SYSTEM */
+/* HIDE */
 .hidden {
   display: none;
-}
-
-/* FEED CARDS */
-.card {
-  background: white;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 10px;
 }

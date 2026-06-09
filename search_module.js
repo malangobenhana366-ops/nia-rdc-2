@@ -2,35 +2,94 @@ import express from "express";
 
 const router = express.Router();
 
-/**
- * SEARCH ANNONCES (ENGINE PRINCIPAL)
- * - recherche texte
- * - filtre ville
- * - filtre catégorie
- * - boost VIP prioritaire
- */
+/*
+========================================
+RECHERCHE ANNONCES
+========================================
+*/
+
 router.get("/search", async (req, res) => {
   const db = req.app.locals.db;
 
-  const q = req.query.q || "";
-  const ville = req.query.ville || "";
-  const categorie = req.query.categorie || "";
+  try {
+    const {
+      q,
+      ville,
+      categorie
+    } = req.query;
 
-  const result = await db.query(
-    `
-    SELECT * FROM annonces
-    WHERE
-      titre ILIKE $1
-      AND ($2 = '' OR ville ILIKE $2)
-      AND ($3 = '' OR categorie ILIKE $3)
-    ORDER BY
-      boosted DESC,
-      created_at DESC
-    `,
-    [`%${q}%`, `%${ville}%`, `%${categorie}%`]
-  );
+    let query = `
+      SELECT *
+      FROM annonces
+      WHERE 1=1
+    `;
 
-  res.json(result.rows);
+    const params = [];
+    let index = 1;
+
+    // recherche texte
+    if (q) {
+      query += ` AND (titre ILIKE $${index} OR description ILIKE $${index})`;
+      params.push(`%${q}%`);
+      index++;
+    }
+
+    // filtre ville
+    if (ville) {
+      query += ` AND ville ILIKE $${index}`;
+      params.push(`%${ville}%`);
+      index++;
+    }
+
+    // filtre catégorie
+    if (categorie) {
+      query += ` AND categorie ILIKE $${index}`;
+      params.push(`%${categorie}%`);
+      index++;
+    }
+
+    query += ` ORDER BY created_at DESC LIMIT 50`;
+
+    const result = await db.query(query, params);
+
+    res.json(result.rows);
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur recherche"
+    });
+  }
+});
+
+/*
+========================================
+HISTORIQUE RECHERCHE (OPTIONNEL FUTUR)
+========================================
+*/
+
+router.post("/search/log", async (req, res) => {
+  const db = req.app.locals.db;
+
+  try {
+    const {
+      user_id,
+      query,
+      ville
+    } = req.body;
+
+    await db.query(
+      `INSERT INTO search_history (user_id, query, ville, created_at)
+       VALUES ($1,$2,$3,NOW())`,
+      [user_id, query, ville]
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    res.status(500).json({
+      error: "Erreur log recherche"
+    });
+  }
 });
 
 export default router;

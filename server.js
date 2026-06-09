@@ -25,9 +25,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// =========================
-// DATABASE
-// =========================
+// DB
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
@@ -35,18 +33,14 @@ const pool = new pg.Pool({
 
 app.locals.db = pool;
 
-// =========================
 // CLOUDINARY
-// =========================
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_API_SECRET
 });
 
-// =========================
 // ROUTES
-// =========================
 app.use("/api", adminModule);
 app.use("/api", vipModule);
 app.use("/api", annonceModule);
@@ -60,9 +54,7 @@ loadChat(app);
 loadRealtime(app);
 loadDashboard(app);
 
-// =========================
 // UPLOAD IMAGE
-// =========================
 app.post(
   "/upload",
   multer({ storage: multer.memoryStorage() }).single("image"),
@@ -88,9 +80,7 @@ app.post(
   }
 );
 
-// =========================
 // AUTH
-// =========================
 app.post("/auth/register", async (req, res) => {
   const { telephone, password } = req.body;
 
@@ -130,18 +120,14 @@ app.post("/auth/login", async (req, res) => {
   });
 });
 
-// =========================
 // HEALTH
-// =========================
 app.get("/", (req, res) => {
-  res.json({ status: "NIA RDC RUNNING 🚀" });
+  res.json({ status: "NIA RDC LIVE 🚀" });
 });
 
-// =========================
 // START
-// =========================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log("🚀 NIA RDC READY");
+  console.log("🚀 SERVER READY ON", PORT);
 });

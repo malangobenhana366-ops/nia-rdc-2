@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Annonce - NIA RDC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f4f4f4;
+}
+
+/* IMAGE */
+img{
+  width:100%;
+  height:250px;
+  object-fit:cover;
+}
+
+/* CONTAINER */
+.container{
+  padding:10px;
+}
+
+/* CARD */
+.box{
+  background:#fff;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:10px;
+}
+
+/* PRICE */
+.price{
+  color:green;
+  font-weight:bold;
+  font-size:18px;
+}
+
+/* BUTTONS */
+button{
+  width:100%;
+  padding:12px;
+  margin-top:5px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+}
+
+.contact{background:#2979ff;color:#fff}
+.fav{background:#ff9800;color:#fff}
+.report{background:#e53935;color:#fff}
+
+/* VIP */
+.vip{
+  background:gold;
+  padding:5px;
+  display:inline-block;
+  border-radius:5px;
+}
+</style>
+
+</head>
+
+<body>
+
+<img id="img" src="https://via.placeholder.com/400">
+
+<div class="container">
+
+  <div class="box">
+    <h2 id="title">Chargement...</h2>
+    <p id="desc"></p>
+    <p class="price" id="price"></p>
+    <p id="location"></p>
+    <span id="vip"></span>
+  </div>
+
+  <div class="box">
+    <h3>Conditions</h3>
+    <p id="conditions"></p>
+  </div>
+
+  <div class="box">
+    <button class="contact" onclick="contact()">Contacter</button>
+    <button class="fav" onclick="fav()">Ajouter aux favoris</button>
+    <button class="report" onclick="report()">Signaler</button>
+  </div>
+
+</div>
+
+<script>
+
+const API = "http://localhost:5000/api";
+
+// 🔥 ID simulé (plus tard viendra du click home)
+const annonceId = new URLSearchParams(window.location.search).get("id");
+
+async function loadAnnonce(){
+
+  const res = await fetch(API + "/annonces");
+  const data = await res.json();
+
+  const annonce = data.find(a => a.id == annonceId);
+
+  if(!annonce) return;
+
+  document.getElementById("img").src = annonce.image_url || "https://via.placeholder.com/400";
+  document.getElementById("title").innerText = annonce.titre;
+  document.getElementById("desc").innerText = annonce.description;
+  document.getElementById("price").innerText = annonce.prix_jour + " $ / jour";
+  document.getElementById("location").innerText = annonce.ville + " - " + annonce.quartier;
+  document.getElementById("conditions").innerText = annonce.conditions_location;
+
+  if(annonce.boosted){
+    document.getElementById("vip").innerHTML = "<span class='vip'>VIP</span>";
+  }
+}
+
+function contact(){
+  alert("Ouverture contact (prochaine étape backend)");
+}
+
+function fav(){
+  alert("Ajout favoris (déjà backend prêt)");
+}
+
+function report(){
+  alert("Signalement envoyé");
+}
+
+loadAnnonce();
+
+</script>
+
+</body>
+</html>

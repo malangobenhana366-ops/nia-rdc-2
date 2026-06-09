@@ -9,6 +9,7 @@ import { v2 as cloudinary } from "cloudinary";
 import adminModule from "./admin_module.js";
 import vipModule from "./vip_module.js";
 import { loadSearch } from "./search_loader.js";
+import { loadFeed } from "./feed_loader.js";
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use("/api", adminModule);
 app.use("/api", vipModule);
 loadSearch(app);
+loadFeed(app);
 
 // HEALTH
 app.get("/", (req, res) => {

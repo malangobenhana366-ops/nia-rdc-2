@@ -15,9 +15,9 @@
 
 <main>
 
+<!-- HOME -->
 <section id="home" class="page active">
 
-  <!-- AVANT CONNEXION -->
   <div id="authBox">
     <h2>Bienvenue 👋</h2>
 
@@ -30,7 +30,6 @@
     </button>
   </div>
 
-  <!-- APRÈS CONNEXION -->
   <div id="appBox" style="display:none;">
 
     <h2>🏠 Accueil NIA RDC</h2>
@@ -65,6 +64,7 @@
 
 </section>
 
+<!-- LOGIN -->
 <section id="login" class="page">
   <h2>Connexion</h2>
 
@@ -76,6 +76,7 @@
   </button>
 </section>
 
+<!-- REGISTER -->
 <section id="register" class="page">
   <h2>Créer compte</h2>
 
@@ -87,19 +88,81 @@
   </button>
 </section>
 
+<!-- PUBLISH -->
 <section id="publish" class="page">
-  <h2>Publier annonce</h2>
 
-  <input id="titre" placeholder="Titre"/>
-  <textarea id="desc" placeholder="Description"></textarea>
+  <h2>➕ Publier une annonce</h2>
 
-  <input id="ville" placeholder="Ville"/>
-  <input id="categorie" placeholder="Catégorie"/>
-  <input id="image" placeholder="Image URL"/>
+  <input
+    id="titre"
+    placeholder="Nom de l'objet"
+  >
 
-  <button onclick="publier()">
+  <textarea
+    id="desc"
+    placeholder="Description"
+  ></textarea>
+
+  <input
+    id="prix"
+    type="number"
+    placeholder="Prix"
+  >
+
+  <select id="prix_type">
+    <option value="heure">Par heure</option>
+    <option value="jour">Par jour</option>
+    <option value="semaine">Par semaine</option>
+    <option value="mois">Par mois</option>
+    <option value="vente">Vente</option>
+  </select>
+
+  <input
+    id="ville"
+    placeholder="Ville"
+  >
+
+  <input
+    id="quartier"
+    placeholder="Commune ou quartier"
+  >
+
+  <h3>📷 Photos</h3>
+
+  <input
+    id="photos"
+    type="file"
+    multiple
+    accept="image/*"
+  >
+
+  <input
+    id="telephone"
+    placeholder="Téléphone de contact"
+  >
+
+  <h3>Disponibilité</h3>
+
+  <select id="disponibilite">
+    <option value="disponible">
+      Disponible
+    </option>
+
+    <option value="occupe">
+      Occupé
+    </option>
+  </select>
+
+  <br><br>
+
+  <button class="big-btn" onclick="publier()">
     Publier
   </button>
+
+  <button class="big-btn secondary" onclick="go('home')">
+    Retour
+  </button>
+
 </section>
 
 </main>

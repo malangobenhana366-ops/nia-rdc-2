@@ -1,7 +1,6 @@
 {
   "name": "nia-rdc-backend",
   "version": "1.0.0",
-  "description": "Backend NIA RDC Marketplace",
   "type": "module",
   "main": "server.js",
   "scripts": {

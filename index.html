@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NIA RDC</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="logo">NIA RDC 🚀</div>
+  <div class="admin-icon" id="adminGear">⚙️</div>
+</header>
+
+<nav class="navbar">
+  <button onclick="go('home')">Accueil</button>
+  <button onclick="go('login')">Connexion</button>
+  <button onclick="go('register')">Inscription</button>
+  <button onclick="go('publish')">Publier</button>
+</nav>
+
+<main>
+
+<!-- HOME -->
+<section id="home" class="page active">
+  <h2>📦 Annonces</h2>
+  <div id="feed"></div>
+</section>
+
+<!-- LOGIN -->
+<section id="login" class="page hidden">
+  <h2>Connexion</h2>
+  <input id="login_tel" placeholder="Téléphone"/>
+  <input id="login_pass" type="password" placeholder="Mot de passe"/>
+  <button onclick="login()">Se connecter</button>
+</section>
+
+<!-- REGISTER -->
+<section id="register" class="page hidden">
+  <h2>Créer compte</h2>
+  <input id="reg_tel" placeholder="Téléphone"/>
+  <input id="reg_pass" type="password" placeholder="Mot de passe"/>
+  <button onclick="register()">Créer</button>
+</section>
+
+<!-- PUBLISH -->
+<section id="publish" class="page hidden">
+  <h2>Publier annonce</h2>
+
+  <input id="titre" placeholder="Titre"/>
+  <textarea id="desc" placeholder="Description"></textarea>
+  <input id="ville" placeholder="Ville"/>
+  <input id="categorie" placeholder="Catégorie"/>
+  <input id="image" placeholder="Image URL"/>
+
+  <button onclick="publier()">Publier</button>
+</section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

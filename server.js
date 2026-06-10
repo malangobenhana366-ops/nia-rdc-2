@@ -10,11 +10,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" })); // important pour images futures
 app.use(express.static(__dirname));
 
 /* ======================
-HOME CHECK
+HEALTH
 ====================== */
 app.get("/", (req, res) => {
   res.json({ status: "NIA BACKEND OK 🚀" });
@@ -71,7 +71,7 @@ app.post("/auth/login", async (req, res) => {
 });
 
 /* ======================
-CREATE ANNONCE (FULL FINAL)
+CREATE ANNONCE (FULL SYNC FINAL)
 ====================== */
 app.post("/annonces", async (req, res) => {
   try {
@@ -80,18 +80,31 @@ app.post("/annonces", async (req, res) => {
       titre,
       description,
       ville,
+      quartier,
       categorie,
       image_url,
-      price
+      price,
+      price_type,
+      telephone,
+      disponibilite
     } = req.body;
+
+    console.log("ANNONCE RECEIVED:", req.body);
 
     if (!user_id || !titre) {
       return res.status(400).json({ error: "missing fields" });
     }
 
     const result = await pool.query(
-      `INSERT INTO annonces
-      (user_id, titre, description, ville, categorie, image_url, price)
+      `INSERT INTO annonces (
+        user_id,
+        titre,
+        description,
+        ville,
+        categorie,
+        image_url,
+        price
+      )
       VALUES ($1,$2,$3,$4,$5,$6,$7)
       RETURNING *`,
       [
@@ -106,6 +119,7 @@ app.post("/annonces", async (req, res) => {
     );
 
     res.json(result.rows[0]);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "create error" });
@@ -122,6 +136,7 @@ app.get("/feed", async (req, res) => {
     );
 
     res.json(result.rows);
+
   } catch (err) {
     console.error(err);
     res.json([]);

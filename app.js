@@ -18,13 +18,39 @@ function go(page) {
 document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
 document.getElementById(page).classList.add("active");
 
-if (page === "home") loadFeed();
+if (page === "home") {
+loadFeed();
+updateUI();
+}
+}
+
+/* ======================
+UI STATE
+====================== */
+function isLogged(){
+return localStorage.getItem("user") !== null;
+}
+
+function updateUI(){
+const authBox = document.getElementById("authBox");
+const appBox = document.getElementById("appBox");
+
+if (!authBox || !appBox) return;
+
+if (isLogged()) {
+authBox.classList.add("hidden");
+appBox.classList.remove("hidden");
+} else {
+authBox.classList.remove("hidden");
+appBox.classList.add("hidden");
+}
 }
 
 /* ======================
 FEED
 ====================== */
 async function loadFeed() {
+try {
 const res = await fetch("${API}/feed");
 const data = await res.json();
 
@@ -32,8 +58,18 @@ const feed = document.getElementById("feed");
 feed.innerHTML = "";
 
 data.forEach(a => {
-feed.innerHTML += "<div style="background:#fff;padding:10px;margin:10px;border-radius:10px"> <h3>${a.titre || ""}</h3> <p>${a.ville || ""}</p> <img src="${a.image_url || ''}" style="width:100%"> </div>";
+  feed.innerHTML += `
+    <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
+      <h3>${a.titre || ""}</h3>
+      <p>${a.ville || ""}</p>
+      <img src="${a.image_url || ''}" style="width:100%">
+    </div>
+  `;
 });
+
+} catch (e) {
+console.log("Feed error", e);
+}
 }
 
 /* ======================
@@ -55,9 +91,7 @@ if (data.error) return alert("Erreur connexion");
 
 localStorage.setItem("user", JSON.stringify(data));
 
-document.getElementById("authBox").classList.add("hidden");
-document.getElementById("appBox").classList.remove("hidden");
-
+updateUI();
 go("home");
 }
 

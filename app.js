@@ -1,8 +1,23 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* INPUT */
 function val(id){
   return document.getElementById(id)?.value || "";
+}
+
+/* UI SWITCH SIMPLE */
+function showLogin(){
+  document.getElementById("authBox").style.display = "none";
+  go("login");
+}
+
+function showRegister(){
+  document.getElementById("authBox").style.display = "none";
+  go("register");
+}
+
+function showApp(){
+  document.getElementById("authBox").style.display = "none";
+  document.getElementById("appBox").style.display = "block";
 }
 
 /* NAV */
@@ -12,10 +27,6 @@ function go(page){
 
   if(page === "home") loadFeed();
 }
-
-/* SHOW FORMS */
-function showLogin(){ go("login"); }
-function showRegister(){ go("register"); }
 
 /* FEED */
 async function loadFeed(){
@@ -28,9 +39,10 @@ async function loadFeed(){
   data.forEach(a => {
     feed.innerHTML += `
       <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
-        <h3>${a.titre || ""}</h3>
+        <h3>${a.titre}</h3>
         <p>${a.ville || ""}</p>
-        <img src="${a.image_url || ""}" style="width:100%">
+        <p>${a.categorie || ""}</p>
+        <img src="${a.image_url || ''}" style="width:100%">
       </div>
     `;
   });
@@ -49,11 +61,7 @@ async function register(){
 
   const data = await res.json();
 
-  if(data.error){
-    alert("Erreur inscription");
-    return;
-  }
-
+  if(data.error) return alert("Erreur inscription !");
   alert("Compte créé !");
   go("login");
 }
@@ -71,17 +79,12 @@ async function login(){
 
   const data = await res.json();
 
-  if(data.error){
-    alert("Erreur connexion");
-    return;
-  }
+  if(data.error) return alert("Erreur connexion !");
 
   localStorage.setItem("user", JSON.stringify(data));
 
   alert("Connecté !");
-  document.getElementById("authBox").style.display = "none";
-  document.getElementById("appBox").style.display = "block";
-
+  showApp();
   go("home");
 }
 
@@ -89,10 +92,7 @@ async function login(){
 async function publier(){
   const user = JSON.parse(localStorage.getItem("user"));
 
-  if(!user){
-    alert("Connecte-toi");
-    return;
-  }
+  if(!user) return alert("Connecte-toi !");
 
   const res = await fetch(`${API}/annonces`, {
     method:"POST",
@@ -109,16 +109,12 @@ async function publier(){
 
   const data = await res.json();
 
-  if(data.error){
-    alert("Erreur publication");
-    return;
-  }
+  if(data.error) return alert("Erreur publication !");
 
   alert("Annonce publiée !");
   go("home");
   loadFeed();
 }
 
-/* INIT */
 go("home");
 loadFeed();

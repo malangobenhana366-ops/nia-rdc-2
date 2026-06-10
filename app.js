@@ -1,7 +1,7 @@
 const API = "https://nia-rdc-2.onrender.com/api";
 
 /* ======================
-   STATE GLOBAL
+   STATE
 ====================== */
 let currentUser = JSON.parse(localStorage.getItem("user"));
 
@@ -32,7 +32,7 @@ async function loadFeed(){
     const data = await res.json();
 
     if(!Array.isArray(data) || data.length === 0){
-      feed.innerHTML = "<p>Aucune annonce pour le moment</p>";
+      feed.innerHTML = "<p>Aucune annonce</p>";
       return;
     }
 
@@ -45,7 +45,7 @@ async function loadFeed(){
     `).join("");
 
   } catch(e){
-    feed.innerHTML = "<p>Erreur réseau</p>";
+    feed.innerHTML = "<p>Erreur chargement</p>";
   }
 }
 
@@ -53,92 +53,93 @@ async function loadFeed(){
    LOGIN
 ====================== */
 async function login(){
-  const btn = document.querySelector("#login button");
-  btn.disabled = true;
-  btn.innerText = "Connexion...";
+  const res = await fetch(`${API}/auth/login`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      telephone: login_tel.value,
+      password: login_pass.value
+    })
+  });
 
-  try{
-    const res = await fetch(`${API}/auth/login`, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        telephone: login_tel.value,
-        password: login_pass.value
-      })
-    });
+  const data = await res.json();
 
-    const data = await res.json();
-
-    if(data.error){
-      alert(data.error);
-      return;
-    }
-
-    currentUser = data;
-    localStorage.setItem("user", JSON.stringify(data));
-
-    alert("Connecté 🚀");
-    go("home");
-
-  } catch(e){
-    alert("Erreur serveur");
-  } finally {
-    btn.disabled = false;
-    btn.innerText = "Connexion";
+  if(data.error){
+    alert(data.error);
+    return;
   }
+
+  currentUser = data;
+  localStorage.setItem("user", JSON.stringify(data));
+
+  alert("Connecté 🚀");
+  go("home");
 }
 
 /* ======================
    REGISTER
 ====================== */
 async function register(){
-  const btn = document.querySelector("#register button");
-  btn.disabled = true;
-  btn.innerText = "Création...";
+  const res = await fetch(`${API}/auth/register`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      telephone: reg_tel.value,
+      password: reg_pass.value
+    })
+  });
 
-  try{
-    const res = await fetch(`${API}/auth/register`, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        telephone: reg_tel.value,
-        password: reg_pass.value
-      })
-    });
+  const data = await res.json();
 
-    const data = await res.json();
-
-    if(data.error){
-      alert(data.error);
-      return;
-    }
-
-    alert("Compte créé ✨");
-    go("login");
-
-  } catch(e){
-    alert("Erreur serveur");
-  } finally {
-    btn.disabled = false;
-    btn.innerText = "S'inscrire";
+  if(data.error){
+    alert(data.error);
+    return;
   }
+
+  alert("Compte créé");
+  go("login");
 }
 
 /* ======================
-   PUBLISH (VERSION PRO)
+   UPLOAD IMAGE CLOUDINARY
+====================== */
+async function uploadImage(file){
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await fetch(`${API}/upload`, {
+    method:"POST",
+    body: formData
+  });
+
+  const data = await res.json();
+
+  if(data.error){
+    throw new Error(data.error);
+  }
+
+  return data.url;
+}
+
+/* ======================
+   PUBLISH (FINAL PRO)
 ====================== */
 async function publier(){
   if(!currentUser){
-    alert("Connecte-toi d'abord");
+    alert("Connecte-toi");
     go("login");
     return;
   }
 
-  const btn = document.querySelector("#publish button");
-  btn.disabled = true;
-  btn.innerText = "Publication...";
+  const file = imageFile.files[0];
+
+  let imageUrl = "";
 
   try{
+    if(file){
+      imageUrl = await uploadImage(file);
+    }
+
     await fetch(`${API}/annonces`, {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
@@ -148,7 +149,7 @@ async function publier(){
         description: desc.value,
         ville: ville.value,
         categorie: categorie.value,
-        image_url: image.value
+        image_url: imageUrl
       })
     });
 
@@ -158,20 +159,18 @@ async function publier(){
     desc.value = "";
     ville.value = "";
     categorie.value = "";
-    image.value = "";
+    imageFile.value = "";
 
     go("home");
 
   } catch(e){
+    console.error(e);
     alert("Erreur publication");
-  } finally {
-    btn.disabled = false;
-    btn.innerText = "Publier";
   }
 }
 
 /* ======================
-   ADMIN (HOLD 10s)
+   ADMIN HOLD 10s
 ====================== */
 let timer;
 
@@ -187,28 +186,23 @@ function adminHoldStop(){
 }
 
 /* ======================
-   ADMIN CHECK
+   ADMIN LOGIN
 ====================== */
 async function checkAdmin(){
-  try{
-    const res = await fetch(`${API}/admin/login`, {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        code: admin_code.value
-      })
-    });
+  const res = await fetch(`${API}/admin/login`, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      code: admin_code.value
+    })
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    if(data.success){
-      alert("Mode admin activé ⚡");
-    } else {
-      alert("Code incorrect");
-    }
-
-  } catch(e){
-    alert("Erreur admin");
+  if(data.success){
+    alert("Admin OK ⚡");
+  } else {
+    alert("Code invalide");
   }
 }
 

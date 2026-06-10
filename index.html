@@ -1,40 +1,84 @@
-<!DOCTYPE html><html lang="fr">
+<!DOCTYPE html>
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NIA RDC</title>
   <link rel="stylesheet" href="style.css"/>
-</head><body><header class="topbar">
+</head>
+
+<body>
+
+<header class="topbar">
   <div class="logo">NIA RDC 🚀</div>
   <div class="admin-icon" id="adminGear">⚙️</div>
-</header><main><!-- HOME --><section id="home" class="page active">  <div class="auth-box" id="authBox">
-    <h2>Bienvenue 👋</h2><button class="big-btn" onclick="showLogin()">Connexion</button>
-<button class="big-btn secondary" onclick="showRegister()">Inscription</button>
+</header>
 
-  </div>  <div id="appBox" class="hidden"><h2>📦 Annonces</h2>
+<main>
 
-<button class="big-btn" onclick="go('publish')">➕ Publier</button>
+<!-- ================= HOME ================= -->
+<section id="home" class="page active">
 
-<div id="feed"></div>
+  <!-- AUTH -->
+  <div class="auth-box" id="authBox">
+    <h2>Bienvenue 👋</h2>
 
-  </div>  <div class="ads">
+    <button class="big-btn" onclick="showLogin()">Connexion</button>
+    <button class="big-btn secondary" onclick="showRegister()">Inscription</button>
+  </div>
+
+  <!-- APP -->
+  <div id="appBox" class="hidden">
+    <h2>📦 Annonces</h2>
+
+    <button class="big-btn" onclick="go('publish')">➕ Publier</button>
+
+    <div id="feed"></div>
+  </div>
+
+  <!-- ADS SPACE -->
+  <div class="ads">
     📢 Publicité (espace réservé)
-  </div></section><!-- LOGIN --><section id="login" class="page hidden">
+  </div>
+
+</section>
+
+<!-- ================= LOGIN ================= -->
+<section id="login" class="page hidden">
   <h2>Connexion</h2>
+
   <input id="login_tel" placeholder="Téléphone"/>
   <input id="login_pass" type="password" placeholder="Mot de passe"/>
+
   <button onclick="login()">Se connecter</button>
-</section><!-- REGISTER --><section id="register" class="page hidden">
+</section>
+
+<!-- ================= REGISTER ================= -->
+<section id="register" class="page hidden">
   <h2>Créer compte</h2>
+
   <input id="reg_tel" placeholder="Téléphone"/>
   <input id="reg_pass" type="password" placeholder="Mot de passe"/>
+
   <button onclick="register()">Créer</button>
-</section><!-- PUBLISH --><section id="publish" class="page hidden">
-  <h2>Publier annonce</h2>  <input id="titre" placeholder="Titre"/>
+</section>
+
+<!-- ================= PUBLISH ================= -->
+<section id="publish" class="page hidden">
+  <h2>Publier annonce</h2>
+
+  <input id="titre" placeholder="Titre"/>
   <textarea id="desc" placeholder="Description"></textarea>
   <input id="ville" placeholder="Ville"/>
   <input id="categorie" placeholder="Catégorie"/>
-  <input id="image" placeholder="Image URL"/><button onclick="publier()">Publier</button>
+  <input id="image" placeholder="Image URL"/>
 
-</section></main><script src="app.js"></script></body>
+  <button onclick="publier()">Publier</button>
+</section>
+
+</main>
+
+<script src="app.js"></script>
+
+</body>
 </html>

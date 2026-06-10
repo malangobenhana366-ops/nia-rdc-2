@@ -1,55 +1,85 @@
-body {
-  margin: 0;
-  font-family: Arial;
-  background: #f2f4f8;
+body{
+  margin:0;
+  font-family: system-ui;
+  background:#0f172a;
+  color:white;
 }
 
 /* HEADER */
-header {
-  background: #111;
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  padding: 15px;
-  align-items: center;
+header{
+  display:flex;
+  justify-content:space-between;
+  padding:15px;
+  background:#111827;
+  align-items:center;
 }
 
-#gear {
-  font-size: 22px;
-  cursor: pointer;
+.logo{
+  font-weight:bold;
+  letter-spacing:1px;
+}
+
+.admin-gear{
+  font-size:22px;
+  cursor:pointer;
 }
 
 /* NAV */
-nav {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  padding: 10px;
-  background: #fff;
+.nav{
+  display:flex;
+  gap:10px;
+  padding:10px;
+  background:#1f2937;
+  overflow:auto;
 }
 
-/* BUTTONS */
-button {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 12px 15px;
-  border-radius: 8px;
+button{
+  border:none;
+  padding:10px 14px;
+  border-radius:10px;
+  background:#374151;
+  color:white;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#4b5563;
+}
+
+.primary{
+  background:#2563eb;
+  width:100%;
+  margin-top:10px;
 }
 
 /* PAGES */
-.page {
-  padding: 20px;
+.page{
+  padding:15px;
 }
 
-/* INPUT */
-input, textarea {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
+/* INPUTS */
+input, textarea{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:10px;
+  border:none;
+  outline:none;
+}
+
+/* FEED */
+#feed div{
+  background:#1f2937;
+  padding:10px;
+  margin-top:10px;
+  border-radius:12px;
+}
+
+img{
+  border-radius:10px;
 }
 
 /* HIDE */
-.hidden {
-  display: none;
+.hidden{
+  display:none;
 }

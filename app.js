@@ -8,11 +8,32 @@ function val(id){
 }
 
 /* ======================
+UI STATE CONTROL
+====================== */
+function showApp(){
+  const authBox = document.getElementById("authBox");
+  const appBox = document.getElementById("appBox");
+
+  if(authBox) authBox.style.display = "none";
+  if(appBox) appBox.style.display = "block";
+}
+
+function showAuth(){
+  const authBox = document.getElementById("authBox");
+  const appBox = document.getElementById("appBox");
+
+  if(authBox) authBox.style.display = "block";
+  if(appBox) appBox.style.display = "none";
+}
+
+/* ======================
 NAVIGATION
 ====================== */
 function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  document.getElementById(page).classList.add("active");
+  const target = document.getElementById(page);
+
+  if(target) target.classList.add("active");
 
   if(page === "home") loadFeed();
 }
@@ -32,6 +53,8 @@ async function loadFeed(){
     const data = await res.json();
 
     const feed = document.getElementById("feed");
+    if(!feed) return;
+
     feed.innerHTML = "";
 
     data.forEach(a => {
@@ -66,7 +89,7 @@ async function register(){
     const data = await res.json();
 
     if(data.error){
-      alert("Erreur inscription");
+      alert("Erreur inscription !");
       return;
     }
 
@@ -74,7 +97,7 @@ async function register(){
     go("login");
 
   } catch(e){
-    alert("Erreur serveur inscription");
+    alert("Erreur serveur inscription !");
   }
 }
 
@@ -95,17 +118,20 @@ async function login(){
     const data = await res.json();
 
     if(data.error){
-      alert("Erreur connexion");
+      alert("Erreur connexion !");
       return;
     }
 
     localStorage.setItem("user", JSON.stringify(data));
 
     alert("Connecté !");
+
+    // 🔥 SWITCH UI PRO
+    showApp();
     go("home");
 
   } catch(e){
-    alert("Erreur serveur login");
+    alert("Erreur serveur login !");
   }
 }
 
@@ -116,7 +142,7 @@ async function publier(){
   const user = JSON.parse(localStorage.getItem("user"));
 
   if(!user){
-    alert("Connecte-toi");
+    alert("Connecte-toi !");
     return;
   }
 
@@ -137,7 +163,7 @@ async function publier(){
     const data = await res.json();
 
     if(data.error){
-      alert("Erreur publication");
+      alert("Erreur publication !");
       return;
     }
 
@@ -146,10 +172,12 @@ async function publier(){
     loadFeed();
 
   } catch(e){
-    alert("Erreur serveur publish");
+    alert("Erreur serveur publish !");
   }
 }
 
-/* INIT */
+/* ======================
+INIT
+====================== */
 go("home");
 loadFeed();

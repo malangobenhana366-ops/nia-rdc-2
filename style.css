@@ -1,0 +1,57 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #f4f6fb;
+}
+
+/* TOP */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  background: #111;
+  color: white;
+}
+
+.logo {
+  font-weight: bold;
+}
+
+.admin-icon {
+  cursor: pointer;
+}
+
+/* NAV */
+.navbar {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  justify-content: center;
+  background: white;
+}
+
+button {
+  padding: 12px 16px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* PAGES */
+.page {
+  display: none;
+  padding: 20px;
+}
+
+.page.active {
+  display: block;
+}
+
+/* INPUT */
+input, textarea {
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+}

@@ -1,18 +1,19 @@
 const API = "https://nia-rdc-2.onrender.com/api";
 
 /* =========================
-   NAVIGATION STABLE
+   NAVIGATION
 ========================= */
 function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
-  const target = document.getElementById(page);
 
-  if(!target){
-    console.error("Page introuvable :", page);
+  const el = document.getElementById(page);
+
+  if(!el){
+    console.error("Page inconnue:", page);
     return;
   }
 
-  target.classList.remove("hidden");
+  el.classList.remove("hidden");
 
   if(page === "home") loadFeed();
 }
@@ -27,26 +28,27 @@ async function loadFeed(){
     const res = await fetch(`${API}/feed`);
     const data = await res.json();
 
-    feed.innerHTML = "";
-
-    if(!Array.isArray(data) || data.length === 0){
-      feed.innerHTML = "<p>Aucune annonce pour le moment</p>";
+    if(!Array.isArray(data)){
+      feed.innerHTML = "<p>Erreur feed</p>";
       return;
     }
 
-    data.forEach(a => {
-      feed.innerHTML += `
-        <div style="background:white;padding:10px;margin:10px;border-radius:10px">
-          <img src="${a.image_url || ''}" width="100%" />
-          <h4>${a.titre || ''}</h4>
-          <p>${a.ville || ''}</p>
-        </div>
-      `;
-    });
+    if(data.length === 0){
+      feed.innerHTML = "<p>Aucune annonce</p>";
+      return;
+    }
+
+    feed.innerHTML = data.map(a => `
+      <div style="background:white;padding:10px;margin:10px;border-radius:10px">
+        <img src="${a.image_url || ''}" style="width:100%">
+        <h4>${a.titre || ''}</h4>
+        <p>${a.ville || ''}</p>
+      </div>
+    `).join("");
 
   } catch (err) {
     console.error(err);
-    feed.innerHTML = "<p>Erreur chargement feed</p>";
+    feed.innerHTML = "<p>Erreur chargement</p>";
   }
 }
 
@@ -67,7 +69,7 @@ async function login(){
     const data = await res.json();
 
     if(data.error){
-      alert("Connexion refusée");
+      alert(data.error);
       return;
     }
 
@@ -76,7 +78,7 @@ async function login(){
     alert("Connecté");
     go("home");
 
-  } catch (e) {
+  } catch (err) {
     alert("Erreur serveur login");
   }
 }
@@ -98,15 +100,15 @@ async function register(){
     const data = await res.json();
 
     if(data.error){
-      alert("Erreur inscription");
+      alert(data.error);
       return;
     }
 
     alert("Compte créé");
     go("login");
 
-  } catch (e) {
-    alert("Erreur serveur inscription");
+  } catch (err) {
+    alert("Erreur serveur register");
   }
 }
 
@@ -117,7 +119,7 @@ async function publier(){
   const user = JSON.parse(localStorage.getItem("user"));
 
   if(!user){
-    alert("Connecte-toi d'abord");
+    alert("Connecte-toi");
     go("login");
     return;
   }
@@ -136,16 +138,17 @@ async function publier(){
       })
     });
 
-    alert("Annonce publiée");
+    alert("Publié !");
     go("home");
+    loadFeed();
 
-  } catch (e) {
+  } catch (err) {
     alert("Erreur publication");
   }
 }
 
 /* =========================
-   ADMIN HOLD
+   ADMIN
 ========================= */
 let timer;
 
@@ -160,17 +163,12 @@ function adminHoldStop(){
   clearTimeout(timer);
 }
 
-/* =========================
-   ADMIN LOGIN
-========================= */
 async function checkAdmin(){
   try {
     const res = await fetch(`${API}/admin/login`, {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        code: admin_code.value
-      })
+      body: JSON.stringify({ code: admin_code.value })
     });
 
     const data = await res.json();
@@ -181,7 +179,7 @@ async function checkAdmin(){
       alert("Code invalide");
     }
 
-  } catch (e) {
+  } catch (err) {
     alert("Erreur admin");
   }
 }

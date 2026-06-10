@@ -1,82 +1,56 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NIA RDC</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIA RDC</title>
 
-  <link rel="stylesheet" href="style.css"/>
-  <script src="app.js" defer></script>
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
 </head>
 
 <body>
 
 <header>
   <div class="logo">NIA RDC 🚀</div>
-
-  <div class="admin-gear"
-       onmousedown="adminHoldStart()"
-       onmouseup="adminHoldStop()">
-    ⚙️
-  </div>
+  <div class="gear" onmousedown="adminHoldStart()" onmouseup="adminHoldStop()">⚙️</div>
 </header>
 
-<nav class="nav">
+<nav>
   <button onclick="go('home')">Accueil</button>
   <button onclick="go('login')">Connexion</button>
   <button onclick="go('register')">Inscription</button>
   <button onclick="go('publish')">Publier</button>
 </nav>
 
-<!-- HOME -->
 <section id="home" class="page">
-  <h2>📦 Annonces</h2>
   <div id="feed"></div>
 </section>
 
-<!-- LOGIN -->
 <section id="login" class="page hidden">
-  <h2>Connexion</h2>
-
-  <input id="login_tel" placeholder="Téléphone"/>
-  <input id="login_pass" type="password" placeholder="Mot de passe"/>
-
+  <input id="login_tel" placeholder="Téléphone">
+  <input id="login_pass" type="password" placeholder="Mot de passe">
   <button onclick="login()">Connexion</button>
 </section>
 
-<!-- REGISTER -->
 <section id="register" class="page hidden">
-  <h2>Inscription</h2>
-
-  <input id="reg_tel" placeholder="Téléphone"/>
-  <input id="reg_pass" type="password" placeholder="Mot de passe"/>
-
+  <input id="reg_tel" placeholder="Téléphone">
+  <input id="reg_pass" type="password">
   <button onclick="register()">Créer compte</button>
 </section>
 
-<!-- PUBLISH -->
 <section id="publish" class="page hidden">
-  <h2>Publier une annonce</h2>
-
-  <input id="titre" placeholder="Titre"/>
-  <textarea id="desc" placeholder="Description"></textarea>
-
-  <input id="ville" placeholder="Ville"/>
-  <input id="categorie" placeholder="Catégorie"/>
-
-  <!-- UPLOAD IMAGE (NOUVEAU) -->
-  <label>Image de l’annonce</label>
-  <input id="imageFile" type="file" accept="image/*"/>
-
+  <input id="titre" placeholder="Titre">
+  <textarea id="desc"></textarea>
+  <input id="ville">
+  <input id="categorie">
+  <input id="imageFile" type="file">
   <button onclick="publier()">Publier</button>
 </section>
 
-<!-- ADMIN -->
 <section id="admin" class="page hidden">
-  <h2>Admin</h2>
-
-  <input id="admin_code" placeholder="Code admin"/>
-  <button onclick="checkAdmin()">Valider</button>
+  <input id="admin_code">
+  <button onclick="checkAdmin()">OK admin</button>
 </section>
 
 </body>

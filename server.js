@@ -15,100 +15,124 @@ const __dirname = path.dirname(__filename);
 app.use(cors());
 app.use(express.json());
 
-/* FICHIERS FRONTEND */
+/* ======================
+STATIC FRONTEND
+====================== */
 app.use(express.static(__dirname));
 
-/* PAGE PRINCIPALE */
 app.get("/", (req, res) => {
-res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
-/* REGISTER */
+/* ======================
+REGISTER (FIX DEBUG)
+====================== */
 app.post("/auth/register", async (req, res) => {
-try {
-const { telephone, password } = req.body;
+  try {
+    const { telephone, password } = req.body;
 
-if (!telephone || !password) {
-  return res.status(400).json({ error: "missing fields" });
-}
+    console.log("REGISTER:", req.body);
 
-const result = await pool.query(
-  `INSERT INTO users (telephone,password)
-   VALUES($1,$2)
-   RETURNING id,telephone`,
-  [telephone, password]
-);
+    if (!telephone || !password) {
+      return res.status(400).json({ error: "missing fields" });
+    }
 
-res.json(result.rows[0]);
+    const result = await pool.query(
+      `INSERT INTO users (telephone, password)
+       VALUES ($1, $2)
+       RETURNING id, telephone`,
+      [telephone, password]
+    );
 
-} catch {
-res.status(500).json({ error: "register error" });
-}
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error("REGISTER ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-/* LOGIN */
+/* ======================
+LOGIN (FIX DEBUG)
+====================== */
 app.post("/auth/login", async (req, res) => {
-try {
-const { telephone, password } = req.body;
+  try {
+    const { telephone, password } = req.body;
 
-const result = await pool.query(
-  "SELECT * FROM users WHERE telephone=$1",
-  [telephone]
-);
+    console.log("LOGIN:", req.body);
 
-const user = result.rows[0];
+    const result = await pool.query(
+      "SELECT * FROM users WHERE telephone=$1",
+      [telephone]
+    );
 
-if (!user)
-  return res.status(400).json({ error: "user not found" });
+    const user = result.rows[0];
 
-if (user.password !== password)
-  return res.status(400).json({ error: "wrong password" });
+    if (!user) {
+      return res.status(400).json({ error: "user not found" });
+    }
 
-res.json({
-  id: user.id,
-  telephone: user.telephone
+    if (user.password !== password) {
+      return res.status(400).json({ error: "wrong password" });
+    }
+
+    res.json({
+      id: user.id,
+      telephone: user.telephone
+    });
+
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-} catch {
-res.status(500).json({ error: "login error" });
-}
-});
-
-/* ANNONCES */
+/* ======================
+CREATE ANNONCE (FIXED)
+====================== */
 app.post("/annonces", async (req, res) => {
-try {
-const { titre, description } = req.body;
+  try {
+    const { titre, description, ville, categorie, image_url, user_id } = req.body;
 
-const result = await pool.query(
-  `INSERT INTO annonces(titre,description)
-   VALUES($1,$2)
-   RETURNING *`,
-  [titre, description]
-);
+    console.log("ANNONCE:", req.body);
 
-res.json(result.rows[0]);
+    const result = await pool.query(
+      `INSERT INTO annonces (titre, description, ville, categorie, image_url, user_id)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING *`,
+      [titre, description, ville, categorie, image_url, user_id]
+    );
 
-} catch {
-res.status(500).json({ error: "annonce error" });
-}
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error("ANNONCE ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-/* FEED */
+/* ======================
+FEED
+====================== */
 app.get("/feed", async (req, res) => {
-try {
-const result = await pool.query(
-"SELECT * FROM annonces ORDER BY id DESC"
-);
+  try {
+    const result = await pool.query(
+      "SELECT * FROM annonces ORDER BY id DESC"
+    );
 
-res.json(result.rows);
+    res.json(result.rows);
 
-} catch {
-res.json([]);
-}
+  } catch (err) {
+    console.error("FEED ERROR:", err);
+    res.json([]);
+  }
 });
 
+/* ======================
+START
+====================== */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-console.log("NIA RDC RUNNING", PORT);
+  console.log("🚀 NIA RDC RUNNING ON", PORT);
 });

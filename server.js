@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import pg from "pg";
 import bcrypt from "bcrypt";
 import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
 import { v2 as cloudinary } from "cloudinary";
 
 // MODULES
@@ -24,13 +26,24 @@ dotenv.config();
 const app = express();
 
 /* ======================
+   PATH FRONTEND
+====================== */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/* ======================
    MIDDLEWARE
 ====================== */
 app.use(cors());
 app.use(express.json());
 
 /* ======================
-   DATABASE (NEON)
+   STATIC FRONTEND
+====================== */
+app.use(express.static(path.join(__dirname, "public")));
+
+/* ======================
+   DATABASE
 ====================== */
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -40,7 +53,7 @@ const pool = new pg.Pool({
 app.locals.db = pool;
 
 /* ======================
-   CLOUDINARY CONFIG
+   CLOUDINARY
 ====================== */
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -49,7 +62,7 @@ cloudinary.config({
 });
 
 /* ======================
-   ROUTES MODULES
+   MODULE ROUTES
 ====================== */
 app.use("/api", adminModule);
 app.use("/api", vipModule);
@@ -66,29 +79,16 @@ loadDashboard(app);
 /* ======================
    HEALTH CHECK
 ====================== */
-app.get("/", (req, res) => {
-  res.json({ status: "NIA RDC LIVE 🚀" });
+app.get("/api/health", (req, res) => {
+  res.json({ status: "OK NIA RDC 🚀" });
 });
 
 /* ======================
-   REGISTER
+   AUTH REGISTER
 ====================== */
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
-
-    if (!telephone || !password) {
-      return res.status(400).json({ error: "Champs manquants" });
-    }
-
-    const exists = await pool.query(
-      "SELECT id FROM users WHERE telephone=$1",
-      [telephone]
-    );
-
-    if (exists.rows.length > 0) {
-      return res.status(400).json({ error: "Utilisateur existe déjà" });
-    }
 
     const hash = await bcrypt.hash(password, 10);
 
@@ -101,14 +101,13 @@ app.post("/auth/register", async (req, res) => {
 
     res.json(result.rows[0]);
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erreur register" });
+  } catch (e) {
+    res.status(500).json({ error: "register error" });
   }
 });
 
 /* ======================
-   LOGIN
+   AUTH LOGIN
 ====================== */
 app.post("/auth/login", async (req, res) => {
   try {
@@ -121,46 +120,39 @@ app.post("/auth/login", async (req, res) => {
 
     const user = result.rows[0];
 
-    if (!user) {
-      return res.status(400).json({ error: "Utilisateur introuvable" });
-    }
+    if (!user) return res.status(400).json({ error: "user not found" });
 
     const ok = await bcrypt.compare(password, user.password);
 
-    if (!ok) {
-      return res.status(400).json({ error: "Mot de passe incorrect" });
-    }
+    if (!ok) return res.status(400).json({ error: "wrong password" });
 
     res.json({
       id: user.id,
       telephone: user.telephone,
-      is_vip: user.is_vip,
-      is_admin: user.is_admin
+      is_admin: user.is_admin,
+      is_vip: user.is_vip
     });
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erreur login" });
+  } catch (e) {
+    res.status(500).json({ error: "login error" });
   }
 });
 
 /* ======================
-   UPLOAD CLOUDINARY
+   UPLOAD IMAGE
 ====================== */
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 app.post("/upload", upload.single("image"), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "Aucune image" });
-    }
+    if (!req.file) return res.status(400).json({ error: "no file" });
 
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
         { folder: "nia_rdc" },
-        (error, result) => {
-          if (error) reject(error);
+        (err, result) => {
+          if (err) reject(err);
           else resolve(result);
         }
       ).end(req.file.buffer);
@@ -168,17 +160,23 @@ app.post("/upload", upload.single("image"), async (req, res) => {
 
     res.json({ url: result.secure_url });
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Upload failed" });
+  } catch (e) {
+    res.status(500).json({ error: "upload error" });
   }
 });
 
 /* ======================
-   START SERVER
+   FRONTEND ENTRY
+====================== */
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+/* ======================
+   START
 ====================== */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log("🚀 SERVER READY ON PORT", PORT);
+  console.log("🚀 NIA RDC RUNNING ON", PORT);
 });

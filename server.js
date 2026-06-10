@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 /* =====================
-   TEST SERVER
+   HEALTH
 ===================== */
 app.get("/", (req, res) => {
   res.json({ status: "NIA BACKEND OK 🚀" });
@@ -24,6 +24,10 @@ app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
 
+    if (!telephone || !password) {
+      return res.status(400).json({ error: "missing fields" });
+    }
+
     const result = await pool.query(
       `INSERT INTO users (telephone, password)
        VALUES ($1, $2)
@@ -32,6 +36,7 @@ app.post("/auth/register", async (req, res) => {
     );
 
     res.json(result.rows[0]);
+
   } catch (err) {
     res.status(500).json({ error: "register error" });
   }
@@ -67,7 +72,28 @@ app.post("/auth/login", async (req, res) => {
 });
 
 /* =====================
-   FEED (TEST)
+   CREATE ANNONCE
+===================== */
+app.post("/annonces", async (req, res) => {
+  try {
+    const { titre, description } = req.body;
+
+    const result = await pool.query(
+      `INSERT INTO annonces (titre, description)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [titre, description]
+    );
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    res.status(500).json({ error: "create annonce error" });
+  }
+});
+
+/* =====================
+   FEED
 ===================== */
 app.get("/feed", async (req, res) => {
   try {
@@ -76,8 +102,9 @@ app.get("/feed", async (req, res) => {
     );
 
     res.json(result.rows);
+
   } catch (err) {
-    res.json([]);
+    res.status(500).json([]);
   }
 });
 

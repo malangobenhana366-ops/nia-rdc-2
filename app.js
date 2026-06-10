@@ -18,8 +18,11 @@ function showRegister(){
 }
 
 function showApp(){
-  document.getElementById("authBox").style.display = "none";
-  document.getElementById("appBox").style.display = "block";
+  const auth = document.getElementById("authBox");
+  const app = document.getElementById("appBox");
+
+  if(auth) auth.style.display = "none";
+  if(app) app.style.display = "block";
 }
 
 /* ======================
@@ -27,7 +30,9 @@ NAV
 ====================== */
 function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  document.getElementById(page).classList.add("active");
+
+  const target = document.getElementById(page);
+  if(target) target.classList.add("active");
 
   if(page === "home") loadFeed();
 }
@@ -36,81 +41,99 @@ function go(page){
 FEED
 ====================== */
 async function loadFeed(){
-  const res = await fetch(`${API}/feed`);
-  const data = await res.json();
+  try {
+    const res = await fetch(`${API}/feed`);
+    const data = await res.json();
 
-  const feed = document.getElementById("feed");
-  feed.innerHTML = "";
+    const feed = document.getElementById("feed");
+    if(!feed) return;
 
-  data.forEach(a => {
-    feed.innerHTML += `
-      <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
-        <h3>${a.titre}</h3>
-        <p>📍 ${a.ville || ""}</p>
-        <p>💰 ${a.price || 0}</p>
-        <p>${a.categorie || ""}</p>
-        <img src="${a.image_url || ''}" style="width:100%">
-      </div>
-    `;
-  });
+    feed.innerHTML = "";
+
+    data.forEach(a => {
+      feed.innerHTML += `
+        <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
+          <h3>${a.titre}</h3>
+          <p>📍 ${a.ville || ""}</p>
+          <p>💰 ${a.price || 0}</p>
+          <p>📦 ${a.categorie || ""}</p>
+          <img src="${a.image_url || ''}" style="width:100%">
+        </div>
+      `;
+    });
+
+  } catch (e) {
+    console.log("feed error", e);
+  }
 }
 
 /* ======================
 REGISTER
 ====================== */
 async function register(){
-  const res = await fetch(`${API}/auth/register`, {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      telephone: val("reg_tel"),
-      password: val("reg_pass")
-    })
-  });
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        telephone: val("reg_tel"),
+        password: val("reg_pass")
+      })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if(data.error) return alert("Erreur inscription !");
-  alert("Compte créé !");
-  go("login");
+    if(data.error) return alert("Erreur inscription !");
+    alert("Compte créé !");
+    go("login");
+
+  } catch {
+    alert("Erreur serveur !");
+  }
 }
 
 /* ======================
 LOGIN
 ====================== */
 async function login(){
-  const res = await fetch(`${API}/auth/login`, {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      telephone: val("login_tel"),
-      password: val("login_pass")
-    })
-  });
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        telephone: val("login_tel"),
+        password: val("login_pass")
+      })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if(data.error) return alert("Erreur connexion !");
+    if(data.error) return alert("Erreur connexion !");
 
-  localStorage.setItem("user", JSON.stringify(data));
+    localStorage.setItem("user", JSON.stringify(data));
 
-  alert("Connecté !");
-  showApp();
-  go("home");
+    alert("Connecté !");
+    showApp();
+    go("home");
+
+  } catch {
+    alert("Erreur serveur !");
+  }
 }
 
 /* ======================
-PUBLISH
+PUBLISH (FIX FINAL ROBUSTE)
 ====================== */
 async function publier(){
-  const user = JSON.parse(localStorage.getItem("user"));
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
 
-  if(!user) return alert("Connecte-toi !");
+    if(!user){
+      alert("Connecte-toi !");
+      return;
+    }
 
-  const res = await fetch(`${API}/annonces`, {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
+    const payload = {
       user_id: user.id,
       titre: val("titre"),
       description: val("desc"),
@@ -118,16 +141,31 @@ async function publier(){
       categorie: val("categorie"),
       image_url: val("image"),
       price: Number(val("prix") || 0)
-    })
-  });
+    };
 
-  const data = await res.json();
+    console.log("PUBLISH:", payload);
 
-  if(data.error) return alert("Erreur publication !");
+    const res = await fetch(`${API}/annonces`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
 
-  alert("Annonce publiée !");
-  go("home");
-  loadFeed();
+    const data = await res.json();
+
+    if(!res.ok){
+      alert(data.error || "Erreur publication !");
+      return;
+    }
+
+    alert("Annonce publiée !");
+    go("home");
+    loadFeed();
+
+  } catch (e) {
+    console.error(e);
+    alert("Erreur serveur publish !");
+  }
 }
 
 go("home");

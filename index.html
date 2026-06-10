@@ -41,17 +41,17 @@
   <input id="login_tel" placeholder="Téléphone"/>
   <input id="login_pass" type="password" placeholder="Mot de passe"/>
 
-  <button class="primary" onclick="login()">Se connecter</button>
+  <button onclick="login()">Connexion</button>
 </section>
 
 <!-- REGISTER -->
 <section id="register" class="page hidden">
-  <h2>Créer compte</h2>
+  <h2>Inscription</h2>
 
   <input id="reg_tel" placeholder="Téléphone"/>
   <input id="reg_pass" type="password" placeholder="Mot de passe"/>
 
-  <button class="primary" onclick="register()">S'inscrire</button>
+  <button onclick="register()">Créer compte</button>
 </section>
 
 <!-- PUBLISH -->
@@ -60,20 +60,23 @@
 
   <input id="titre" placeholder="Titre"/>
   <textarea id="desc" placeholder="Description"></textarea>
+
   <input id="ville" placeholder="Ville"/>
   <input id="categorie" placeholder="Catégorie"/>
-  <input id="image" placeholder="Image URL"/>
 
-  <button class="primary" onclick="publier()">Publier</button>
+  <!-- UPLOAD IMAGE (NOUVEAU) -->
+  <label>Image de l’annonce</label>
+  <input id="imageFile" type="file" accept="image/*"/>
+
+  <button onclick="publier()">Publier</button>
 </section>
 
 <!-- ADMIN -->
 <section id="admin" class="page hidden">
-  <h2>Admin Access</h2>
+  <h2>Admin</h2>
 
   <input id="admin_code" placeholder="Code admin"/>
-
-  <button class="primary" onclick="checkAdmin()">Valider</button>
+  <button onclick="checkAdmin()">Valider</button>
 </section>
 
 </body>

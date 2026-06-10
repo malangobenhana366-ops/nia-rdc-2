@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NIA RDC</title>
   <link rel="stylesheet" href="style.css"/>
@@ -11,24 +11,20 @@
 
 <header class="topbar">
   <div class="logo">NIA RDC 🚀</div>
-  <div class="admin-icon" id="adminGear">⚙️</div>
 </header>
 
 <main>
 
-<!-- ================= HOME ================= -->
+<!-- HOME -->
 <section id="home" class="page active">
 
-  <!-- AUTH -->
-  <div class="auth-box" id="authBox">
+  <div id="authBox">
     <h2>Bienvenue 👋</h2>
-
     <button class="big-btn" onclick="showLogin()">Connexion</button>
     <button class="big-btn secondary" onclick="showRegister()">Inscription</button>
   </div>
 
-  <!-- APP -->
-  <div id="appBox" class="hidden">
+  <div id="appBox" style="display:none;">
     <h2>📦 Annonces</h2>
 
     <button class="big-btn" onclick="go('publish')">➕ Publier</button>
@@ -36,35 +32,28 @@
     <div id="feed"></div>
   </div>
 
-  <!-- ADS SPACE -->
-  <div class="ads">
-    📢 Publicité (espace réservé)
-  </div>
+  <div class="ads">📢 Publicité</div>
 
 </section>
 
-<!-- ================= LOGIN ================= -->
-<section id="login" class="page hidden">
+<!-- LOGIN -->
+<section id="login" class="page">
   <h2>Connexion</h2>
-
   <input id="login_tel" placeholder="Téléphone"/>
   <input id="login_pass" type="password" placeholder="Mot de passe"/>
-
   <button onclick="login()">Se connecter</button>
 </section>
 
-<!-- ================= REGISTER ================= -->
-<section id="register" class="page hidden">
+<!-- REGISTER -->
+<section id="register" class="page">
   <h2>Créer compte</h2>
-
   <input id="reg_tel" placeholder="Téléphone"/>
   <input id="reg_pass" type="password" placeholder="Mot de passe"/>
-
   <button onclick="register()">Créer</button>
 </section>
 
-<!-- ================= PUBLISH ================= -->
-<section id="publish" class="page hidden">
+<!-- PUBLISH -->
+<section id="publish" class="page">
   <h2>Publier annonce</h2>
 
   <input id="titre" placeholder="Titre"/>
@@ -79,6 +68,5 @@
 </main>
 
 <script src="app.js"></script>
-
 </body>
 </html>

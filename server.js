@@ -8,7 +8,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { v2 as cloudinary } from "cloudinary";
 
-// MODULES
 import adminModule from "./admin_module.js";
 import vipModule from "./vip_module.js";
 import annonceModule from "./annonce_module.js";
@@ -26,7 +25,7 @@ dotenv.config();
 const app = express();
 
 /* ======================
-   PATH FRONTEND
+   PATH
 ====================== */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +35,7 @@ const __dirname = path.dirname(__filename);
 ====================== */
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 /* ======================
    STATIC FRONTEND
@@ -43,7 +43,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 /* ======================
-   DATABASE
+   DATABASE (NEON)
 ====================== */
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -62,7 +62,7 @@ cloudinary.config({
 });
 
 /* ======================
-   MODULE ROUTES
+   ROUTES MODULES
 ====================== */
 app.use("/api", adminModule);
 app.use("/api", vipModule);
@@ -100,7 +100,6 @@ app.post("/auth/register", async (req, res) => {
     );
 
     res.json(result.rows[0]);
-
   } catch (e) {
     res.status(500).json({ error: "register error" });
   }
@@ -166,17 +165,24 @@ app.post("/upload", upload.single("image"), async (req, res) => {
 });
 
 /* ======================
-   FRONTEND ENTRY
+   ROOT
+====================== */
+app.get("/", (req, res) => {
+  res.send("NIA RDC BACKEND OK 🚀");
+});
+
+/* ======================
+   FRONTEND FALLBACK
 ====================== */
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 /* ======================
-   START
+   START SERVER
 ====================== */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log("🚀 NIA RDC RUNNING ON", PORT);
+  console.log("🚀 SERVER RUNNING ON", PORT);
 });

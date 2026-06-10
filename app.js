@@ -1,55 +1,32 @@
 const API = "https://nia-rdc-2.onrender.com";
 
 /* ======================
-UI SWITCH
+UTILS INPUT SAFE
 ====================== */
-function showLogin(){
-go("login");
-}
-
-function showRegister(){
-go("register");
+function val(id){
+return document.getElementById(id)?.value || "";
 }
 
 /* ======================
 NAVIGATION
 ====================== */
-function go(page) {
+function go(page){
 document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
 document.getElementById(page).classList.add("active");
 
-if (page === "home") {
-loadFeed();
-updateUI();
-}
+if(page === "home") loadFeed();
 }
 
 /* ======================
-UI STATE
+SHOW FORMS
 ====================== */
-function isLogged(){
-return localStorage.getItem("user") !== null;
-}
-
-function updateUI(){
-const authBox = document.getElementById("authBox");
-const appBox = document.getElementById("appBox");
-
-if (!authBox || !appBox) return;
-
-if (isLogged()) {
-authBox.classList.add("hidden");
-appBox.classList.remove("hidden");
-} else {
-authBox.classList.remove("hidden");
-appBox.classList.add("hidden");
-}
-}
+function showLogin(){ go("login"); }
+function showRegister(){ go("register"); }
 
 /* ======================
 FEED
 ====================== */
-async function loadFeed() {
+async function loadFeed(){
 try {
 const res = await fetch("${API}/feed");
 const data = await res.json();
@@ -68,82 +45,109 @@ data.forEach(a => {
 });
 
 } catch (e) {
-console.log("Feed error", e);
+console.log("feed error", e);
 }
 }
 
 /* ======================
-LOGIN
+REGISTER (IMPORTANT FIX)
 ====================== */
-async function login() {
-const res = await fetch("${API}/auth/login", {
-method: "POST",
-headers: {"Content-Type":"application/json"},
+async function register(){
+try {
+const res = await fetch("${API}/auth/register", {
+method:"POST",
+headers:{"Content-Type":"application/json"},
 body: JSON.stringify({
-telephone: login_tel.value,
-password: login_pass.value
+telephone: val("reg_tel"),
+password: val("reg_pass")
 })
 });
 
 const data = await res.json();
 
-if (data.error) return alert("Erreur connexion");
+if(data.error){
+  alert("Erreur inscription");
+  return;
+}
+
+alert("Compte créé !");
+go("login");
+
+} catch(e){
+alert("Erreur serveur inscription");
+}
+}
+
+/* ======================
+LOGIN (IMPORTANT FIX)
+====================== */
+async function login(){
+try {
+const res = await fetch("${API}/auth/login", {
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body: JSON.stringify({
+telephone: val("login_tel"),
+password: val("login_pass")
+})
+});
+
+const data = await res.json();
+
+if(data.error){
+  alert("Erreur connexion");
+  return;
+}
 
 localStorage.setItem("user", JSON.stringify(data));
 
-updateUI();
+alert("Connecté !");
 go("home");
+
+} catch(e){
+alert("Erreur serveur login");
 }
-
-/* ======================
-REGISTER
-====================== */
-async function register() {
-const res = await fetch("${API}/auth/register", {
-method: "POST",
-headers: {"Content-Type":"application/json"},
-body: JSON.stringify({
-telephone: reg_tel.value,
-password: reg_pass.value
-})
-});
-
-const data = await res.json();
-
-if (data.error) return alert("Erreur inscription");
-
-alert("Compte créé");
-go("login");
 }
 
 /* ======================
 PUBLISH
 ====================== */
-async function publier() {
+async function publier(){
 const user = JSON.parse(localStorage.getItem("user"));
 
-if (!user) return alert("Connecte-toi");
+if(!user){
+alert("Connecte-toi");
+return;
+}
 
+try {
 const res = await fetch("${API}/annonces", {
-method: "POST",
-headers: {"Content-Type":"application/json"},
+method:"POST",
+headers:{"Content-Type":"application/json"},
 body: JSON.stringify({
 user_id: user.id,
-titre: titre.value,
-description: desc.value,
-ville: ville.value,
-categorie: categorie.value,
-image_url: image.value
+titre: val("titre"),
+description: val("desc"),
+ville: val("ville"),
+categorie: val("categorie"),
+image_url: val("image")
 })
 });
 
 const data = await res.json();
 
-if (data.error) return alert("Erreur publication");
+if(data.error){
+  alert("Erreur publication");
+  return;
+}
 
 alert("Annonce publiée !");
 go("home");
 loadFeed();
+
+} catch(e){
+alert("Erreur serveur publish");
+}
 }
 
 /* INIT */

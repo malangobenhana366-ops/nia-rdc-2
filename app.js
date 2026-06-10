@@ -4,7 +4,9 @@ function val(id){
   return document.getElementById(id)?.value || "";
 }
 
-/* UI SWITCH SIMPLE */
+/* ======================
+UI
+====================== */
 function showLogin(){
   document.getElementById("authBox").style.display = "none";
   go("login");
@@ -20,7 +22,9 @@ function showApp(){
   document.getElementById("appBox").style.display = "block";
 }
 
-/* NAV */
+/* ======================
+NAV
+====================== */
 function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById(page).classList.add("active");
@@ -28,7 +32,9 @@ function go(page){
   if(page === "home") loadFeed();
 }
 
-/* FEED */
+/* ======================
+FEED
+====================== */
 async function loadFeed(){
   const res = await fetch(`${API}/feed`);
   const data = await res.json();
@@ -40,7 +46,8 @@ async function loadFeed(){
     feed.innerHTML += `
       <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
         <h3>${a.titre}</h3>
-        <p>${a.ville || ""}</p>
+        <p>📍 ${a.ville || ""}</p>
+        <p>💰 ${a.price || 0}</p>
         <p>${a.categorie || ""}</p>
         <img src="${a.image_url || ''}" style="width:100%">
       </div>
@@ -48,7 +55,9 @@ async function loadFeed(){
   });
 }
 
-/* REGISTER */
+/* ======================
+REGISTER
+====================== */
 async function register(){
   const res = await fetch(`${API}/auth/register`, {
     method:"POST",
@@ -66,7 +75,9 @@ async function register(){
   go("login");
 }
 
-/* LOGIN */
+/* ======================
+LOGIN
+====================== */
 async function login(){
   const res = await fetch(`${API}/auth/login`, {
     method:"POST",
@@ -88,7 +99,9 @@ async function login(){
   go("home");
 }
 
-/* PUBLISH */
+/* ======================
+PUBLISH
+====================== */
 async function publier(){
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -103,7 +116,8 @@ async function publier(){
       description: val("desc"),
       ville: val("ville"),
       categorie: val("categorie"),
-      image_url: val("image")
+      image_url: val("image"),
+      price: Number(val("prix") || 0)
     })
   });
 

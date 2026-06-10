@@ -13,33 +13,41 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-/* HOME CHECK */
+/* ======================
+HOME CHECK
+====================== */
 app.get("/", (req, res) => {
   res.json({ status: "NIA BACKEND OK 🚀" });
 });
 
-/* REGISTER */
+/* ======================
+REGISTER
+====================== */
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
 
-    if (!telephone || !password)
+    if (!telephone || !password) {
       return res.status(400).json({ error: "missing fields" });
+    }
 
     const result = await pool.query(
-      `INSERT INTO users (telephone,password)
+      `INSERT INTO users (telephone, password)
        VALUES ($1,$2)
-       RETURNING id,telephone`,
+       RETURNING id, telephone`,
       [telephone, password]
     );
 
     res.json(result.rows[0]);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "register error" });
   }
 });
 
-/* LOGIN */
+/* ======================
+LOGIN
+====================== */
 app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -56,30 +64,57 @@ app.post("/auth/login", async (req, res) => {
       return res.status(400).json({ error: "wrong password" });
 
     res.json({ id: user.id, telephone: user.telephone });
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "login error" });
   }
 });
 
-/* CREATE POST */
+/* ======================
+CREATE ANNONCE (FULL FINAL)
+====================== */
 app.post("/annonces", async (req, res) => {
   try {
-    const { titre, description, ville, categorie, image_url, user_id } = req.body;
+    const {
+      user_id,
+      titre,
+      description,
+      ville,
+      categorie,
+      image_url,
+      price
+    } = req.body;
+
+    if (!user_id || !titre) {
+      return res.status(400).json({ error: "missing fields" });
+    }
 
     const result = await pool.query(
-      `INSERT INTO annonces (titre,description,ville,categorie,image_url,user_id)
-       VALUES ($1,$2,$3,$4,$5,$6)
-       RETURNING *`,
-      [titre, description, ville, categorie, image_url, user_id]
+      `INSERT INTO annonces
+      (user_id, titre, description, ville, categorie, image_url, price)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
+      RETURNING *`,
+      [
+        user_id,
+        titre,
+        description,
+        ville,
+        categorie,
+        image_url,
+        price || 0
+      ]
     );
 
     res.json(result.rows[0]);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "create error" });
   }
 });
 
-/* FEED */
+/* ======================
+FEED
+====================== */
 app.get("/feed", async (req, res) => {
   try {
     const result = await pool.query(
@@ -87,10 +122,11 @@ app.get("/feed", async (req, res) => {
     );
 
     res.json(result.rows);
-  } catch {
+  } catch (err) {
+    console.error(err);
     res.json([]);
   }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log("RUNNING", PORT));
+app.listen(PORT, () => console.log("🚀 RUNNING", PORT));

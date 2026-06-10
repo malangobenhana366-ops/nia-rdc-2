@@ -15,58 +15,96 @@
 
 <main>
 
-<!-- HOME -->
 <section id="home" class="page active">
 
+  <!-- AVANT CONNEXION -->
   <div id="authBox">
     <h2>Bienvenue 👋</h2>
-    <button class="big-btn" onclick="showLogin()">Connexion</button>
-    <button class="big-btn secondary" onclick="showRegister()">Inscription</button>
+
+    <button class="big-btn" onclick="showLogin()">
+      Connexion
+    </button>
+
+    <button class="big-btn secondary" onclick="showRegister()">
+      Inscription
+    </button>
   </div>
 
+  <!-- APRÈS CONNEXION -->
   <div id="appBox" style="display:none;">
-    <h2>📦 Annonces</h2>
 
-    <button class="big-btn" onclick="go('publish')">➕ Publier</button>
+    <h2>🏠 Accueil NIA RDC</h2>
+
+    <button class="big-btn" onclick="go('publish')">
+      ➕ Publier
+    </button>
+
+    <button class="big-btn">
+      🔍 Rechercher
+    </button>
+
+    <button class="big-btn">
+      ⭐ VIP
+    </button>
+
+    <button class="big-btn secondary">
+      👤 Mon profil
+    </button>
+
+    <hr>
+
+    <h3>📦 Annonces récentes</h3>
 
     <div id="feed"></div>
+
   </div>
 
-  <div class="ads">📢 Publicité</div>
+  <div class="ads">
+    📢 Publicité
+  </div>
 
 </section>
 
-<!-- LOGIN -->
 <section id="login" class="page">
   <h2>Connexion</h2>
+
   <input id="login_tel" placeholder="Téléphone"/>
   <input id="login_pass" type="password" placeholder="Mot de passe"/>
-  <button onclick="login()">Se connecter</button>
+
+  <button onclick="login()">
+    Se connecter
+  </button>
 </section>
 
-<!-- REGISTER -->
 <section id="register" class="page">
   <h2>Créer compte</h2>
+
   <input id="reg_tel" placeholder="Téléphone"/>
   <input id="reg_pass" type="password" placeholder="Mot de passe"/>
-  <button onclick="register()">Créer</button>
+
+  <button onclick="register()">
+    Créer
+  </button>
 </section>
 
-<!-- PUBLISH -->
 <section id="publish" class="page">
   <h2>Publier annonce</h2>
 
   <input id="titre" placeholder="Titre"/>
   <textarea id="desc" placeholder="Description"></textarea>
+
   <input id="ville" placeholder="Ville"/>
   <input id="categorie" placeholder="Catégorie"/>
   <input id="image" placeholder="Image URL"/>
 
-  <button onclick="publier()">Publier</button>
+  <button onclick="publier()">
+    Publier
+  </button>
 </section>
 
 </main>
 
 <script src="app.js"></script>
+
 </body>
 </html>

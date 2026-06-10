@@ -4,17 +4,17 @@ const API = "https://nia-rdc-2.onrender.com";
 UTILS INPUT SAFE
 ====================== */
 function val(id){
-return document.getElementById(id)?.value || "";
+  return document.getElementById(id)?.value || "";
 }
 
 /* ======================
 NAVIGATION
 ====================== */
 function go(page){
-document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-document.getElementById(page).classList.add("active");
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(page).classList.add("active");
 
-if(page === "home") loadFeed();
+  if(page === "home") loadFeed();
 }
 
 /* ======================
@@ -27,127 +27,127 @@ function showRegister(){ go("register"); }
 FEED
 ====================== */
 async function loadFeed(){
-try {
-const res = await fetch("${API}/feed");
-const data = await res.json();
+  try {
+    const res = await fetch(`${API}/feed`);
+    const data = await res.json();
 
-const feed = document.getElementById("feed");
-feed.innerHTML = "";
+    const feed = document.getElementById("feed");
+    feed.innerHTML = "";
 
-data.forEach(a => {
-  feed.innerHTML += `
-    <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
-      <h3>${a.titre || ""}</h3>
-      <p>${a.ville || ""}</p>
-      <img src="${a.image_url || ''}" style="width:100%">
-    </div>
-  `;
-});
+    data.forEach(a => {
+      feed.innerHTML += `
+        <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
+          <h3>${a.titre || ""}</h3>
+          <p>${a.ville || ""}</p>
+          <img src="${a.image_url || ''}" style="width:100%">
+        </div>
+      `;
+    });
 
-} catch (e) {
-console.log("feed error", e);
-}
+  } catch (e) {
+    console.log("feed error", e);
+  }
 }
 
 /* ======================
-REGISTER (IMPORTANT FIX)
+REGISTER
 ====================== */
 async function register(){
-try {
-const res = await fetch("${API}/auth/register", {
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body: JSON.stringify({
-telephone: val("reg_tel"),
-password: val("reg_pass")
-})
-});
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        telephone: val("reg_tel"),
+        password: val("reg_pass")
+      })
+    });
 
-const data = await res.json();
+    const data = await res.json();
 
-if(data.error){
-  alert("Erreur inscription");
-  return;
-}
+    if(data.error){
+      alert("Erreur inscription");
+      return;
+    }
 
-alert("Compte créé !");
-go("login");
+    alert("Compte créé !");
+    go("login");
 
-} catch(e){
-alert("Erreur serveur inscription");
-}
+  } catch(e){
+    alert("Erreur serveur inscription");
+  }
 }
 
 /* ======================
-LOGIN (IMPORTANT FIX)
+LOGIN
 ====================== */
 async function login(){
-try {
-const res = await fetch("${API}/auth/login", {
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body: JSON.stringify({
-telephone: val("login_tel"),
-password: val("login_pass")
-})
-});
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        telephone: val("login_tel"),
+        password: val("login_pass")
+      })
+    });
 
-const data = await res.json();
+    const data = await res.json();
 
-if(data.error){
-  alert("Erreur connexion");
-  return;
-}
+    if(data.error){
+      alert("Erreur connexion");
+      return;
+    }
 
-localStorage.setItem("user", JSON.stringify(data));
+    localStorage.setItem("user", JSON.stringify(data));
 
-alert("Connecté !");
-go("home");
+    alert("Connecté !");
+    go("home");
 
-} catch(e){
-alert("Erreur serveur login");
-}
+  } catch(e){
+    alert("Erreur serveur login");
+  }
 }
 
 /* ======================
 PUBLISH
 ====================== */
 async function publier(){
-const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
 
-if(!user){
-alert("Connecte-toi");
-return;
-}
+  if(!user){
+    alert("Connecte-toi");
+    return;
+  }
 
-try {
-const res = await fetch("${API}/annonces", {
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body: JSON.stringify({
-user_id: user.id,
-titre: val("titre"),
-description: val("desc"),
-ville: val("ville"),
-categorie: val("categorie"),
-image_url: val("image")
-})
-});
+  try {
+    const res = await fetch(`${API}/annonces`, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        user_id: user.id,
+        titre: val("titre"),
+        description: val("desc"),
+        ville: val("ville"),
+        categorie: val("categorie"),
+        image_url: val("image")
+      })
+    });
 
-const data = await res.json();
+    const data = await res.json();
 
-if(data.error){
-  alert("Erreur publication");
-  return;
-}
+    if(data.error){
+      alert("Erreur publication");
+      return;
+    }
 
-alert("Annonce publiée !");
-go("home");
-loadFeed();
+    alert("Annonce publiée !");
+    go("home");
+    loadFeed();
 
-} catch(e){
-alert("Erreur serveur publish");
-}
+  } catch(e){
+    alert("Erreur serveur publish");
+  }
 }
 
 /* INIT */

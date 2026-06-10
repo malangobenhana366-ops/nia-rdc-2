@@ -1,118 +1,114 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import { pool } from "./db.js";
 
 dotenv.config();
 
 const app = express();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(cors());
 app.use(express.json());
 
-/* =====================
-   HEALTH
-===================== */
+/* FICHIERS FRONTEND */
+app.use(express.static(__dirname));
+
+/* PAGE PRINCIPALE */
 app.get("/", (req, res) => {
-  res.json({ status: "NIA BACKEND OK 🚀" });
+res.sendFile(path.join(__dirname, "index.html"));
 });
 
-/* =====================
-   REGISTER
-===================== */
+/* REGISTER */
 app.post("/auth/register", async (req, res) => {
-  try {
-    const { telephone, password } = req.body;
+try {
+const { telephone, password } = req.body;
 
-    if (!telephone || !password) {
-      return res.status(400).json({ error: "missing fields" });
-    }
+if (!telephone || !password) {
+  return res.status(400).json({ error: "missing fields" });
+}
 
-    const result = await pool.query(
-      `INSERT INTO users (telephone, password)
-       VALUES ($1, $2)
-       RETURNING id, telephone`,
-      [telephone, password]
-    );
+const result = await pool.query(
+  `INSERT INTO users (telephone,password)
+   VALUES($1,$2)
+   RETURNING id,telephone`,
+  [telephone, password]
+);
 
-    res.json(result.rows[0]);
+res.json(result.rows[0]);
 
-  } catch (err) {
-    res.status(500).json({ error: "register error" });
-  }
+} catch {
+res.status(500).json({ error: "register error" });
+}
 });
 
-/* =====================
-   LOGIN
-===================== */
+/* LOGIN */
 app.post("/auth/login", async (req, res) => {
-  try {
-    const { telephone, password } = req.body;
+try {
+const { telephone, password } = req.body;
 
-    const result = await pool.query(
-      "SELECT * FROM users WHERE telephone=$1",
-      [telephone]
-    );
+const result = await pool.query(
+  "SELECT * FROM users WHERE telephone=$1",
+  [telephone]
+);
 
-    const user = result.rows[0];
+const user = result.rows[0];
 
-    if (!user) return res.status(400).json({ error: "user not found" });
+if (!user)
+  return res.status(400).json({ error: "user not found" });
 
-    if (user.password !== password)
-      return res.status(400).json({ error: "wrong password" });
+if (user.password !== password)
+  return res.status(400).json({ error: "wrong password" });
 
-    res.json({
-      id: user.id,
-      telephone: user.telephone
-    });
-
-  } catch (err) {
-    res.status(500).json({ error: "login error" });
-  }
+res.json({
+  id: user.id,
+  telephone: user.telephone
 });
 
-/* =====================
-   CREATE ANNONCE
-===================== */
+} catch {
+res.status(500).json({ error: "login error" });
+}
+});
+
+/* ANNONCES */
 app.post("/annonces", async (req, res) => {
-  try {
-    const { titre, description } = req.body;
+try {
+const { titre, description } = req.body;
 
-    const result = await pool.query(
-      `INSERT INTO annonces (titre, description)
-       VALUES ($1, $2)
-       RETURNING *`,
-      [titre, description]
-    );
+const result = await pool.query(
+  `INSERT INTO annonces(titre,description)
+   VALUES($1,$2)
+   RETURNING *`,
+  [titre, description]
+);
 
-    res.json(result.rows[0]);
+res.json(result.rows[0]);
 
-  } catch (err) {
-    res.status(500).json({ error: "create annonce error" });
-  }
+} catch {
+res.status(500).json({ error: "annonce error" });
+}
 });
 
-/* =====================
-   FEED
-===================== */
+/* FEED */
 app.get("/feed", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM annonces ORDER BY id DESC"
-    );
+try {
+const result = await pool.query(
+"SELECT * FROM annonces ORDER BY id DESC"
+);
 
-    res.json(result.rows);
+res.json(result.rows);
 
-  } catch (err) {
-    res.status(500).json([]);
-  }
+} catch {
+res.json([]);
+}
 });
 
-/* =====================
-   START
-===================== */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log("SERVER RUNNING ON", PORT);
+console.log("NIA RDC RUNNING", PORT);
 });

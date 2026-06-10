@@ -23,12 +23,15 @@ dotenv.config();
 
 const app = express();
 
+/* ======================
+   MIDDLEWARE
+====================== */
 app.use(cors());
 app.use(express.json());
 
-// =========================
-// DATABASE NEON
-// =========================
+/* ======================
+   DATABASE (NEON)
+====================== */
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
@@ -36,18 +39,18 @@ const pool = new pg.Pool({
 
 app.locals.db = pool;
 
-// =========================
-// CLOUDINARY CONFIG
-// =========================
+/* ======================
+   CLOUDINARY CONFIG
+====================== */
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_API_SECRET
 });
 
-// =========================
-// ROUTES MODULES
-// =========================
+/* ======================
+   ROUTES MODULES
+====================== */
 app.use("/api", adminModule);
 app.use("/api", vipModule);
 app.use("/api", annonceModule);
@@ -60,16 +63,16 @@ loadChat(app);
 loadRealtime(app);
 loadDashboard(app);
 
-// =========================
-// HEALTH CHECK
-// =========================
+/* ======================
+   HEALTH CHECK
+====================== */
 app.get("/", (req, res) => {
   res.json({ status: "NIA RDC LIVE 🚀" });
 });
 
-// =========================
-// AUTH REGISTER
-// =========================
+/* ======================
+   REGISTER
+====================== */
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -78,12 +81,12 @@ app.post("/auth/register", async (req, res) => {
       return res.status(400).json({ error: "Champs manquants" });
     }
 
-    const exist = await pool.query(
+    const exists = await pool.query(
       "SELECT id FROM users WHERE telephone=$1",
       [telephone]
     );
 
-    if (exist.rows.length > 0) {
+    if (exists.rows.length > 0) {
       return res.status(400).json({ error: "Utilisateur existe déjà" });
     }
 
@@ -91,7 +94,7 @@ app.post("/auth/register", async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO users (telephone, password)
-       VALUES ($1, $2)
+       VALUES ($1,$2)
        RETURNING id, telephone`,
       [telephone, hash]
     );
@@ -100,20 +103,16 @@ app.post("/auth/register", async (req, res) => {
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Erreur serveur register" });
+    res.status(500).json({ error: "Erreur register" });
   }
 });
 
-// =========================
-// AUTH LOGIN
-// =========================
+/* ======================
+   LOGIN
+====================== */
 app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
-
-    if (!telephone || !password) {
-      return res.status(400).json({ error: "Champs manquants" });
-    }
 
     const result = await pool.query(
       "SELECT * FROM users WHERE telephone=$1",
@@ -135,25 +134,27 @@ app.post("/auth/login", async (req, res) => {
     res.json({
       id: user.id,
       telephone: user.telephone,
-      is_vip: user.is_vip || false,
-      is_admin: user.is_admin || false
+      is_vip: user.is_vip,
+      is_admin: user.is_admin
     });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Erreur serveur login" });
+    res.status(500).json({ error: "Erreur login" });
   }
 });
 
-// =========================
-// UPLOAD IMAGE (CLOUDINARY)
-// =========================
+/* ======================
+   UPLOAD CLOUDINARY
+====================== */
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 app.post("/upload", upload.single("image"), async (req, res) => {
   try {
-    const file = req.file;
+    if (!req.file) {
+      return res.status(400).json({ error: "Aucune image" });
+    }
 
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
@@ -162,19 +163,20 @@ app.post("/upload", upload.single("image"), async (req, res) => {
           if (error) reject(error);
           else resolve(result);
         }
-      ).end(file.buffer);
+      ).end(req.file.buffer);
     });
 
     res.json({ url: result.secure_url });
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Upload failed" });
   }
 });
 
-// =========================
-// START SERVER
-// =========================
+/* ======================
+   START SERVER
+====================== */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

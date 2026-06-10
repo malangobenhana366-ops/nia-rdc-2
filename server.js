@@ -4,8 +4,6 @@ import dotenv from "dotenv";
 import pg from "pg";
 import bcrypt from "bcrypt";
 import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "url";
 import { v2 as cloudinary } from "cloudinary";
 
 // MODULES
@@ -24,18 +22,13 @@ import { loadDashboard } from "./dashboard_loader.js";
 dotenv.config();
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// --------------------
-// PATH FRONTEND
-// --------------------
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// --------------------
-// DATABASE
-// --------------------
+// =========================
+// DATABASE NEON
+// =========================
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
@@ -43,53 +36,18 @@ const pool = new pg.Pool({
 
 app.locals.db = pool;
 
-// --------------------
-// CLOUDINARY
-// --------------------
+// =========================
+// CLOUDINARY CONFIG
+// =========================
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
   api_secret: process.env.CLOUD_API_SECRET
 });
 
-// --------------------
-// FRONTEND SERVING
-// --------------------
-app.use(express.static(__dirname));
-
-// page principale
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
-
-// autres pages
-app.get("/admin", (req, res) => {
-  res.sendFile(path.join(__dirname, "admin.html"));
-});
-
-app.get("/home", (req, res) => {
-  res.sendFile(path.join(__dirname, "home.html"));
-});
-
-app.get("/dashboard", (req, res) => {
-  res.sendFile(path.join(__dirname, "dashboard.html"));
-});
-
-app.get("/annonce", (req, res) => {
-  res.sendFile(path.join(__dirname, "annonce.html"));
-});
-
-app.get("/publish", (req, res) => {
-  res.sendFile(path.join(__dirname, "publish.html"));
-});
-
-app.get("/vip", (req, res) => {
-  res.sendFile(path.join(__dirname, "vip.html"));
-});
-
-// --------------------
-// API MODULES
-// --------------------
+// =========================
+// ROUTES MODULES
+// =========================
 app.use("/api", adminModule);
 app.use("/api", vipModule);
 app.use("/api", annonceModule);
@@ -102,9 +60,94 @@ loadChat(app);
 loadRealtime(app);
 loadDashboard(app);
 
-// --------------------
-// UPLOAD IMAGE
-// --------------------
+// =========================
+// HEALTH CHECK
+// =========================
+app.get("/", (req, res) => {
+  res.json({ status: "NIA RDC LIVE 🚀" });
+});
+
+// =========================
+// AUTH REGISTER
+// =========================
+app.post("/auth/register", async (req, res) => {
+  try {
+    const { telephone, password } = req.body;
+
+    if (!telephone || !password) {
+      return res.status(400).json({ error: "Champs manquants" });
+    }
+
+    const exist = await pool.query(
+      "SELECT id FROM users WHERE telephone=$1",
+      [telephone]
+    );
+
+    if (exist.rows.length > 0) {
+      return res.status(400).json({ error: "Utilisateur existe déjà" });
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+
+    const result = await pool.query(
+      `INSERT INTO users (telephone, password)
+       VALUES ($1, $2)
+       RETURNING id, telephone`,
+      [telephone, hash]
+    );
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur serveur register" });
+  }
+});
+
+// =========================
+// AUTH LOGIN
+// =========================
+app.post("/auth/login", async (req, res) => {
+  try {
+    const { telephone, password } = req.body;
+
+    if (!telephone || !password) {
+      return res.status(400).json({ error: "Champs manquants" });
+    }
+
+    const result = await pool.query(
+      "SELECT * FROM users WHERE telephone=$1",
+      [telephone]
+    );
+
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(400).json({ error: "Utilisateur introuvable" });
+    }
+
+    const ok = await bcrypt.compare(password, user.password);
+
+    if (!ok) {
+      return res.status(400).json({ error: "Mot de passe incorrect" });
+    }
+
+    res.json({
+      id: user.id,
+      telephone: user.telephone,
+      is_vip: user.is_vip || false,
+      is_admin: user.is_admin || false
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur serveur login" });
+  }
+});
+
+// =========================
+// UPLOAD IMAGE (CLOUDINARY)
+// =========================
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -129,60 +172,11 @@ app.post("/upload", upload.single("image"), async (req, res) => {
   }
 });
 
-// --------------------
-// AUTH
-// --------------------
-app.post("/auth/register", async (req, res) => {
-  const { telephone, password } = req.body;
-
-  const hash = await bcrypt.hash(password, 10);
-
-  const result = await pool.query(
-    `INSERT INTO users (telephone, password)
-     VALUES ($1,$2)
-     RETURNING id, telephone, is_vip, is_admin`,
-    [telephone, hash]
-  );
-
-  res.json(result.rows[0]);
-});
-
-app.post("/auth/login", async (req, res) => {
-  const { telephone, password } = req.body;
-
-  const result = await pool.query(
-    "SELECT * FROM users WHERE telephone=$1",
-    [telephone]
-  );
-
-  const user = result.rows[0];
-
-  if (!user) return res.status(400).json({ error: "User not found" });
-
-  const ok = await bcrypt.compare(password, user.password);
-
-  if (!ok) return res.status(400).json({ error: "Wrong password" });
-
-  res.json({
-    id: user.id,
-    telephone: user.telephone,
-    is_vip: user.is_vip,
-    is_admin: user.is_admin
-  });
-});
-
-// --------------------
-// HEALTH CHECK
-// --------------------
-app.get("/health", (req, res) => {
-  res.json({ status: "NIA RDC LIVE 🚀" });
-});
-
-// --------------------
+// =========================
 // START SERVER
-// --------------------
+// =========================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log("🚀 SERVER READY ON", PORT);
+  console.log("🚀 SERVER READY ON PORT", PORT);
 });

@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NIA RDC</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css"/>
   <script src="app.js" defer></script>
 </head>
 
 <body>
 
-<!-- TOP BAR -->
 <header>
-  <div id="logo">NIA RDC 🚀</div>
+  <div class="logo">NIA RDC 🚀</div>
 
-  <!-- ENGRENAGE ADMIN -->
-  <div id="gear" onmousedown="adminHoldStart()" onmouseup="adminHoldStop()">
+  <div class="admin-gear"
+       onmousedown="adminHoldStart()"
+       onmouseup="adminHoldStop()">
     ⚙️
   </div>
 </header>
 
-<!-- NAV -->
-<nav>
+<nav class="nav">
   <button onclick="go('home')">Accueil</button>
   <button onclick="go('login')">Connexion</button>
   <button onclick="go('register')">Inscription</button>
@@ -31,44 +30,50 @@
 
 <!-- HOME -->
 <section id="home" class="page">
-  <h3>Feed</h3>
+  <h2>📦 Annonces</h2>
   <div id="feed"></div>
 </section>
 
 <!-- LOGIN -->
 <section id="login" class="page hidden">
-  <h3>Connexion</h3>
-  <input id="login_tel" placeholder="Téléphone">
-  <input id="login_pass" type="password" placeholder="Mot de passe">
-  <button onclick="login()">Connexion</button>
+  <h2>Connexion</h2>
+
+  <input id="login_tel" placeholder="Téléphone"/>
+  <input id="login_pass" type="password" placeholder="Mot de passe"/>
+
+  <button class="primary" onclick="login()">Se connecter</button>
 </section>
 
 <!-- REGISTER -->
 <section id="register" class="page hidden">
-  <h3>Inscription</h3>
-  <input id="reg_tel" placeholder="Téléphone">
-  <input id="reg_pass" type="password" placeholder="Mot de passe">
-  <button onclick="register()">Créer compte</button>
+  <h2>Créer compte</h2>
+
+  <input id="reg_tel" placeholder="Téléphone"/>
+  <input id="reg_pass" type="password" placeholder="Mot de passe"/>
+
+  <button class="primary" onclick="register()">S'inscrire</button>
 </section>
 
 <!-- PUBLISH -->
 <section id="publish" class="page hidden">
-  <h3>Publier</h3>
+  <h2>Publier une annonce</h2>
 
-  <input id="titre" placeholder="Titre">
+  <input id="titre" placeholder="Titre"/>
   <textarea id="desc" placeholder="Description"></textarea>
-  <input id="ville" placeholder="Ville">
-  <input id="categorie" placeholder="Catégorie">
-  <input id="image" placeholder="Image URL">
+  <input id="ville" placeholder="Ville"/>
+  <input id="categorie" placeholder="Catégorie"/>
+  <input id="image" placeholder="Image URL"/>
 
-  <button onclick="publier()">Publier</button>
+  <button class="primary" onclick="publier()">Publier</button>
 </section>
 
 <!-- ADMIN -->
 <section id="admin" class="page hidden">
-  <h3>ADMIN</h3>
-  <input id="admin_code" placeholder="Code admin">
-  <button onclick="checkAdmin()">Entrer</button>
+  <h2>Admin Access</h2>
+
+  <input id="admin_code" placeholder="Code admin"/>
+
+  <button class="primary" onclick="checkAdmin()">Valider</button>
 </section>
 
 </body>

@@ -8,7 +8,7 @@ function val(id){
 }
 
 /* ======================
-NAVIGATION UI
+NAVIGATION
 ====================== */
 function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -43,7 +43,7 @@ function showApp(){
 }
 
 /* ======================
-FEED (AFFICHAGE ANNONCES)
+FEED
 ====================== */
 async function loadFeed(){
   try {
@@ -59,11 +59,14 @@ async function loadFeed(){
       feed.innerHTML += `
         <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
           <h3>${a.titre || ""}</h3>
-          <p>📍 ${a.ville || ""}</p>
-          <p>🏷️ ${a.quartier || ""}</p>
+          <p>📍 ${a.ville || ""} - ${a.quartier || ""}</p>
           <p>💰 ${a.prix || 0} ${a.prix_type || ""}</p>
           <p>📞 ${a.telephone || ""}</p>
           <p>📦 ${a.disponibilite || ""}</p>
+
+          ${a.image_url ? `
+            <img src="${a.image_url}" style="width:100%;border-radius:10px;margin-top:10px">
+          ` : ""}
         </div>
       `;
     });
@@ -94,7 +97,7 @@ async function register(){
       return;
     }
 
-    alert("Compte créé !");
+    alert("Compte créé 🚀");
     go("login");
 
   } catch (err) {
@@ -126,7 +129,7 @@ async function login(){
 
     localStorage.setItem("user", JSON.stringify(data));
 
-    alert("Connecté !");
+    alert("Connecté 🚀");
     showApp();
     go("home");
 
@@ -137,7 +140,19 @@ async function login(){
 }
 
 /* ======================
-PUBLISH FIX FINAL (ALIGNÉ SERVER)
+BASE64 IMAGE
+====================== */
+function toBase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+  });
+}
+
+/* ======================
+PUBLISH (CLOUDINARY READY)
 ====================== */
 async function publier(){
   try {
@@ -146,6 +161,14 @@ async function publier(){
     if(!user){
       alert("Connecte-toi !");
       return;
+    }
+
+    const file = document.getElementById("photos")?.files?.[0];
+
+    let image_base64 = "";
+
+    if(file){
+      image_base64 = await toBase64(file);
     }
 
     const payload = {
@@ -157,10 +180,11 @@ async function publier(){
       ville: val("ville"),
       quartier: val("quartier"),
       telephone: val("telephone"),
-      disponibilite: val("disponibilite")
+      disponibilite: val("disponibilite"),
+      image_base64
     };
 
-    console.log("📦 SEND ANNONCE:", payload);
+    console.log("📦 PUBLISH PAYLOAD:", payload);
 
     const res = await fetch(`${API}/annonces`, {
       method: "POST",
@@ -176,14 +200,14 @@ async function publier(){
       return;
     }
 
-    alert("Annonce publiée avec succès 🚀");
+    alert("Annonce publiée avec photo 🚀");
 
     go("home");
     loadFeed();
 
   } catch (err) {
     console.error("PUBLISH ERROR:", err);
-    alert("Erreur serveur publication !");
+    alert("Erreur upload image !");
   }
 }
 

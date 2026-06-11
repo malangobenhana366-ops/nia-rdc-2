@@ -1,167 +1,357 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>NIA RDC</title>
-  <link rel="stylesheet" href="style.css"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>NIA RDC</title>
+
+<link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
 
 <header class="topbar">
-  <div class="logo">NIA RDC 🚀</div>
+<div class="logo">
+🚀 NIA RDC
+</div>
 </header>
 
 <main>
 
 <!-- HOME -->
+
 <section id="home" class="page active">
 
-  <div id="authBox">
-    <h2>Bienvenue 👋</h2>
+<div id="authBox">
 
-    <button class="big-btn" onclick="showLogin()">
-      Connexion
-    </button>
+<h2>Bienvenue sur NIA RDC 👋</h2>
 
-    <button class="big-btn secondary" onclick="showRegister()">
-      Inscription
-    </button>
-  </div>
+<button class="big-btn" onclick="showLogin()">
+Connexion
+</button>
 
-  <div id="appBox" style="display:none;">
+<button class="big-btn secondary" onclick="showRegister()">
+Inscription
+</button>
 
-    <h2>🏠 Accueil NIA RDC</h2>
+</div>
 
-    <button class="big-btn" onclick="go('publish')">
-      ➕ Publier
-    </button>
+<div id="appBox" style="display:none;">
 
-    <button class="big-btn">
-      🔍 Rechercher
-    </button>
+<h2>🏠 Accueil</h2>
 
-    <button class="big-btn">
-      ⭐ VIP
-    </button>
+<button class="big-btn" onclick="go('publish')">
+➕ Publier
+</button>
 
-    <button class="big-btn secondary">
-      👤 Mon profil
-    </button>
+<button class="big-btn">
+🔍 Rechercher
+</button>
 
-    <hr>
+<button class="big-btn">
+⭐ VIP
+</button>
 
-    <h3>📦 Annonces récentes</h3>
+<button class="big-btn secondary">
+👤 Mon profil
+</button>
 
-    <div id="feed"></div>
+<hr>
 
-  </div>
+<h3>
+📦 Annonces récentes
+</h3>
 
-  <div class="ads">
-    📢 Publicité
-  </div>
+<div id="feed">
+
+</div>
+
+</div>
+
+<div class="ads">
+
+📢 Publicité
+
+</div>
 
 </section>
 
 <!-- LOGIN -->
+
 <section id="login" class="page">
-  <h2>Connexion</h2>
 
-  <input id="login_tel" placeholder="Téléphone"/>
-  <input id="login_pass" type="password" placeholder="Mot de passe"/>
+<h2>
+Connexion
+</h2>
 
-  <button onclick="login()">
-    Se connecter
-  </button>
+<input
+id="login_tel"
+placeholder="Téléphone">
+
+<input
+id="login_pass"
+type="password"
+placeholder="Mot de passe">
+
+<button class="big-btn"
+onclick="login()">
+
+Se connecter
+
+</button>
+
+<button
+class="big-btn secondary"
+onclick="go('home')">
+
+Retour
+
+</button>
+
 </section>
 
 <!-- REGISTER -->
+
 <section id="register" class="page">
-  <h2>Créer compte</h2>
 
-  <input id="reg_tel" placeholder="Téléphone"/>
-  <input id="reg_pass" type="password" placeholder="Mot de passe"/>
+<h2>
+Créer un compte
+</h2>
 
-  <button onclick="register()">
-    Créer
-  </button>
+<input
+id="reg_tel"
+placeholder="Téléphone">
+
+<input
+id="reg_pass"
+type="password"
+placeholder="Mot de passe">
+
+<button
+class="big-btn"
+onclick="register()">
+
+Créer
+
+</button>
+
+<button
+class="big-btn secondary"
+onclick="go('home')">
+
+Retour
+
+</button>
+
 </section>
 
-<!-- PUBLISH -->
+<!-- PUBLIER -->
+
 <section id="publish" class="page">
 
-  <h2>➕ Publier une annonce</h2>
+<h2>
 
-  <input
-    id="titre"
-    placeholder="Nom de l'objet"
-  >
+➕ Publier une annonce
 
-  <textarea
-    id="desc"
-    placeholder="Description"
-  ></textarea>
+</h2>
 
-  <input
-    id="prix"
-    type="number"
-    placeholder="Prix"
-  >
+<input
+id="titre"
+placeholder="Nom de l'objet">
 
-  <select id="prix_type">
-    <option value="heure">Par heure</option>
-    <option value="jour">Par jour</option>
-    <option value="semaine">Par semaine</option>
-    <option value="mois">Par mois</option>
-    <option value="vente">Vente</option>
-  </select>
+<textarea
+id="desc"
+placeholder="Description">
+</textarea>
 
-  <input
-    id="ville"
-    placeholder="Ville"
-  >
+<input
+id="prix"
+type="number"
+placeholder="Prix">
 
-  <input
-    id="quartier"
-    placeholder="Commune ou quartier"
-  >
+<select id="prix_type">
 
-  <h3>📷 Photos</h3>
+<option value="heure">
+Par heure
+</option>
 
-  <input
-    id="photos"
-    type="file"
-    multiple
-    accept="image/*"
-  >
+<option value="jour">
+Par jour
+</option>
 
-  <input
-    id="telephone"
-    placeholder="Téléphone de contact"
-  >
+<option value="semaine">
+Par semaine
+</option>
 
-  <h3>Disponibilité</h3>
+<option value="mois">
+Par mois
+</option>
 
-  <select id="disponibilite">
-    <option value="disponible">
-      Disponible
-    </option>
+<option value="vente">
+Vente
+</option>
 
-    <option value="occupe">
-      Occupé
-    </option>
-  </select>
+</select>
 
-  <br><br>
+<input
+id="ville"
+placeholder="Ville">
 
-  <button class="big-btn" onclick="publier()">
-    Publier
-  </button>
+<input
+id="quartier"
+placeholder="Commune ou quartier">
 
-  <button class="big-btn secondary" onclick="go('home')">
-    Retour
-  </button>
+<h3>
+
+📷 Photos
+
+</h3>
+
+<input
+id="photos"
+type="file"
+multiple
+accept="image/*">
+
+<input
+id="telephone"
+placeholder="Téléphone de contact">
+
+<h3>
+
+Disponibilité
+
+</h3>
+
+<select id="disponibilite">
+
+<option value="disponible">
+Disponible
+</option>
+
+<option value="occupe">
+Occupé
+</option>
+
+</select>
+
+<br>
+<br>
+
+<button
+class="big-btn"
+onclick="publier()">
+
+Publier
+
+</button>
+
+<button
+class="big-btn secondary"
+onclick="go('home')">
+
+Retour
+
+</button>
+
+</section>
+
+<!-- RECHERCHE -->
+
+<section id="search" class="page">
+
+<h2>
+
+🔍 Rechercher
+
+</h2>
+
+<p>
+
+Fonctionnalité en préparation.
+
+</p>
+
+<button
+class="big-btn secondary"
+onclick="go('home')">
+
+Retour
+
+</button>
+
+</section>
+
+<!-- VIP -->
+
+<section id="vip" class="page">
+
+<h2>
+
+⭐ Espace VIP
+
+</h2>
+
+<p>
+
+Les annonces VIP apparaîtront ici.
+
+</p>
+
+<button
+class="big-btn secondary"
+onclick="go('home')">
+
+Retour
+
+</button>
+
+</section>
+
+<!-- PROFIL -->
+
+<section id="profile" class="page">
+
+<h2>
+
+👤 Mon profil
+
+</h2>
+
+<button class="big-btn">
+
+Mes annonces
+
+</button>
+
+<button class="big-btn">
+
+Modifier mes annonces
+
+</button>
+
+<button class="big-btn">
+
+Boost VIP
+
+</button>
+
+<button class="big-btn">
+
+Paramètres
+
+</button>
+
+<button
+class="big-btn secondary"
+onclick="go('home')">
+
+Retour
+
+</button>
 
 </section>
 
@@ -170,4 +360,5 @@
 <script src="app.js"></script>
 
 </body>
+
 </html>

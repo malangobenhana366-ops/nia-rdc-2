@@ -20,7 +20,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* UPLOAD IMAGE */
 async function uploadImage(base64) {
   try {
     const result = await cloudinary.uploader.upload(base64, {
@@ -33,12 +32,10 @@ async function uploadImage(base64) {
   }
 }
 
-/* HEALTH */
 app.get("/", (req, res) => {
   res.json({ status: "OK NIA BACKEND 🚀" });
 });
 
-/* REGISTER */
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -54,7 +51,6 @@ app.post("/auth/register", async (req, res) => {
   }
 });
 
-/* LOGIN */
 app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -76,7 +72,6 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
-/* CREATE ANNONCE */
 app.post("/annonces", async (req, res) => {
   try {
     const {
@@ -89,18 +84,23 @@ app.post("/annonces", async (req, res) => {
       quartier,
       telephone,
       disponibilite,
-      image_base64
+      images
     } = req.body;
 
     if (!user_id || !titre) {
       return res.status(400).json({ error: "missing fields" });
     }
 
-    let image_url = "";
+    let urls = [];
 
-    if (image_base64) {
-      image_url = await uploadImage(image_base64);
+    if (Array.isArray(images)) {
+      for (let img of images.slice(0, 5)) {
+        const url = await uploadImage(img);
+        if (url) urls.push(url);
+      }
     }
+
+    const main_image = urls[0] || "";
 
     const result = await pool.query(
       `INSERT INTO annonces (
@@ -113,9 +113,10 @@ app.post("/annonces", async (req, res) => {
         quartier,
         telephone,
         disponibilite,
-        image_url
+        image_url,
+        images
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
       RETURNING *`,
       [
         user_id,
@@ -127,7 +128,8 @@ app.post("/annonces", async (req, res) => {
         quartier || "",
         telephone || "",
         disponibilite || "disponible",
-        image_url
+        main_image,
+        JSON.stringify(urls)
       ]
     );
 
@@ -137,7 +139,6 @@ app.post("/annonces", async (req, res) => {
   }
 });
 
-/* FEED */
 app.get("/feed", async (req, res) => {
   try {
     const result = await pool.query(
@@ -149,5 +150,4 @@ app.get("/feed", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log("🚀 RUNNING", PORT));
+app.listen(process.env.PORT || 5000, () => console.log("🚀 RUNNING"));

@@ -20,60 +20,64 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-async function uploadImage(base64) {
+async function uploadImage(base64){
   try {
     const result = await cloudinary.uploader.upload(base64, {
       folder: "nia_rdc",
       resource_type: "image"
     });
     return result.secure_url;
-  } catch {
+  } catch (e) {
+    console.log("UPLOAD ERROR:", e.message);
     return "";
   }
 }
 
-app.get("/", (req, res) => {
-  res.json({ status: "OK NIA BACKEND 🚀" });
+app.get("/", (req,res)=>{
+  res.json({status:"OK"});
 });
 
-app.post("/auth/register", async (req, res) => {
+/* AUTH */
+app.post("/auth/register", async (req,res)=>{
   try {
     const { telephone, password } = req.body;
 
-    const result = await pool.query(
+    const r = await pool.query(
       "INSERT INTO users (telephone,password) VALUES ($1,$2) RETURNING id,telephone",
-      [telephone, password]
+      [telephone,password]
     );
 
-    res.json(result.rows[0]);
+    res.json(r.rows[0]);
   } catch {
-    res.status(500).json({ error: "register error" });
+    res.status(500).json({error:"register error"});
   }
 });
 
-app.post("/auth/login", async (req, res) => {
+app.post("/auth/login", async (req,res)=>{
   try {
     const { telephone, password } = req.body;
 
-    const result = await pool.query(
+    const r = await pool.query(
       "SELECT * FROM users WHERE telephone=$1",
       [telephone]
     );
 
-    const user = result.rows[0];
+    const user = r.rows[0];
 
-    if (!user) return res.status(400).json({ error: "user not found" });
-    if (user.password !== password)
-      return res.status(400).json({ error: "wrong password" });
+    if(!user) return res.status(400).json({error:"user not found"});
+    if(user.password !== password)
+      return res.status(400).json({error:"wrong password"});
 
-    res.json({ id: user.id, telephone: user.telephone });
+    res.json({id:user.id, telephone:user.telephone});
   } catch {
-    res.status(500).json({ error: "login error" });
+    res.status(500).json({error:"login error"});
   }
 });
 
-app.post("/annonces", async (req, res) => {
+/* CREATE ANNONCE (MULTI IMAGES FIX) */
+app.post("/annonces", async (req,res)=>{
   try {
+
     const {
       user_id,
       titre,
@@ -87,22 +91,22 @@ app.post("/annonces", async (req, res) => {
       images
     } = req.body;
 
-    if (!user_id || !titre) {
-      return res.status(400).json({ error: "missing fields" });
+    if(!user_id || !titre){
+      return res.status(400).json({error:"missing fields"});
     }
 
     let urls = [];
 
-    if (Array.isArray(images)) {
-      for (let img of images.slice(0, 5)) {
+    if(Array.isArray(images)){
+      for(let img of images.slice(0,10)){
         const url = await uploadImage(img);
-        if (url) urls.push(url);
+        if(url) urls.push(url);
       }
     }
 
     const main_image = urls[0] || "";
 
-    const result = await pool.query(
+    const r = await pool.query(
       `INSERT INTO annonces (
         user_id,
         titre,
@@ -133,21 +137,25 @@ app.post("/annonces", async (req, res) => {
       ]
     );
 
-    res.json(result.rows[0]);
+    res.json(r.rows[0]);
+
   } catch (e) {
-    res.status(500).json({ error: "create error" });
+    console.log(e.message);
+    res.status(500).json({error:"create error"});
   }
 });
 
-app.get("/feed", async (req, res) => {
+/* FEED */
+app.get("/feed", async (req,res)=>{
   try {
-    const result = await pool.query(
+    const r = await pool.query(
       "SELECT * FROM annonces ORDER BY id DESC"
     );
-    res.json(result.rows);
+    res.json(r.rows);
   } catch {
     res.json([]);
   }
 });
 
-app.listen(process.env.PORT || 5000, () => console.log("🚀 RUNNING"));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, ()=>console.log("RUNNING", PORT));

@@ -1,11 +1,15 @@
 const API = "https://nia-rdc-2.onrender.com";
 
+/* ======================
+SAFE GET INPUT
+====================== */
 function val(id){
-  return document.getElementById(id)?.value || "";
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
 }
 
 /* ======================
-UI
+UI STATE
 ====================== */
 function showLogin(){
   document.getElementById("authBox").style.display = "none";
@@ -26,7 +30,15 @@ function showApp(){
 }
 
 /* ======================
-NAV
+LOGOUT
+====================== */
+function logout(){
+  localStorage.removeItem("user");
+  location.reload();
+}
+
+/* ======================
+NAVIGATION
 ====================== */
 function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -52,18 +64,18 @@ async function loadFeed(){
 
     data.forEach(a => {
       feed.innerHTML += `
-        <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
-          <h3>${a.titre}</h3>
-          <p>📍 ${a.ville || ""}</p>
+        <div style="background:#fff;padding:12px;margin:10px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1)">
+          <h3>${a.titre || ""}</h3>
+          <p>📍 ${a.ville || ""} ${a.quartier ? " - " + a.quartier : ""}</p>
           <p>💰 ${a.price || 0}</p>
           <p>📦 ${a.categorie || ""}</p>
-          <img src="${a.image_url || ''}" style="width:100%">
+          <img src="${a.image_url || ''}" style="width:100%;border-radius:8px;margin-top:5px">
         </div>
       `;
     });
 
   } catch (e) {
-    console.log("feed error", e);
+    console.log("Feed error:", e);
   }
 }
 
@@ -83,12 +95,16 @@ async function register(){
 
     const data = await res.json();
 
-    if(data.error) return alert("Erreur inscription !");
+    if(!res.ok){
+      alert(data.error || "Erreur inscription !");
+      return;
+    }
+
     alert("Compte créé !");
     go("login");
 
-  } catch {
-    alert("Erreur serveur !");
+  } catch (e) {
+    alert("Erreur serveur inscription !");
   }
 }
 
@@ -108,7 +124,10 @@ async function login(){
 
     const data = await res.json();
 
-    if(data.error) return alert("Erreur connexion !");
+    if(!res.ok){
+      alert(data.error || "Erreur connexion !");
+      return;
+    }
 
     localStorage.setItem("user", JSON.stringify(data));
 
@@ -116,13 +135,13 @@ async function login(){
     showApp();
     go("home");
 
-  } catch {
-    alert("Erreur serveur !");
+  } catch (e) {
+    alert("Erreur serveur login !");
   }
 }
 
 /* ======================
-PUBLISH (FIX FINAL ROBUSTE)
+PUBLISH (ROBUST FINAL)
 ====================== */
 async function publier(){
   try {
@@ -138,12 +157,22 @@ async function publier(){
       titre: val("titre"),
       description: val("desc"),
       ville: val("ville"),
-      categorie: val("categorie"),
-      image_url: val("image"),
-      price: Number(val("prix") || 0)
+      quartier: val("quartier"),
+      categorie: "general",
+      image_url: "",
+
+      price: Number(val("prix") || 0),
+      price_type: val("prix_type"),
+      telephone: val("telephone"),
+      disponibilite: val("disponibilite")
     };
 
-    console.log("PUBLISH:", payload);
+    if(!payload.titre){
+      alert("Ajoute un titre !");
+      return;
+    }
+
+    console.log("PUBLISH PAYLOAD:", payload);
 
     const res = await fetch(`${API}/annonces`, {
       method:"POST",
@@ -154,6 +183,7 @@ async function publier(){
     const data = await res.json();
 
     if(!res.ok){
+      console.log("SERVER ERROR:", data);
       alert(data.error || "Erreur publication !");
       return;
     }
@@ -164,9 +194,12 @@ async function publier(){
 
   } catch (e) {
     console.error(e);
-    alert("Erreur serveur publish !");
+    alert("Erreur serveur publication !");
   }
 }
 
+/* ======================
+INIT
+====================== */
 go("home");
 loadFeed();

@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 MIDDLEWARE
 ====================== */
 app.use(cors());
-app.use(express.json({ limit: "15mb" }));
+app.use(express.json({ limit: "20mb" })); // images base64 = gros payload
 app.use(express.static(__dirname));
 
 /* ======================
@@ -26,15 +26,23 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* HEALTH */
+/* ======================
+HEALTH CHECK
+====================== */
 app.get("/", (req, res) => {
   res.json({ status: "NIA BACKEND OK 🚀" });
 });
 
-/* REGISTER */
+/* ======================
+REGISTER
+====================== */
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
+
+    if (!telephone || !password) {
+      return res.status(400).json({ error: "missing fields" });
+    }
 
     const result = await pool.query(
       "INSERT INTO users (telephone,password) VALUES ($1,$2) RETURNING id,telephone",
@@ -43,12 +51,14 @@ app.post("/auth/register", async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (e) {
-    console.error(e.message);
+    console.error("REGISTER ERROR:", e.message);
     res.status(500).json({ error: "register error" });
   }
 });
 
-/* LOGIN */
+/* ======================
+LOGIN
+====================== */
 app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -66,24 +76,30 @@ app.post("/auth/login", async (req, res) => {
 
     res.json({ id: user.id, telephone: user.telephone });
   } catch (e) {
-    console.error(e.message);
+    console.error("LOGIN ERROR:", e.message);
     res.status(500).json({ error: "login error" });
   }
 });
 
 /* ======================
-UPLOAD IMAGE CLOUDINARY
+CLOUDINARY UPLOAD SAFE
 ====================== */
 async function uploadImage(base64) {
-  const result = await cloudinary.uploader.upload(base64, {
-    folder: "nia_rdc"
-  });
+  try {
+    const result = await cloudinary.uploader.upload(base64, {
+      folder: "nia_rdc",
+      resource_type: "image"
+    });
 
-  return result.secure_url;
+    return result.secure_url;
+  } catch (err) {
+    console.error("CLOUDINARY ERROR:", err.message);
+    return "";
+  }
 }
 
 /* ======================
-CREATE ANNONCE (WITH IMAGE)
+CREATE ANNONCE (FINAL STABLE)
 ====================== */
 app.post("/annonces", async (req, res) => {
   try {
@@ -100,7 +116,11 @@ app.post("/annonces", async (req, res) => {
       image_base64
     } = req.body;
 
-    console.log("📦 ANNONCE:", req.body);
+    console.log("📦 NEW ANNONCE:", {
+      user_id,
+      titre,
+      hasImage: !!image_base64
+    });
 
     if (!user_id || !titre) {
       return res.status(400).json({ error: "missing fields" });
@@ -108,7 +128,7 @@ app.post("/annonces", async (req, res) => {
 
     let image_url = "";
 
-    /* UPLOAD IMAGE IF EXISTS */
+    /* IMAGE UPLOAD (OPTIONAL) */
     if (image_base64) {
       image_url = await uploadImage(image_base64);
     }
@@ -150,7 +170,9 @@ app.post("/annonces", async (req, res) => {
   }
 });
 
-/* FEED */
+/* ======================
+FEED
+====================== */
 app.get("/feed", async (req, res) => {
   try {
     const result = await pool.query(
@@ -158,7 +180,8 @@ app.get("/feed", async (req, res) => {
     );
 
     res.json(result.rows);
-  } catch {
+  } catch (e) {
+    console.error(e.message);
     res.json([]);
   }
 });

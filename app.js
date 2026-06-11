@@ -20,7 +20,7 @@ function go(page){
 }
 
 /* ======================
-FEED
+FEED (AVEC IMAGE PRINCIPALE)
 ====================== */
 async function loadFeed(){
   try {
@@ -42,7 +42,10 @@ async function loadFeed(){
           <p>📞 ${a.telephone || ""}</p>
           <p>📦 ${a.disponibilite || ""}</p>
 
-          ${a.image_url ? `<img src="${a.image_url}" style="width:100%;margin-top:10px;border-radius:10px">` : ""}
+          ${a.image_url ? `
+            <img src="${a.image_url}" 
+            style="width:100%;margin-top:10px;border-radius:10px">
+          ` : ""}
         </div>
       `;
     });
@@ -53,37 +56,83 @@ async function loadFeed(){
 }
 
 /* ======================
-LOGIN / REGISTER (inchangé)
+LOGIN (inchangé logique)
 ====================== */
-async function register(){ /* inchangé */ }
+async function login(){
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        telephone: val("login_tel"),
+        password: val("login_pass")
+      })
+    });
 
-async function login(){ /* inchangé */ }
+    const data = await res.json();
+
+    if(!res.ok){
+      return alert(data.error || "Erreur login");
+    }
+
+    localStorage.setItem("user", JSON.stringify(data));
+
+    alert("Connecté 🚀");
+    go("home");
+    loadFeed();
+
+  } catch (err) {
+    console.error(err);
+    alert("Erreur serveur login");
+  }
+}
 
 /* ======================
-🔥 CLOUDINARY READY PUBLISH
+REGISTER (inchangé logique)
+====================== */
+async function register(){
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        telephone: val("reg_tel"),
+        password: val("reg_pass")
+      })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      return alert(data.error || "Erreur register");
+    }
+
+    alert("Compte créé 🚀");
+    go("login");
+
+  } catch (err) {
+    console.error(err);
+    alert("Erreur serveur register");
+  }
+}
+
+/* ======================
+🔥 PUBLISH MULTI PHOTOS READY
 ====================== */
 async function publier(){
   try {
     const user = JSON.parse(localStorage.getItem("user"));
     if(!user) return alert("Connecte-toi !");
 
-    const fileInput = document.getElementById("photos");
-    const file = fileInput?.files?.[0];
+    const files = document.getElementById("photos")?.files;
 
-    let image_url = "";
+    let images = [];
 
-    // si image existe → upload vers backend Cloudinary
-    if(file){
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const upload = await fetch(`${API}/upload`, {
-        method: "POST",
-        body: formData
-      });
-
-      const img = await upload.json();
-      image_url = img.url || "";
+    if(files && files.length > 0){
+      for(let i = 0; i < Math.min(files.length, 5); i++){
+        const base64 = await toBase64(files[i]);
+        images.push(base64);
+      }
     }
 
     const payload = {
@@ -96,7 +145,7 @@ async function publier(){
       quartier: val("quartier"),
       telephone: val("telephone"),
       disponibilite: val("disponibilite"),
-      image_url
+      images // 👈 IMPORTANT (multi images)
     };
 
     const res = await fetch(`${API}/annonces`, {
@@ -108,6 +157,7 @@ async function publier(){
     const data = await res.json();
 
     if(!res.ok){
+      console.log(data);
       return alert(data.error || "Erreur publication");
     }
 
@@ -117,8 +167,20 @@ async function publier(){
 
   } catch (err) {
     console.error(err);
-    alert("Erreur serveur");
+    alert("Erreur serveur publication");
   }
+}
+
+/* ======================
+CONVERT FILE → BASE64
+====================== */
+function toBase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = err => reject(err);
+  });
 }
 
 /* INIT */

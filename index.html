@@ -15,23 +15,16 @@
 
 <main>
 
-<!-- ================= HOME ================= -->
+<!-- HOME -->
 <section id="home" class="page active">
 
-  <!-- AUTH -->
   <div id="authBox">
     <h2>Bienvenue sur NIA RDC 👋</h2>
 
-    <button class="big-btn" onclick="showLogin()">
-      Connexion
-    </button>
-
-    <button class="big-btn secondary" onclick="showRegister()">
-      Inscription
-    </button>
+    <button class="big-btn" onclick="showLogin()">Connexion</button>
+    <button class="big-btn secondary" onclick="showRegister()">Inscription</button>
   </div>
 
-  <!-- APP -->
   <div id="appBox" style="display:none;">
     <h2>🏠 Accueil</h2>
 
@@ -43,15 +36,13 @@
     <hr>
 
     <h3>📦 Annonces récentes</h3>
-
     <div id="feed"></div>
   </div>
 
 </section>
 
-<!-- ================= LOGIN ================= -->
+<!-- LOGIN -->
 <section id="login" class="page">
-
   <h2>Connexion</h2>
 
   <input id="login_tel" placeholder="Téléphone">
@@ -59,12 +50,10 @@
 
   <button class="big-btn" onclick="login()">Se connecter</button>
   <button class="big-btn secondary" onclick="go('home')">Retour</button>
-
 </section>
 
-<!-- ================= REGISTER ================= -->
+<!-- REGISTER -->
 <section id="register" class="page">
-
   <h2>Créer un compte</h2>
 
   <input id="reg_tel" placeholder="Téléphone">
@@ -72,16 +61,13 @@
 
   <button class="big-btn" onclick="register()">Créer</button>
   <button class="big-btn secondary" onclick="go('home')">Retour</button>
-
 </section>
 
-<!-- ================= PUBLISH ================= -->
+<!-- PUBLISH -->
 <section id="publish" class="page">
-
   <h2>➕ Publier une annonce</h2>
 
   <input id="titre" placeholder="Nom de l'objet">
-
   <textarea id="desc" placeholder="Description"></textarea>
 
   <input id="prix" type="number" placeholder="Prix">
@@ -96,7 +82,6 @@
 
   <input id="ville" placeholder="Ville">
   <input id="quartier" placeholder="Quartier">
-
   <input id="telephone" placeholder="Téléphone de contact">
 
   <select id="disponibilite">
@@ -104,48 +89,35 @@
     <option value="occupe">Occupé</option>
   </select>
 
-  <!-- 📷 IMAGE PRINCIPALE (Cloudinary ready) -->
   <h3>📷 Photo principale</h3>
-
   <input id="image" type="file" accept="image/*">
 
   <br><br>
 
-  <button class="big-btn" onclick="publier()">
-    Publier
-  </button>
-
-  <button class="big-btn secondary" onclick="go('home')">
-    Retour
-  </button>
-
+  <button class="big-btn" onclick="publier()">Publier</button>
+  <button class="big-btn secondary" onclick="go('home')">Retour</button>
 </section>
 
-<!-- ================= SEARCH ================= -->
+<!-- SEARCH -->
 <section id="search" class="page">
-
   <h2>🔍 Rechercher</h2>
 
   <input placeholder="Rechercher...">
 
   <button class="big-btn">Rechercher</button>
   <button class="big-btn secondary" onclick="go('home')">Retour</button>
-
 </section>
 
-<!-- ================= VIP ================= -->
+<!-- VIP -->
 <section id="vip" class="page">
-
   <h2>⭐ VIP</h2>
   <p>Zone premium des annonces boostées</p>
 
   <button class="big-btn secondary" onclick="go('home')">Retour</button>
-
 </section>
 
-<!-- ================= PROFILE ================= -->
+<!-- PROFILE -->
 <section id="profile" class="page">
-
   <h2>👤 Mon profil</h2>
 
   <button class="big-btn">Mes annonces</button>
@@ -153,10 +125,7 @@
   <button class="big-btn">Boost VIP</button>
   <button class="big-btn">Paramètres</button>
 
-  <button class="big-btn secondary" onclick="go('home')">
-    Retour
-  </button>
-
+  <button class="big-btn secondary" onclick="go('home')">Retour</button>
 </section>
 
 </main>
@@ -164,4 +133,4 @@
 <script src="app.js"></script>
 
 </body>
-                                        </html>
+</html>

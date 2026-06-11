@@ -1,92 +1,85 @@
 const API = "https://nia-rdc-2.onrender.com";
 
 /* ======================
-SAFE GET INPUT
+UTILS
 ====================== */
-function val(id){
+function val(id) {
   const el = document.getElementById(id);
-  return el ? el.value.trim() : "";
+  return el ? el.value : "";
+}
+
+function valFile(id) {
+  const el = document.getElementById(id);
+  return el?.files ? Array.from(el.files) : [];
 }
 
 /* ======================
-UI STATE
+UI NAV
 ====================== */
-function showLogin(){
+function showLogin() {
   document.getElementById("authBox").style.display = "none";
   go("login");
 }
 
-function showRegister(){
+function showRegister() {
   document.getElementById("authBox").style.display = "none";
   go("register");
 }
 
-function showApp(){
-  const auth = document.getElementById("authBox");
-  const app = document.getElementById("appBox");
-
-  if(auth) auth.style.display = "none";
-  if(app) app.style.display = "block";
-}
-
-/* ======================
-LOGOUT
-====================== */
-function logout(){
-  localStorage.removeItem("user");
-  location.reload();
+function showApp() {
+  document.getElementById("authBox").style.display = "none";
+  document.getElementById("appBox").style.display = "block";
 }
 
 /* ======================
 NAVIGATION
 ====================== */
-function go(page){
+function go(page) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
 
   const target = document.getElementById(page);
-  if(target) target.classList.add("active");
+  if (target) target.classList.add("active");
 
-  if(page === "home") loadFeed();
+  if (page === "home") loadFeed();
 }
 
 /* ======================
 FEED
 ====================== */
-async function loadFeed(){
+async function loadFeed() {
   try {
     const res = await fetch(`${API}/feed`);
     const data = await res.json();
 
     const feed = document.getElementById("feed");
-    if(!feed) return;
+    if (!feed) return;
 
     feed.innerHTML = "";
 
     data.forEach(a => {
       feed.innerHTML += `
-        <div style="background:#fff;padding:12px;margin:10px;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1)">
+        <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
           <h3>${a.titre || ""}</h3>
-          <p>📍 ${a.ville || ""} ${a.quartier ? " - " + a.quartier : ""}</p>
+          <p>📍 ${a.ville || ""}</p>
           <p>💰 ${a.price || 0}</p>
-          <p>📦 ${a.categorie || ""}</p>
-          <img src="${a.image_url || ''}" style="width:100%;border-radius:8px;margin-top:5px">
+          <img src="${a.image_url || ""}" style="width:100%;border-radius:8px">
         </div>
       `;
     });
 
   } catch (e) {
-    console.log("Feed error:", e);
+    console.log("feed error", e);
   }
 }
 
 /* ======================
 REGISTER
 ====================== */
-async function register(){
+async function register() {
   try {
     const res = await fetch(`${API}/auth/register`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         telephone: val("reg_tel"),
         password: val("reg_pass")
@@ -95,10 +88,7 @@ async function register(){
 
     const data = await res.json();
 
-    if(!res.ok){
-      alert(data.error || "Erreur inscription !");
-      return;
-    }
+    if (!res.ok) return alert(data.error || "Erreur inscription !");
 
     alert("Compte créé !");
     go("login");
@@ -111,11 +101,11 @@ async function register(){
 /* ======================
 LOGIN
 ====================== */
-async function login(){
+async function login() {
   try {
     const res = await fetch(`${API}/auth/login`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         telephone: val("login_tel"),
         password: val("login_pass")
@@ -124,10 +114,7 @@ async function login(){
 
     const data = await res.json();
 
-    if(!res.ok){
-      alert(data.error || "Erreur connexion !");
-      return;
-    }
+    if (!res.ok) return alert(data.error || "Erreur connexion !");
 
     localStorage.setItem("user", JSON.stringify(data));
 
@@ -141,51 +128,42 @@ async function login(){
 }
 
 /* ======================
-PUBLISH (ROBUST FINAL)
+PUBLISH (FIX FINAL CLEAN)
 ====================== */
-async function publier(){
+async function publier() {
   try {
     const user = JSON.parse(localStorage.getItem("user"));
 
-    if(!user){
+    if (!user) {
       alert("Connecte-toi !");
       return;
     }
+
+    const photos = valFile("photos");
 
     const payload = {
       user_id: user.id,
       titre: val("titre"),
       description: val("desc"),
       ville: val("ville"),
-      quartier: val("quartier"),
       categorie: "general",
       image_url: "",
-
-      price: Number(val("prix") || 0),
-      price_type: val("prix_type"),
-      telephone: val("telephone"),
-      disponibilite: val("disponibilite")
+      price: Number(val("prix") || 0)
     };
 
-    if(!payload.titre){
-      alert("Ajoute un titre !");
-      return;
-    }
-
-    console.log("PUBLISH PAYLOAD:", payload);
+    // IMPORTANT: on ne casse pas backend → pas de champs inutiles envoyés
 
     const res = await fetch(`${API}/annonces`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
 
     const data = await res.json();
 
-    if(!res.ok){
+    if (!res.ok) {
       console.log("SERVER ERROR:", data);
-      alert(data.error || "Erreur publication !");
-      return;
+      return alert(data.error || "create error");
     }
 
     alert("Annonce publiée !");
@@ -193,13 +171,11 @@ async function publier(){
     loadFeed();
 
   } catch (e) {
-    console.error(e);
-    alert("Erreur serveur publication !");
+    console.log(e);
+    alert("Erreur serveur publish !");
   }
 }
 
-/* ======================
-INIT
-====================== */
+/* INIT */
 go("home");
 loadFeed();

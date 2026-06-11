@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.static(__dirname));
 
-/* HEALTH CHECK */
+/* HEALTH */
 app.get("/", (req, res) => {
   res.json({ status: "NIA BACKEND OK 🚀" });
 });
@@ -36,7 +36,7 @@ app.post("/auth/register", async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error("REGISTER ERROR:", err);
+    console.error("REGISTER ERROR:", err.message);
     res.status(500).json({ error: "register error" });
   }
 });
@@ -59,12 +59,12 @@ app.post("/auth/login", async (req, res) => {
 
     res.json({ id: user.id, telephone: user.telephone });
   } catch (err) {
-    console.error("LOGIN ERROR:", err);
+    console.error("LOGIN ERROR:", err.message);
     res.status(500).json({ error: "login error" });
   }
 });
 
-/* CREATE ANNONCE (SAFE MODE ULTRA STABLE) */
+/* CREATE ANNONCE (STABLE + SAFE) */
 app.post("/annonces", async (req, res) => {
   try {
     const {
@@ -72,32 +72,21 @@ app.post("/annonces", async (req, res) => {
       titre,
       description,
       ville,
-      quartier,
       categorie,
       image_url,
-      price,
-      price_type,
-      telephone,
-      disponibilite
+      price
     } = req.body;
 
     console.log("ANNONCE RECEIVED:", req.body);
 
-    // validation minimale CRITIQUE
+    // sécurité minimale
     if (!user_id || !titre) {
       return res.status(400).json({ error: "missing required fields" });
     }
 
     const result = await pool.query(
-      `INSERT INTO annonces (
-        user_id,
-        titre,
-        description,
-        ville,
-        categorie,
-        image_url,
-        price
-      )
+      `INSERT INTO annonces
+      (user_id, titre, description, ville, categorie, image_url, price)
       VALUES ($1,$2,$3,$4,$5,$6,$7)
       RETURNING *`,
       [
@@ -112,9 +101,8 @@ app.post("/annonces", async (req, res) => {
     );
 
     res.json(result.rows[0]);
-
   } catch (err) {
-    console.error("CREATE ERROR FULL:", err);
+    console.error("CREATE ERROR:", err.message);
     res.status(500).json({ error: err.message });
   }
 });

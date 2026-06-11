@@ -4,353 +4,199 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>NIA RDC</title>
-
 <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
 
 <header class="topbar">
-<div class="logo">
-🚀 NIA RDC
-</div>
+  <div class="logo">🚀 NIA RDC</div>
 </header>
 
 <main>
 
-<!-- HOME -->
-
+<!-- ================= HOME ================= -->
 <section id="home" class="page active">
 
-<div id="authBox">
+  <!-- AUTH -->
+  <div id="authBox">
 
-<h2>Bienvenue sur NIA RDC 👋</h2>
+    <h2>Bienvenue sur NIA RDC 👋</h2>
 
-<button class="big-btn" onclick="showLogin()">
-Connexion
-</button>
+    <button class="big-btn" onclick="showLogin()">
+      Connexion
+    </button>
 
-<button class="big-btn secondary" onclick="showRegister()">
-Inscription
-</button>
+    <button class="big-btn secondary" onclick="showRegister()">
+      Inscription
+    </button>
 
-</div>
+  </div>
 
-<div id="appBox" style="display:none;">
+  <!-- APP -->
+  <div id="appBox" style="display:none;">
 
-<h2>🏠 Accueil</h2>
+    <h2>🏠 Accueil</h2>
 
-<button class="big-btn" onclick="go('publish')">
-➕ Publier
-</button>
+    <button class="big-btn" onclick="go('publish')">
+      ➕ Publier
+    </button>
 
-<button class="big-btn">
-🔍 Rechercher
-</button>
+    <button class="big-btn" onclick="go('search')">
+      🔍 Rechercher
+    </button>
 
-<button class="big-btn">
-⭐ VIP
-</button>
+    <button class="big-btn" onclick="go('vip')">
+      ⭐ VIP
+    </button>
 
-<button class="big-btn secondary">
-👤 Mon profil
-</button>
+    <button class="big-btn secondary" onclick="go('profile')">
+      👤 Mon profil
+    </button>
 
-<hr>
+    <button class="big-btn secondary" onclick="logout()">
+      🚪 Déconnexion
+    </button>
 
-<h3>
-📦 Annonces récentes
-</h3>
+    <hr>
 
-<div id="feed">
+    <h3>📦 Annonces récentes</h3>
 
-</div>
+    <div id="feed"></div>
 
-</div>
+  </div>
 
-<div class="ads">
-
-📢 Publicité
-
-</div>
+  <div class="ads">
+    📢 Publicité
+  </div>
 
 </section>
 
-<!-- LOGIN -->
-
+<!-- ================= LOGIN ================= -->
 <section id="login" class="page">
 
-<h2>
-Connexion
-</h2>
+<h2>Connexion</h2>
 
-<input
-id="login_tel"
-placeholder="Téléphone">
+<input id="login_tel" placeholder="Téléphone">
+<input id="login_pass" type="password" placeholder="Mot de passe">
 
-<input
-id="login_pass"
-type="password"
-placeholder="Mot de passe">
-
-<button class="big-btn"
-onclick="login()">
-
+<button class="big-btn" onclick="login()">
 Se connecter
-
 </button>
 
-<button
-class="big-btn secondary"
-onclick="go('home')">
-
+<button class="big-btn secondary" onclick="go('home')">
 Retour
-
 </button>
 
 </section>
 
-<!-- REGISTER -->
-
+<!-- ================= REGISTER ================= -->
 <section id="register" class="page">
 
-<h2>
-Créer un compte
-</h2>
+<h2>Créer un compte</h2>
 
-<input
-id="reg_tel"
-placeholder="Téléphone">
+<input id="reg_tel" placeholder="Téléphone">
+<input id="reg_pass" type="password" placeholder="Mot de passe">
 
-<input
-id="reg_pass"
-type="password"
-placeholder="Mot de passe">
-
-<button
-class="big-btn"
-onclick="register()">
-
+<button class="big-btn" onclick="register()">
 Créer
-
 </button>
 
-<button
-class="big-btn secondary"
-onclick="go('home')">
-
+<button class="big-btn secondary" onclick="go('home')">
 Retour
-
 </button>
 
 </section>
 
-<!-- PUBLIER -->
-
+<!-- ================= PUBLISH ================= -->
 <section id="publish" class="page">
 
-<h2>
+<h2>➕ Publier une annonce</h2>
 
-➕ Publier une annonce
+<input id="titre" placeholder="Nom de l'objet">
 
-</h2>
+<textarea id="desc" placeholder="Description"></textarea>
 
-<input
-id="titre"
-placeholder="Nom de l'objet">
-
-<textarea
-id="desc"
-placeholder="Description">
-</textarea>
-
-<input
-id="prix"
-type="number"
-placeholder="Prix">
+<input id="prix" type="number" placeholder="Prix">
 
 <select id="prix_type">
-
-<option value="heure">
-Par heure
-</option>
-
-<option value="jour">
-Par jour
-</option>
-
-<option value="semaine">
-Par semaine
-</option>
-
-<option value="mois">
-Par mois
-</option>
-
-<option value="vente">
-Vente
-</option>
-
+  <option value="heure">Par heure</option>
+  <option value="jour">Par jour</option>
+  <option value="semaine">Par semaine</option>
+  <option value="mois">Par mois</option>
+  <option value="vente">Vente</option>
 </select>
 
-<input
-id="ville"
-placeholder="Ville">
+<input id="ville" placeholder="Ville">
+<input id="quartier" placeholder="Quartier">
 
-<input
-id="quartier"
-placeholder="Commune ou quartier">
+<h3>📷 Photos</h3>
+<input id="photos" type="file" multiple accept="image/*">
 
-<h3>
+<input id="telephone" placeholder="Téléphone de contact">
 
-📷 Photos
-
-</h3>
-
-<input
-id="photos"
-type="file"
-multiple
-accept="image/*">
-
-<input
-id="telephone"
-placeholder="Téléphone de contact">
-
-<h3>
-
-Disponibilité
-
-</h3>
-
+<h3>Disponibilité</h3>
 <select id="disponibilite">
-
-<option value="disponible">
-Disponible
-</option>
-
-<option value="occupe">
-Occupé
-</option>
-
+  <option value="disponible">Disponible</option>
+  <option value="occupe">Occupé</option>
 </select>
 
-<br>
-<br>
+<br><br>
 
-<button
-class="big-btn"
-onclick="publier()">
-
+<button class="big-btn" onclick="publier()">
 Publier
-
 </button>
 
-<button
-class="big-btn secondary"
-onclick="go('home')">
-
+<button class="big-btn secondary" onclick="go('home')">
 Retour
-
 </button>
 
 </section>
 
-<!-- RECHERCHE -->
-
+<!-- ================= SEARCH ================= -->
 <section id="search" class="page">
 
-<h2>
+<h2>🔍 Rechercher</h2>
 
-🔍 Rechercher
+<input id="searchText" placeholder="Rechercher une annonce...">
 
-</h2>
+<button class="big-btn">
+Rechercher
+</button>
 
-<p>
-
-Fonctionnalité en préparation.
-
-</p>
-
-<button
-class="big-btn secondary"
-onclick="go('home')">
-
+<button class="big-btn secondary" onclick="go('home')">
 Retour
-
 </button>
 
 </section>
 
-<!-- VIP -->
-
+<!-- ================= VIP ================= -->
 <section id="vip" class="page">
 
-<h2>
+<h2>⭐ Espace VIP</h2>
 
-⭐ Espace VIP
+<p>Annonces boostées et visibilité premium ici.</p>
 
-</h2>
-
-<p>
-
-Les annonces VIP apparaîtront ici.
-
-</p>
-
-<button
-class="big-btn secondary"
-onclick="go('home')">
-
+<button class="big-btn secondary" onclick="go('home')">
 Retour
-
 </button>
 
 </section>
 
-<!-- PROFIL -->
-
+<!-- ================= PROFILE ================= -->
 <section id="profile" class="page">
 
-<h2>
+<h2>👤 Mon profil</h2>
 
-👤 Mon profil
+<button class="big-btn">Mes annonces</button>
+<button class="big-btn">Modifier mes annonces</button>
+<button class="big-btn">Boost VIP</button>
+<button class="big-btn">Paramètres</button>
+<button class="big-btn">Mes favoris</button>
 
-</h2>
-
-<button class="big-btn">
-
-Mes annonces
-
-</button>
-
-<button class="big-btn">
-
-Modifier mes annonces
-
-</button>
-
-<button class="big-btn">
-
-Boost VIP
-
-</button>
-
-<button class="big-btn">
-
-Paramètres
-
-</button>
-
-<button
-class="big-btn secondary"
-onclick="go('home')">
-
+<button class="big-btn secondary" onclick="go('home')">
 Retour
-
 </button>
 
 </section>
@@ -360,5 +206,4 @@ Retour
 <script src="app.js"></script>
 
 </body>
-
 </html>

@@ -9,16 +9,26 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/* ======================
+MIDDLEWARE
+====================== */
 app.use(cors());
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "20mb" })); // prêt pour images base64 futur
 app.use(express.static(__dirname));
 
-/* HEALTH */
+/* ======================
+HEALTH CHECK
+====================== */
 app.get("/", (req, res) => {
-  res.json({ status: "NIA BACKEND OK 🚀" });
+  res.json({
+    status: "NIA BACKEND OK 🚀",
+    version: "1.0.0"
+  });
 });
 
-/* REGISTER */
+/* ======================
+REGISTER
+====================== */
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -41,7 +51,9 @@ app.post("/auth/register", async (req, res) => {
   }
 });
 
-/* LOGIN */
+/* ======================
+LOGIN
+====================== */
 app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -64,50 +76,73 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
-/* CREATE ANNONCE (STABLE + SAFE) */
+/* ======================
+CREATE ANNONCE (STABLE + FUTURE READY)
+====================== */
 app.post("/annonces", async (req, res) => {
   try {
     const {
       user_id,
       titre,
       description,
+      prix,
+      prix_type,
       ville,
-      categorie,
-      image_url,
-      price
+      quartier,
+      telephone,
+      disponibilite
     } = req.body;
 
-    console.log("ANNONCE RECEIVED:", req.body);
+    console.log("📦 NEW ANNONCE:", req.body);
 
-    // sécurité minimale
+    // sécurité minimale obligatoire
     if (!user_id || !titre) {
-      return res.status(400).json({ error: "missing required fields" });
+      return res.status(400).json({
+        error: "missing required fields (user_id, titre)"
+      });
     }
 
     const result = await pool.query(
-      `INSERT INTO annonces
-      (user_id, titre, description, ville, categorie, image_url, price)
-      VALUES ($1,$2,$3,$4,$5,$6,$7)
+      `INSERT INTO annonces (
+        user_id,
+        titre,
+        description,
+        prix,
+        prix_type,
+        ville,
+        quartier,
+        telephone,
+        disponibilite
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
       RETURNING *`,
       [
         user_id,
         titre,
         description || "",
+        prix || 0,
+        prix_type || "vente",
         ville || "",
-        categorie || "",
-        image_url || "",
-        price || 0
+        quartier || "",
+        telephone || "",
+        disponibilite || "disponible"
       ]
     );
 
     res.json(result.rows[0]);
+
   } catch (err) {
-    console.error("CREATE ERROR:", err.message);
-    res.status(500).json({ error: err.message });
+    console.error("CREATE ANNONCE ERROR:", err.message);
+    res.status(500).json({
+      error: "create error",
+      details: err.message
+    });
   }
 });
 
-/* FEED */
+/* ======================
+FEED
+====================== */
 app.get("/feed", async (req, res) => {
   try {
     const result = await pool.query(
@@ -115,11 +150,32 @@ app.get("/feed", async (req, res) => {
     );
 
     res.json(result.rows);
+
   } catch (err) {
-    console.error(err);
+    console.error("FEED ERROR:", err.message);
     res.json([]);
   }
 });
 
+/* ======================
+FUTURE FEATURES READY (IMPORTANT)
+====================== */
+
+/*
+👉 ICI TU AS LA BASE POUR ÉVOLUER :
+
+- /vip (boost annonces)
+- /search (recherche intelligente)
+- /profile (gestion utilisateur)
+- /upload (images réelles plus tard)
+
+On a préparé la structure backend propre pour ça.
+*/
+
+/* ======================
+START SERVER
+====================== */
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log("🚀 RUNNING", PORT));
+app.listen(PORT, () => {
+  console.log("🚀 NIA SERVER RUNNING ON PORT", PORT);
+});

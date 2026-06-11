@@ -3,19 +3,32 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import { pool } from "./db.js";
+import { v2 as cloudinary } from "cloudinary";
 
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/* ======================
+MIDDLEWARE
+====================== */
 app.use(cors());
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "15mb" }));
 app.use(express.static(__dirname));
+
+/* ======================
+CLOUDINARY CONFIG
+====================== */
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 /* HEALTH */
 app.get("/", (req, res) => {
-  res.json({ status: "OK" });
+  res.json({ status: "NIA BACKEND OK 🚀" });
 });
 
 /* REGISTER */
@@ -30,6 +43,7 @@ app.post("/auth/register", async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (e) {
+    console.error(e.message);
     res.status(500).json({ error: "register error" });
   }
 });
@@ -52,11 +66,25 @@ app.post("/auth/login", async (req, res) => {
 
     res.json({ id: user.id, telephone: user.telephone });
   } catch (e) {
+    console.error(e.message);
     res.status(500).json({ error: "login error" });
   }
 });
 
-/* CREATE ANNONCE — SAFE */
+/* ======================
+UPLOAD IMAGE CLOUDINARY
+====================== */
+async function uploadImage(base64) {
+  const result = await cloudinary.uploader.upload(base64, {
+    folder: "nia_rdc"
+  });
+
+  return result.secure_url;
+}
+
+/* ======================
+CREATE ANNONCE (WITH IMAGE)
+====================== */
 app.post("/annonces", async (req, res) => {
   try {
     const {
@@ -68,11 +96,21 @@ app.post("/annonces", async (req, res) => {
       ville,
       quartier,
       telephone,
-      disponibilite
+      disponibilite,
+      image_base64
     } = req.body;
+
+    console.log("📦 ANNONCE:", req.body);
 
     if (!user_id || !titre) {
       return res.status(400).json({ error: "missing fields" });
+    }
+
+    let image_url = "";
+
+    /* UPLOAD IMAGE IF EXISTS */
+    if (image_base64) {
+      image_url = await uploadImage(image_base64);
     }
 
     const result = await pool.query(
@@ -85,9 +123,10 @@ app.post("/annonces", async (req, res) => {
         ville,
         quartier,
         telephone,
-        disponibilite
+        disponibilite,
+        image_url
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       RETURNING *`,
       [
         user_id,
@@ -98,14 +137,15 @@ app.post("/annonces", async (req, res) => {
         ville || "",
         quartier || "",
         telephone || "",
-        disponibilite || "disponible"
+        disponibilite || "disponible",
+        image_url
       ]
     );
 
     res.json(result.rows[0]);
 
   } catch (e) {
-    console.error(e);
+    console.error("CREATE ERROR:", e.message);
     res.status(500).json({ error: "create error" });
   }
 });
@@ -124,4 +164,4 @@ app.get("/feed", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log("RUNNING", PORT));
+app.listen(PORT, () => console.log("🚀 RUNNING", PORT));

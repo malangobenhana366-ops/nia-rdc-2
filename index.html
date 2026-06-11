@@ -15,156 +15,61 @@
 
 <main>
 
-<!-- ================= HOME ================= -->
+<!-- HOME -->
 <section id="home" class="page active">
 
-  <!-- AUTH -->
   <div id="authBox">
+    <h2>Bienvenue 👋</h2>
 
-    <h2>Bienvenue sur NIA RDC 👋</h2>
-
-    <button class="big-btn" onclick="showLogin()">
-      Connexion
-    </button>
-
-    <button class="big-btn secondary" onclick="showRegister()">
-      Inscription
-    </button>
-
+    <button class="big-btn" onclick="showLogin()">Connexion</button>
+    <button class="big-btn secondary" onclick="showRegister()">Inscription</button>
   </div>
 
-  <!-- APP -->
   <div id="appBox" style="display:none;">
-
-    <h2>🏠 Accueil</h2>
+    <h2>Accueil</h2>
 
     <button class="big-btn" onclick="go('publish')">➕ Publier</button>
-    <button class="big-btn" onclick="go('search')">🔍 Rechercher</button>
-    <button class="big-btn" onclick="go('vip')">⭐ VIP</button>
-    <button class="big-btn secondary" onclick="go('profile')">👤 Mon profil</button>
 
-    <hr>
-
-    <h3>📦 Annonces récentes</h3>
-
+    <h3>Annonces récentes</h3>
     <div id="feed"></div>
-
   </div>
 
 </section>
 
-<!-- ================= LOGIN ================= -->
+<!-- LOGIN -->
 <section id="login" class="page">
-
   <h2>Connexion</h2>
-
   <input id="login_tel" placeholder="Téléphone">
   <input id="login_pass" type="password" placeholder="Mot de passe">
-
-  <button class="big-btn" onclick="login()">Se connecter</button>
-  <button class="big-btn secondary" onclick="go('home')">Retour</button>
-
+  <button class="big-btn" onclick="login()">OK</button>
 </section>
 
-<!-- ================= REGISTER ================= -->
+<!-- REGISTER -->
 <section id="register" class="page">
-
-  <h2>Créer un compte</h2>
-
+  <h2>Inscription</h2>
   <input id="reg_tel" placeholder="Téléphone">
-  <input id="reg_pass" type="password" placeholder="Mot de passe">
-
+  <input id="reg_pass" type="password">
   <button class="big-btn" onclick="register()">Créer</button>
-  <button class="big-btn secondary" onclick="go('home')">Retour</button>
-
 </section>
 
-<!-- ================= PUBLISH ================= -->
+<!-- PUBLISH -->
 <section id="publish" class="page">
 
-  <h2>➕ Publier une annonce</h2>
+  <h2>Publier</h2>
 
   <input id="titre" placeholder="Nom de l'objet">
-
   <textarea id="desc" placeholder="Description"></textarea>
-
   <input id="prix" type="number" placeholder="Prix">
-
-  <select id="prix_type">
-    <option value="heure">Par heure</option>
-    <option value="jour">Par jour</option>
-    <option value="semaine">Par semaine</option>
-    <option value="mois">Par mois</option>
-    <option value="vente">Vente</option>
-  </select>
 
   <input id="ville" placeholder="Ville">
   <input id="quartier" placeholder="Quartier">
+  <input id="telephone" placeholder="Téléphone">
 
-  <input id="telephone" placeholder="Téléphone de contact">
+  <!-- 🔥 MULTI IMAGES -->
+  <h3>Photos (max 5)</h3>
+  <input id="images" type="file" multiple accept="image/*">
 
-  <select id="disponibilite">
-    <option value="disponible">Disponible</option>
-    <option value="occupe">Occupé</option>
-  </select>
-
-  <!-- 🔥 IMAGE CLOUDINARY READY -->
-  <h3>📷 Photo de l’annonce</h3>
-
-  <input 
-    id="image" 
-    type="file" 
-    accept="image/*"
-  >
-
-  <br><br>
-
-  <button class="big-btn" onclick="publier()">
-    Publier
-  </button>
-
-  <button class="big-btn secondary" onclick="go('home')">
-    Retour
-  </button>
-
-</section>
-
-<!-- ================= SEARCH ================= -->
-<section id="search" class="page">
-
-  <h2>🔍 Rechercher</h2>
-
-  <input placeholder="Rechercher...">
-
-  <button class="big-btn">Rechercher</button>
-  <button class="big-btn secondary" onclick="go('home')">Retour</button>
-
-</section>
-
-<!-- ================= VIP ================= -->
-<section id="vip" class="page">
-
-  <h2>⭐ VIP</h2>
-
-  <p>Zone premium des annonces boostées</p>
-
-  <button class="big-btn secondary" onclick="go('home')">Retour</button>
-
-</section>
-
-<!-- ================= PROFILE ================= -->
-<section id="profile" class="page">
-
-  <h2>👤 Mon profil</h2>
-
-  <button class="big-btn">Mes annonces</button>
-  <button class="big-btn">Modifier annonces</button>
-  <button class="big-btn">Boost VIP</button>
-  <button class="big-btn">Paramètres</button>
-
-  <button class="big-btn secondary" onclick="go('home')">
-    Retour
-  </button>
+  <button class="big-btn" onclick="publier()">Publier</button>
 
 </section>
 

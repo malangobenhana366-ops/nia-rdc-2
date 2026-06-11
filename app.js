@@ -1,11 +1,9 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* UTILS */
 function val(id){
   return document.getElementById(id)?.value?.trim() || "";
 }
 
-/* NAV */
 function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const el = document.getElementById(page);
@@ -13,7 +11,6 @@ function go(page){
   if(page === "home") loadFeed();
 }
 
-/* UI */
 function showLogin(){ go("login"); }
 function showRegister(){ go("register"); }
 
@@ -22,7 +19,6 @@ function showApp(){
   document.getElementById("appBox").style.display = "block";
 }
 
-/* FEED */
 async function loadFeed(){
   const res = await fetch(`${API}/feed`);
   const data = await res.json();
@@ -33,6 +29,9 @@ async function loadFeed(){
   feed.innerHTML = "";
 
   data.forEach(a => {
+    let imgs = [];
+    try { imgs = JSON.parse(a.images || "[]"); } catch {}
+
     feed.innerHTML += `
       <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
         <h3>${a.titre || ""}</h3>
@@ -40,15 +39,14 @@ async function loadFeed(){
         <p>${a.prix || 0} ${a.prix_type || ""}</p>
         <p>${a.telephone || ""}</p>
 
-        ${a.image_url ? `<img src="${a.image_url}" style="width:100%;margin-top:10px">` : ""}
+        ${imgs.map(i => `<img src="${i}" style="width:100%;margin-top:8px;border-radius:10px">`).join("")}
       </div>
     `;
   });
 }
 
-/* REGISTER */
 async function register(){
-  await fetch(`${API}/auth/register`, {
+  const res = await fetch(`${API}/auth/register`, {
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
@@ -57,11 +55,13 @@ async function register(){
     })
   });
 
+  const data = await res.json();
+  if(!res.ok) return alert(data.error);
+
   alert("Compte créé");
   go("login");
 }
 
-/* LOGIN */
 async function login(){
   const res = await fetch(`${API}/auth/login`, {
     method:"POST",
@@ -73,7 +73,6 @@ async function login(){
   });
 
   const data = await res.json();
-
   if(!res.ok) return alert(data.error);
 
   localStorage.setItem("user", JSON.stringify(data));
@@ -81,17 +80,15 @@ async function login(){
   go("home");
 }
 
-/* PUBLISH (IMPORTANT FIX IMAGE) */
 async function publier(){
   const user = JSON.parse(localStorage.getItem("user"));
   if(!user) return alert("Connecte-toi");
 
-  const file = document.getElementById("image")?.files?.[0];
+  const files = document.getElementById("image")?.files || [];
+  let images = [];
 
-  let image_base64 = "";
-
-  if(file){
-    image_base64 = await toBase64(file);
+  for(let f of files){
+    images.push(await toBase64(f));
   }
 
   const res = await fetch(`${API}/annonces`, {
@@ -107,12 +104,11 @@ async function publier(){
       quartier:val("quartier"),
       telephone:val("telephone"),
       disponibilite:val("disponibilite"),
-      image_base64
+      images
     })
   });
 
   const data = await res.json();
-
   if(!res.ok) return alert(data.error);
 
   alert("Annonce publiée 🚀");
@@ -120,16 +116,14 @@ async function publier(){
   loadFeed();
 }
 
-/* BASE64 */
 function toBase64(file){
-  return new Promise((resolve,reject)=>{
+  return new Promise((res,rej)=>{
     const r = new FileReader();
     r.readAsDataURL(file);
-    r.onload = () => resolve(r.result);
-    r.onerror = reject;
+    r.onload = () => res(r.result);
+    r.onerror = rej;
   });
 }
 
-/* INIT */
 go("home");
 loadFeed();

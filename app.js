@@ -1,9 +1,11 @@
 const API = "https://nia-rdc-2.onrender.com";
 
+/* UTILS */
 function val(id){
   return document.getElementById(id)?.value?.trim() || "";
 }
 
+/* NAV */
 function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const el = document.getElementById(page);
@@ -11,6 +13,7 @@ function go(page){
   if(page === "home") loadFeed();
 }
 
+/* UI */
 function showLogin(){ go("login"); }
 function showRegister(){ go("register"); }
 
@@ -19,32 +22,43 @@ function showApp(){
   document.getElementById("appBox").style.display = "block";
 }
 
+/* FEED */
 async function loadFeed(){
-  const res = await fetch(`${API}/feed`);
-  const data = await res.json();
+  try{
+    const res = await fetch(`${API}/feed`);
+    const data = await res.json();
 
-  const feed = document.getElementById("feed");
-  if(!feed) return;
+    const feed = document.getElementById("feed");
+    if(!feed) return;
 
-  feed.innerHTML = "";
+    feed.innerHTML = "";
 
-  data.forEach(a => {
-    let imgs = [];
-    try { imgs = JSON.parse(a.images || "[]"); } catch {}
+    data.forEach(a => {
+      let images = [];
+      try {
+        images = JSON.parse(a.images || "[]");
+      } catch {}
 
-    feed.innerHTML += `
-      <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
-        <h3>${a.titre || ""}</h3>
-        <p>${a.ville || ""} - ${a.quartier || ""}</p>
-        <p>${a.prix || 0} ${a.prix_type || ""}</p>
-        <p>${a.telephone || ""}</p>
+      feed.innerHTML += `
+        <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
+          <h3>${a.titre || ""}</h3>
+          <p>${a.ville || ""} - ${a.quartier || ""}</p>
+          <p>${a.prix || 0} ${a.prix_type || ""}</p>
+          <p>${a.telephone || ""}</p>
 
-        ${imgs.map(i => `<img src="${i}" style="width:100%;margin-top:8px;border-radius:10px">`).join("")}
-      </div>
-    `;
-  });
+          ${images.map(img => `
+            <img src="${img}" style="width:100%;margin-top:8px;border-radius:10px">
+          `).join("")}
+        </div>
+      `;
+    });
+
+  } catch(e){
+    console.log(e);
+  }
 }
 
+/* REGISTER */
 async function register(){
   const res = await fetch(`${API}/auth/register`, {
     method:"POST",
@@ -62,6 +76,7 @@ async function register(){
   go("login");
 }
 
+/* LOGIN */
 async function login(){
   const res = await fetch(`${API}/auth/login`, {
     method:"POST",
@@ -80,15 +95,21 @@ async function login(){
   go("home");
 }
 
+/* 🔥 MULTI UPLOAD FIX */
 async function publier(){
   const user = JSON.parse(localStorage.getItem("user"));
   if(!user) return alert("Connecte-toi");
 
-  const files = document.getElementById("image")?.files || [];
+  const files = document.getElementById("image")?.files;
+
+  if(!files || files.length === 0){
+    return alert("Ajoute au moins une image");
+  }
+
   let images = [];
 
-  for(let f of files){
-    images.push(await toBase64(f));
+  for(let i = 0; i < files.length; i++){
+    images.push(await toBase64(files[i]));
   }
 
   const res = await fetch(`${API}/annonces`, {
@@ -109,21 +130,26 @@ async function publier(){
   });
 
   const data = await res.json();
-  if(!res.ok) return alert(data.error);
+
+  if(!res.ok){
+    return alert(data.error || "Erreur publication");
+  }
 
   alert("Annonce publiée 🚀");
   go("home");
   loadFeed();
 }
 
+/* BASE64 */
 function toBase64(file){
-  return new Promise((res,rej)=>{
+  return new Promise((resolve,reject)=>{
     const r = new FileReader();
     r.readAsDataURL(file);
-    r.onload = () => res(r.result);
-    r.onerror = rej;
+    r.onload = () => resolve(r.result);
+    r.onerror = reject;
   });
 }
 
+/* INIT */
 go("home");
 loadFeed();

@@ -10,25 +10,17 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/* ======================
-MIDDLEWARE
-====================== */
 app.use(cors());
 app.use(express.json({ limit: "25mb" }));
 app.use(express.static(__dirname));
 
-/* ======================
-CLOUDINARY CONFIG
-====================== */
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* ======================
-UTIL CLOUDINARY
-====================== */
+/* UPLOAD IMAGE */
 async function uploadImage(base64) {
   try {
     const result = await cloudinary.uploader.upload(base64, {
@@ -36,22 +28,17 @@ async function uploadImage(base64) {
       resource_type: "image"
     });
     return result.secure_url;
-  } catch (e) {
-    console.log("CLOUDINARY ERROR:", e.message);
+  } catch {
     return "";
   }
 }
 
-/* ======================
-HEALTH
-====================== */
+/* HEALTH */
 app.get("/", (req, res) => {
   res.json({ status: "OK NIA BACKEND 🚀" });
 });
 
-/* ======================
-REGISTER
-====================== */
+/* REGISTER */
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -62,14 +49,12 @@ app.post("/auth/register", async (req, res) => {
     );
 
     res.json(result.rows[0]);
-  } catch (e) {
+  } catch {
     res.status(500).json({ error: "register error" });
   }
 });
 
-/* ======================
-LOGIN
-====================== */
+/* LOGIN */
 app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -91,9 +76,7 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
-/* ======================
-CREATE ANNONCE (MULTI PHOTOS READY)
-====================== */
+/* CREATE ANNONCE */
 app.post("/annonces", async (req, res) => {
   try {
     const {
@@ -106,24 +89,18 @@ app.post("/annonces", async (req, res) => {
       quartier,
       telephone,
       disponibilite,
-      images // 👈 tableau base64
+      image_base64
     } = req.body;
 
     if (!user_id || !titre) {
       return res.status(400).json({ error: "missing fields" });
     }
 
-    let image_urls = [];
+    let image_url = "";
 
-    /* UPLOAD MULTI IMAGES */
-    if (images && Array.isArray(images)) {
-      for (let img of images.slice(0, 5)) {
-        const url = await uploadImage(img);
-        if (url) image_urls.push(url);
-      }
+    if (image_base64) {
+      image_url = await uploadImage(image_base64);
     }
-
-    const main_image = image_urls[0] || "";
 
     const result = await pool.query(
       `INSERT INTO annonces (
@@ -136,10 +113,9 @@ app.post("/annonces", async (req, res) => {
         quartier,
         telephone,
         disponibilite,
-        image_url,
-        images
+        image_url
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       RETURNING *`,
       [
         user_id,
@@ -151,22 +127,17 @@ app.post("/annonces", async (req, res) => {
         quartier || "",
         telephone || "",
         disponibilite || "disponible",
-        main_image,
-        JSON.stringify(image_urls)
+        image_url
       ]
     );
 
     res.json(result.rows[0]);
-
   } catch (e) {
-    console.log("CREATE ERROR:", e.message);
     res.status(500).json({ error: "create error" });
   }
 });
 
-/* ======================
-FEED
-====================== */
+/* FEED */
 app.get("/feed", async (req, res) => {
   try {
     const result = await pool.query(

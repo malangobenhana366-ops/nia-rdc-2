@@ -9,23 +9,16 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/* ======================
-MIDDLEWARE
-====================== */
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.static(__dirname));
 
-/* ======================
-HEALTH CHECK
-====================== */
+/* HEALTH CHECK */
 app.get("/", (req, res) => {
   res.json({ status: "NIA BACKEND OK 🚀" });
 });
 
-/* ======================
-REGISTER
-====================== */
+/* REGISTER */
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -36,7 +29,7 @@ app.post("/auth/register", async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO users (telephone, password)
-       VALUES ($1, $2)
+       VALUES ($1,$2)
        RETURNING id, telephone`,
       [telephone, password]
     );
@@ -48,58 +41,49 @@ app.post("/auth/register", async (req, res) => {
   }
 });
 
-/* ======================
-LOGIN
-====================== */
+/* LOGIN */
 app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
 
     const result = await pool.query(
-      "SELECT * FROM users WHERE telephone = $1",
+      "SELECT * FROM users WHERE telephone=$1",
       [telephone]
     );
 
     const user = result.rows[0];
 
     if (!user) return res.status(400).json({ error: "user not found" });
-
-    if (user.password !== password) {
+    if (user.password !== password)
       return res.status(400).json({ error: "wrong password" });
-    }
 
-    res.json({
-      id: user.id,
-      telephone: user.telephone
-    });
-
+    res.json({ id: user.id, telephone: user.telephone });
   } catch (err) {
     console.error("LOGIN ERROR:", err);
     res.status(500).json({ error: "login error" });
   }
 });
 
-/* ======================
-CREATE ANNONCE (ULTRA SAFE)
-====================== */
+/* CREATE ANNONCE (SAFE MODE ULTRA STABLE) */
 app.post("/annonces", async (req, res) => {
   try {
-    const body = req.body || {};
+    const {
+      user_id,
+      titre,
+      description,
+      ville,
+      quartier,
+      categorie,
+      image_url,
+      price,
+      price_type,
+      telephone,
+      disponibilite
+    } = req.body;
 
-    const user_id = body.user_id;
-    const titre = body.titre;
-    const description = body.description || "";
-    const ville = body.ville || "";
-    const quartier = body.quartier || "";
-    const categorie = body.categorie || "";
-    const image_url = body.image_url || "";
-    const price = Number(body.price || 0);
-    const price_type = body.price_type || "jour";
-    const disponibilite = body.disponibilite || "disponible";
-    const telephone = body.telephone || "";
+    console.log("ANNONCE RECEIVED:", req.body);
 
-    console.log("ANNONCE RECEIVED:", body);
-
+    // validation minimale CRITIQUE
     if (!user_id || !titre) {
       return res.status(400).json({ error: "missing required fields" });
     }
@@ -119,25 +103,23 @@ app.post("/annonces", async (req, res) => {
       [
         user_id,
         titre,
-        description,
-        ville,
-        categorie,
-        image_url,
-        price
+        description || "",
+        ville || "",
+        categorie || "",
+        image_url || "",
+        price || 0
       ]
     );
 
     res.json(result.rows[0]);
 
   } catch (err) {
-    console.error("CREATE ERROR:", err);
-    res.status(500).json({ error: "create error" });
+    console.error("CREATE ERROR FULL:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-/* ======================
-FEED
-====================== */
+/* FEED */
 app.get("/feed", async (req, res) => {
   try {
     const result = await pool.query(
@@ -145,18 +127,11 @@ app.get("/feed", async (req, res) => {
     );
 
     res.json(result.rows);
-
   } catch (err) {
-    console.error("FEED ERROR:", err);
+    console.error(err);
     res.json([]);
   }
 });
 
-/* ======================
-START
-====================== */
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log("🚀 NIA RUNNING ON", PORT);
-});
+app.listen(PORT, () => console.log("🚀 RUNNING", PORT));

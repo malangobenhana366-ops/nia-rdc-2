@@ -8,15 +8,29 @@ function val(id){
 }
 
 /* ======================
-UI NAV HELPERS
+NAVIGATION UI
+====================== */
+function go(page){
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+
+  const target = document.getElementById(page);
+  if(target) target.classList.add("active");
+
+  if(page === "home") loadFeed();
+}
+
+/* ======================
+AUTH UI
 ====================== */
 function showLogin(){
-  document.getElementById("authBox").style.display = "none";
+  const auth = document.getElementById("authBox");
+  if(auth) auth.style.display = "none";
   go("login");
 }
 
 function showRegister(){
-  document.getElementById("authBox").style.display = "none";
+  const auth = document.getElementById("authBox");
+  if(auth) auth.style.display = "none";
   go("register");
 }
 
@@ -29,19 +43,7 @@ function showApp(){
 }
 
 /* ======================
-NAV SYSTEM
-====================== */
-function go(page){
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-
-  const target = document.getElementById(page);
-  if(target) target.classList.add("active");
-
-  if(page === "home") loadFeed();
-}
-
-/* ======================
-FEED
+FEED (AFFICHAGE ANNONCES)
 ====================== */
 async function loadFeed(){
   try {
@@ -58,9 +60,10 @@ async function loadFeed(){
         <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
           <h3>${a.titre || ""}</h3>
           <p>📍 ${a.ville || ""}</p>
-          <p>📦 ${a.categorie || ""}</p>
-          <p>💰 ${a.price || 0}</p>
-          ${a.image_url ? `<img src="${a.image_url}" style="width:100%">` : ""}
+          <p>🏷️ ${a.quartier || ""}</p>
+          <p>💰 ${a.prix || 0} ${a.prix_type || ""}</p>
+          <p>📞 ${a.telephone || ""}</p>
+          <p>📦 ${a.disponibilite || ""}</p>
         </div>
       `;
     });
@@ -96,7 +99,7 @@ async function register(){
 
   } catch (err) {
     console.error(err);
-    alert("Erreur serveur inscription !");
+    alert("Erreur serveur !");
   }
 }
 
@@ -134,7 +137,7 @@ async function login(){
 }
 
 /* ======================
-PUBLISH (ROBUST FIX FINAL)
+PUBLISH FIX FINAL (ALIGNÉ SERVER)
 ====================== */
 async function publier(){
   try {
@@ -145,37 +148,19 @@ async function publier(){
       return;
     }
 
-    const titre = val("titre");
-    const description = val("desc");
-    const ville = val("ville");
-    const quartier = val("quartier");
-    const price = Number(val("prix") || 0);
-    const price_type = val("prix_type");
-    const disponibilite = val("disponibilite");
-    const telephone = val("telephone");
-
-    // images (preview simple -> backend reçoit NULL ou string future upgrade)
-    const photosInput = document.getElementById("photos");
-    const photos = photosInput?.files || [];
-
-    let image_url = "";
-
-    if(photos.length > 0){
-      // pour éviter crash backend actuel → on envoie juste un nom temporaire
-      image_url = photos[0].name;
-    }
-
     const payload = {
       user_id: user.id,
-      titre,
-      description,
-      ville,
-      categorie: quartier, // on remplace catégorie par quartier comme tu voulais
-      image_url,
-      price
+      titre: val("titre"),
+      description: val("desc"),
+      prix: Number(val("prix") || 0),
+      prix_type: val("prix_type"),
+      ville: val("ville"),
+      quartier: val("quartier"),
+      telephone: val("telephone"),
+      disponibilite: val("disponibilite")
     };
 
-    console.log("📦 PUBLISH PAYLOAD:", payload);
+    console.log("📦 SEND ANNONCE:", payload);
 
     const res = await fetch(`${API}/annonces`, {
       method: "POST",
@@ -191,7 +176,8 @@ async function publier(){
       return;
     }
 
-    alert("Annonce publiée !");
+    alert("Annonce publiée avec succès 🚀");
+
     go("home");
     loadFeed();
 
@@ -201,6 +187,8 @@ async function publier(){
   }
 }
 
-/* INIT */
+/* ======================
+INIT
+====================== */
 go("home");
 loadFeed();

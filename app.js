@@ -8,7 +8,7 @@ function val(id){
 }
 
 /* ======================
-NAVIGATION
+NAV
 ====================== */
 function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
@@ -17,6 +17,22 @@ function go(page){
   if(target) target.classList.add("active");
 
   if(page === "home") loadFeed();
+}
+
+/* ======================
+AUTH UI FIX
+====================== */
+function showLogin(){
+  go("login");
+}
+
+function showRegister(){
+  go("register");
+}
+
+function showApp(){
+  document.getElementById("authBox").style.display = "none";
+  document.getElementById("appBox").style.display = "block";
 }
 
 /* ======================
@@ -37,7 +53,6 @@ async function loadFeed(){
         <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
 
           <h3>${a.titre || ""}</h3>
-
           <p>📍 ${a.ville || ""}</p>
           <p>🏷️ ${a.quartier || ""}</p>
           <p>💰 ${a.prix || 0} ${a.prix_type || ""}</p>
@@ -59,26 +74,81 @@ async function loadFeed(){
 }
 
 /* ======================
-AUTH (inchangé)
+REGISTER (CORRIGÉ)
 ====================== */
-async function register(){ /* inchangé */ }
-async function login(){ /* inchangé */ }
+async function register(){
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        telephone: val("reg_tel"),
+        password: val("reg_pass")
+      })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      alert(data.error || "Erreur inscription");
+      return;
+    }
+
+    alert("Compte créé !");
+    go("login");
+
+  } catch (err) {
+    console.error(err);
+    alert("Erreur serveur");
+  }
+}
 
 /* ======================
-PUBLISH (CLOUDINARY READY)
+LOGIN (CORRIGÉ)
+====================== */
+async function login(){
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        telephone: val("login_tel"),
+        password: val("login_pass")
+      })
+    });
+
+    const data = await res.json();
+
+    if(!res.ok){
+      alert(data.error || "Erreur connexion");
+      return;
+    }
+
+    localStorage.setItem("user", JSON.stringify(data));
+
+    alert("Connecté !");
+    showApp();
+    go("home");
+
+  } catch (err) {
+    console.error(err);
+    alert("Erreur serveur");
+  }
+}
+
+/* ======================
+PUBLISH
 ====================== */
 async function publier(){
   try {
     const user = JSON.parse(localStorage.getItem("user"));
     if(!user) return alert("Connecte-toi !");
 
-    /* IMPORTANT : ton input HTML doit avoir id="image" */
     const fileInput = document.getElementById("image");
     const file = fileInput?.files?.[0];
 
     let image_url = "";
 
-    /* UPLOAD IMAGE SI EXISTE */
     if(file){
       const formData = new FormData();
       formData.append("file", file);
@@ -119,18 +189,15 @@ async function publier(){
     }
 
     alert("Annonce publiée 🚀");
-
     go("home");
     loadFeed();
 
   } catch (err) {
-    console.error("PUBLISH ERROR:", err);
+    console.error(err);
     alert("Erreur serveur");
   }
 }
 
-/* ======================
-INIT
-====================== */
+/* INIT */
 go("home");
 loadFeed();

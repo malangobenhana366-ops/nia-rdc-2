@@ -1,15 +1,11 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* ======================
-UTILS
-====================== */
+/* UTILS */
 function val(id){
   return document.getElementById(id)?.value?.trim() || "";
 }
 
-/* ======================
-NAV
-====================== */
+/* NAV */
 function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const el = document.getElementById(page);
@@ -17,9 +13,7 @@ function go(page){
   if(page === "home") loadFeed();
 }
 
-/* ======================
-AUTH UI
-====================== */
+/* UI */
 function showLogin(){ go("login"); }
 function showRegister(){ go("register"); }
 
@@ -28,173 +22,122 @@ function showApp(){
   document.getElementById("appBox").style.display = "block";
 }
 
-/* ======================
-BASE64 MULTI IMAGES
-====================== */
-function fileToBase64(file){
-  return new Promise((resolve,reject)=>{
-    const r = new FileReader();
-    r.readAsDataURL(file);
-    r.onload = () => resolve(r.result);
-    r.onerror = reject;
+/* FEED */
+async function loadFeed(){
+  const res = await fetch(`${API}/feed`);
+  const data = await res.json();
+
+  const feed = document.getElementById("feed");
+  if(!feed) return;
+
+  feed.innerHTML = "";
+
+  data.forEach(a => {
+    let images = [];
+
+    try {
+      images = a.images ? JSON.parse(a.images) : [];
+    } catch(e){}
+
+    feed.innerHTML += `
+      <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
+        <h3>${a.titre || ""}</h3>
+        <p>${a.ville || ""} - ${a.quartier || ""}</p>
+        <p>${a.prix || 0} ${a.prix_type || ""}</p>
+        <p>${a.telephone || ""}</p>
+
+        ${images.map(img =>
+          `<img src="${img}" style="width:100%;margin-top:8px;border-radius:10px">`
+        ).join("")}
+      </div>
+    `;
   });
 }
 
-/* ======================
-FEED
-====================== */
-async function loadFeed(){
-  try {
-    const res = await fetch(`${API}/feed`);
-    const data = await res.json();
-
-    const feed = document.getElementById("feed");
-    if(!feed) return;
-
-    feed.innerHTML = "";
-
-    data.forEach(a => {
-
-      let imagesHTML = "";
-
-      if(a.image_url){
-        imagesHTML += `<img src="${a.image_url}" style="width:100%;margin-top:10px;border-radius:10px">`;
-      }
-
-      // support futur multi images (si backend évolue)
-      if(a.images){
-        try {
-          const imgs = typeof a.images === "string" ? JSON.parse(a.images) : a.images;
-          imgs.forEach(img=>{
-            imagesHTML += `<img src="${img}" style="width:100%;margin-top:10px;border-radius:10px">`;
-          });
-        } catch(e){}
-      }
-
-      feed.innerHTML += `
-        <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
-          <h3>${a.titre || ""}</h3>
-          <p>📍 ${a.ville || ""} - ${a.quartier || ""}</p>
-          <p>💰 ${a.prix || 0} ${a.prix_type || ""}</p>
-          <p>📞 ${a.telephone || ""}</p>
-          <p>📦 ${a.disponibilite || ""}</p>
-          ${imagesHTML}
-        </div>
-      `;
-    });
-
-  } catch (err) {
-    console.log("FEED ERROR:", err);
-  }
-}
-
-/* ======================
-REGISTER
-====================== */
+/* REGISTER */
 async function register(){
-  try {
-    const res = await fetch(`${API}/auth/register`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        telephone: val("reg_tel"),
-        password: val("reg_pass")
-      })
-    });
+  await fetch(`${API}/auth/register`, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      telephone: val("reg_tel"),
+      password: val("reg_pass")
+    })
+  });
 
-    const data = await res.json();
-
-    if(!res.ok) return alert(data.error || "Erreur inscription");
-
-    alert("Compte créé");
-    go("login");
-
-  } catch {
-    alert("Erreur serveur");
-  }
+  alert("Compte créé");
+  go("login");
 }
 
-/* ======================
-LOGIN
-====================== */
+/* LOGIN */
 async function login(){
-  try {
-    const res = await fetch(`${API}/auth/login`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        telephone: val("login_tel"),
-        password: val("login_pass")
-      })
-    });
+  const res = await fetch(`${API}/auth/login`, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      telephone: val("login_tel"),
+      password: val("login_pass")
+    })
+  });
 
-    const data = await res.json();
+  const data = await res.json();
+  if(!res.ok) return alert(data.error);
 
-    if(!res.ok) return alert(data.error || "Erreur connexion");
-
-    localStorage.setItem("user", JSON.stringify(data));
-
-    showApp();
-    go("home");
-
-  } catch {
-    alert("Erreur serveur");
-  }
+  localStorage.setItem("user", JSON.stringify(data));
+  showApp();
+  go("home");
 }
 
-/* ======================
-PUBLISH MULTI PHOTOS (IMPORTANT)
-====================== */
+/* MULTI UPLOAD PUBLISH */
 async function publier(){
-  try {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if(!user) return alert("Connecte-toi");
 
-    const user = JSON.parse(localStorage.getItem("user"));
-    if(!user) return alert("Connecte-toi");
+  const files = document.getElementById("image").files;
 
-    const input = document.getElementById("image");
-    const files = input?.files;
+  if(!files.length) return alert("Ajoute des images");
 
-    if(!files || files.length === 0){
-      return alert("Ajoute au moins une photo");
-    }
+  let images_base64 = [];
 
-    let images_base64 = [];
-
-    for(let f of files){
-      images_base64.push(await fileToBase64(f));
-    }
-
-    const res = await fetch(`${API}/annonces`, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        user_id: user.id,
-        titre: val("titre"),
-        description: val("desc"),
-        prix: val("prix"),
-        prix_type: val("prix_type"),
-        ville: val("ville"),
-        quartier: val("quartier"),
-        telephone: val("telephone"),
-        disponibilite: val("disponibilite"),
-        images_base64
-      })
-    });
-
-    const data = await res.json();
-
-    if(!res.ok){
-      return alert(data.error || "Erreur publication");
-    }
-
-    alert("Annonce publiée 🚀");
-    go("home");
-    loadFeed();
-
-  } catch (e) {
-    console.log(e);
-    alert("Erreur serveur");
+  for(let f of files){
+    const b64 = await toBase64(f);
+    images_base64.push(b64);
   }
+
+  const res = await fetch(`${API}/annonces`, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      user_id:user.id,
+      titre:val("titre"),
+      description:val("desc"),
+      prix:val("prix"),
+      prix_type:val("prix_type"),
+      ville:val("ville"),
+      quartier:val("quartier"),
+      telephone:val("telephone"),
+      disponibilite:val("disponibilite"),
+      images: images_base64
+    })
+  });
+
+  const data = await res.json();
+
+  if(!res.ok) return alert(data.error);
+
+  alert("Annonce publiée 🚀");
+  go("home");
+  loadFeed();
+}
+
+/* BASE64 */
+function toBase64(file){
+  return new Promise((res, rej)=>{
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => res(reader.result);
+    reader.onerror = rej;
+  });
 }
 
 /* INIT */

@@ -10,138 +10,236 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(cors());
-app.use(express.json({ limit: "10mb" })); // important pour images futures
+app.use(express.json());
 app.use(express.static(__dirname));
 
-/* ======================
-HEALTH
-====================== */
-app.get("/", (req, res) => {
-  res.json({ status: "NIA BACKEND OK 🚀" });
+/* HOME */
+
+app.get("/", (req,res)=>{
+    res.json({
+        app:"NIA RDC",
+        status:"ONLINE"
+    });
 });
 
-/* ======================
-REGISTER
-====================== */
-app.post("/auth/register", async (req, res) => {
-  try {
-    const { telephone, password } = req.body;
+/* REGISTER */
 
-    if (!telephone || !password) {
-      return res.status(400).json({ error: "missing fields" });
+app.post("/auth/register", async(req,res)=>{
+
+    try{
+
+        const {telephone,password}=req.body;
+
+        if(!telephone || !password){
+            return res.status(400).json({
+                error:"missing fields"
+            });
+        }
+
+        const result=await pool.query(
+            `
+            INSERT INTO users(
+            telephone,
+            password
+            )
+            VALUES($1,$2)
+            RETURNING id,telephone
+            `,
+            [
+                telephone,
+                password
+            ]
+        );
+
+        res.json(result.rows[0]);
+
     }
 
-    const result = await pool.query(
-      `INSERT INTO users (telephone, password)
-       VALUES ($1,$2)
-       RETURNING id, telephone`,
-      [telephone, password]
-    );
+    catch(err){
 
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "register error" });
-  }
-});
+        console.log(err);
 
-/* ======================
-LOGIN
-====================== */
-app.post("/auth/login", async (req, res) => {
-  try {
-    const { telephone, password } = req.body;
+        res.status(500).json({
+            error:"register error"
+        });
 
-    const result = await pool.query(
-      "SELECT * FROM users WHERE telephone=$1",
-      [telephone]
-    );
-
-    const user = result.rows[0];
-
-    if (!user) return res.status(400).json({ error: "user not found" });
-    if (user.password !== password)
-      return res.status(400).json({ error: "wrong password" });
-
-    res.json({ id: user.id, telephone: user.telephone });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "login error" });
-  }
-});
-
-/* ======================
-CREATE ANNONCE (FULL SYNC FINAL)
-====================== */
-app.post("/annonces", async (req, res) => {
-  try {
-    const {
-      user_id,
-      titre,
-      description,
-      ville,
-      quartier,
-      categorie,
-      image_url,
-      price,
-      price_type,
-      telephone,
-      disponibilite
-    } = req.body;
-
-    console.log("ANNONCE RECEIVED:", req.body);
-
-    if (!user_id || !titre) {
-      return res.status(400).json({ error: "missing fields" });
     }
 
-    const result = await pool.query(
-      `INSERT INTO annonces (
-        user_id,
-        titre,
-        description,
-        ville,
-        categorie,
-        image_url,
-        price
-      )
-      VALUES ($1,$2,$3,$4,$5,$6,$7)
-      RETURNING *`,
-      [
-        user_id,
-        titre,
-        description,
-        ville,
-        categorie,
-        image_url,
-        price || 0
-      ]
-    );
-
-    res.json(result.rows[0]);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "create error" });
-  }
 });
 
-/* ======================
-FEED
-====================== */
-app.get("/feed", async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM annonces ORDER BY id DESC"
-    );
+/* LOGIN */
 
-    res.json(result.rows);
+app.post("/auth/login", async(req,res)=>{
 
-  } catch (err) {
-    console.error(err);
-    res.json([]);
-  }
+    try{
+
+        const {telephone,password}=req.body;
+
+        const result=await pool.query(
+            `
+            SELECT *
+            FROM users
+            WHERE telephone=$1
+            `,
+            [
+                telephone
+            ]
+        );
+
+        const user=result.rows[0];
+
+        if(!user){
+            return res.status(400).json({
+                error:"user not found"
+            });
+        }
+
+        if(user.password!==password){
+            return res.status(400).json({
+                error:"wrong password"
+            });
+        }
+
+        res.json({
+            id:user.id,
+            telephone:user.telephone
+        });
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+        res.status(500).json({
+            error:"login error"
+        });
+
+    }
+
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log("🚀 RUNNING", PORT));
+/* CREATE ANNONCE */
+
+app.post("/annonces", async(req,res)=>{
+
+    try{
+
+        const{
+
+            user_id,
+            titre,
+            description,
+            prix,
+            prix_type,
+            ville,
+            quartier,
+            telephone,
+            disponibilite
+
+        }=req.body;
+
+        if(!user_id || !titre){
+
+            return res.status(400).json({
+                error:"missing fields"
+            });
+
+        }
+
+        const result=await pool.query(
+
+            `
+            INSERT INTO annonces(
+
+            user_id,
+            titre,
+            description,
+            prix,
+            prix_type,
+            ville,
+            quartier,
+            telephone,
+            disponibilite
+
+            )
+
+            VALUES(
+
+            $1,$2,$3,$4,$5,$6,$7,$8,$9
+
+            )
+
+            RETURNING *
+
+            `,
+
+            [
+
+                user_id,
+                titre,
+                description,
+                prix||0,
+                prix_type,
+                ville,
+                quartier,
+                telephone,
+                disponibilite
+
+            ]
+
+        );
+
+        res.json(result.rows[0]);
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+        res.status(500).json({
+            error:"create error"
+        });
+
+    }
+
+});
+
+/* FEED */
+
+app.get("/feed", async(req,res)=>{
+
+    try{
+
+        const result=await pool.query(
+
+            `
+            SELECT *
+            FROM annonces
+            ORDER BY id DESC
+            `
+
+        );
+
+        res.json(result.rows);
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+        res.json([]);
+
+    }
+
+});
+
+const PORT=process.env.PORT||5000;
+
+app.listen(PORT,()=>{
+
+    console.log("NIA RDC RUNNING");
+
+});

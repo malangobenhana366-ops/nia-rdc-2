@@ -1,58 +1,55 @@
 const API = "https://nia-rdc-2.onrender.com";
 
 /* ======================
-UTILS
+UTILS SAFE
 ====================== */
-function val(id) {
-  const el = document.getElementById(id);
-  return el ? el.value : "";
-}
-
-function valFile(id) {
-  const el = document.getElementById(id);
-  return el?.files ? Array.from(el.files) : [];
+function val(id){
+  return document.getElementById(id)?.value?.trim() || "";
 }
 
 /* ======================
-UI NAV
+UI NAV HELPERS
 ====================== */
-function showLogin() {
+function showLogin(){
   document.getElementById("authBox").style.display = "none";
   go("login");
 }
 
-function showRegister() {
+function showRegister(){
   document.getElementById("authBox").style.display = "none";
   go("register");
 }
 
-function showApp() {
-  document.getElementById("authBox").style.display = "none";
-  document.getElementById("appBox").style.display = "block";
+function showApp(){
+  const auth = document.getElementById("authBox");
+  const app = document.getElementById("appBox");
+
+  if(auth) auth.style.display = "none";
+  if(app) app.style.display = "block";
 }
 
 /* ======================
-NAVIGATION
+NAV SYSTEM
 ====================== */
-function go(page) {
+function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
 
   const target = document.getElementById(page);
-  if (target) target.classList.add("active");
+  if(target) target.classList.add("active");
 
-  if (page === "home") loadFeed();
+  if(page === "home") loadFeed();
 }
 
 /* ======================
 FEED
 ====================== */
-async function loadFeed() {
+async function loadFeed(){
   try {
     const res = await fetch(`${API}/feed`);
     const data = await res.json();
 
     const feed = document.getElementById("feed");
-    if (!feed) return;
+    if(!feed) return;
 
     feed.innerHTML = "";
 
@@ -61,25 +58,26 @@ async function loadFeed() {
         <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
           <h3>${a.titre || ""}</h3>
           <p>📍 ${a.ville || ""}</p>
+          <p>📦 ${a.categorie || ""}</p>
           <p>💰 ${a.price || 0}</p>
-          <img src="${a.image_url || ""}" style="width:100%;border-radius:8px">
+          ${a.image_url ? `<img src="${a.image_url}" style="width:100%">` : ""}
         </div>
       `;
     });
 
-  } catch (e) {
-    console.log("feed error", e);
+  } catch (err) {
+    console.log("FEED ERROR:", err);
   }
 }
 
 /* ======================
 REGISTER
 ====================== */
-async function register() {
+async function register(){
   try {
     const res = await fetch(`${API}/auth/register`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
         telephone: val("reg_tel"),
         password: val("reg_pass")
@@ -88,12 +86,16 @@ async function register() {
 
     const data = await res.json();
 
-    if (!res.ok) return alert(data.error || "Erreur inscription !");
+    if(!res.ok){
+      alert(data.error || "Erreur inscription !");
+      return;
+    }
 
     alert("Compte créé !");
     go("login");
 
-  } catch (e) {
+  } catch (err) {
+    console.error(err);
     alert("Erreur serveur inscription !");
   }
 }
@@ -101,11 +103,11 @@ async function register() {
 /* ======================
 LOGIN
 ====================== */
-async function login() {
+async function login(){
   try {
     const res = await fetch(`${API}/auth/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
         telephone: val("login_tel"),
         password: val("login_pass")
@@ -114,7 +116,10 @@ async function login() {
 
     const data = await res.json();
 
-    if (!res.ok) return alert(data.error || "Erreur connexion !");
+    if(!res.ok){
+      alert(data.error || "Erreur connexion !");
+      return;
+    }
 
     localStorage.setItem("user", JSON.stringify(data));
 
@@ -122,57 +127,77 @@ async function login() {
     showApp();
     go("home");
 
-  } catch (e) {
+  } catch (err) {
+    console.error(err);
     alert("Erreur serveur login !");
   }
 }
 
 /* ======================
-PUBLISH (FIX FINAL CLEAN)
+PUBLISH (ROBUST FIX FINAL)
 ====================== */
-async function publier() {
+async function publier(){
   try {
     const user = JSON.parse(localStorage.getItem("user"));
 
-    if (!user) {
+    if(!user){
       alert("Connecte-toi !");
       return;
     }
 
-    const photos = valFile("photos");
+    const titre = val("titre");
+    const description = val("desc");
+    const ville = val("ville");
+    const quartier = val("quartier");
+    const price = Number(val("prix") || 0);
+    const price_type = val("prix_type");
+    const disponibilite = val("disponibilite");
+    const telephone = val("telephone");
+
+    // images (preview simple -> backend reçoit NULL ou string future upgrade)
+    const photosInput = document.getElementById("photos");
+    const photos = photosInput?.files || [];
+
+    let image_url = "";
+
+    if(photos.length > 0){
+      // pour éviter crash backend actuel → on envoie juste un nom temporaire
+      image_url = photos[0].name;
+    }
 
     const payload = {
       user_id: user.id,
-      titre: val("titre"),
-      description: val("desc"),
-      ville: val("ville"),
-      categorie: "general",
-      image_url: "",
-      price: Number(val("prix") || 0)
+      titre,
+      description,
+      ville,
+      categorie: quartier, // on remplace catégorie par quartier comme tu voulais
+      image_url,
+      price
     };
 
-    // IMPORTANT: on ne casse pas backend → pas de champs inutiles envoyés
+    console.log("📦 PUBLISH PAYLOAD:", payload);
 
     const res = await fetch(`${API}/annonces`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {"Content-Type":"application/json"},
       body: JSON.stringify(payload)
     });
 
     const data = await res.json();
 
-    if (!res.ok) {
+    if(!res.ok){
       console.log("SERVER ERROR:", data);
-      return alert(data.error || "create error");
+      alert(data.error || "Erreur publication !");
+      return;
     }
 
     alert("Annonce publiée !");
     go("home");
     loadFeed();
 
-  } catch (e) {
-    console.log(e);
-    alert("Erreur serveur publish !");
+  } catch (err) {
+    console.error("PUBLISH ERROR:", err);
+    alert("Erreur serveur publication !");
   }
 }
 

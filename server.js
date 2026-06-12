@@ -83,10 +83,9 @@ app.post("/annonces", async (req,res)=>{
       return res.status(400).json({error:"missing fields"});
     }
 
-    // Sécurité : ID 1 par défaut si non connecté lors des phases de tests
     if(!user_id) user_id = 1;
 
-    // Insertion alignée avec le schéma SQL de NIA RDC
+    // Sauvegarde en BDD
     const annonce = await pool.query(
       `INSERT INTO annonces (user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -119,7 +118,7 @@ app.post("/annonces", async (req,res)=>{
   }
 });
 
-/* FEED + IMAGES */
+/* FEED EN DIRECT AVEC TOUTES LES IMAGES ASSOCIÉES */
 app.get("/feed", async (req,res)=>{
   try {
     const annonces = await pool.query(
@@ -143,36 +142,6 @@ app.get("/feed", async (req,res)=>{
   }
 });
 
-/* OBTENIR UNE SEULE ANNONCE POUR LA PAGE DÉTAILS */
-app.get("/annonces/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await pool.query("SELECT * FROM annonces WHERE id = $1", [id]);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Annonce introuvable" });
-    }
-
-    const annonce = result.rows[0];
-    const imgs = await pool.query(
-      "SELECT image_url FROM annonce_images WHERE annonce_id = $1",
-      [id]
-    );
-
-    res.json({
-      ...annonce,
-      images: imgs.rows.map(i => i.image_url)
-    });
-  } catch (e) {
-    res.status(500).json({ error: "Erreur serveur détails" });
-  }
-});
-
-/* FORCE LE SERVEUR À TROUVER ET DISTRIBUER LA PAGE DETAILS */
-app.get("/details.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "details.html"));
-});
-
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("RUNNING",PORT));
-  
+app.listen(PORT, ()=>console.log("RUNNING NIA RDC ON PORT", PORT));
+    

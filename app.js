@@ -1,5 +1,7 @@
 const API = "https://nia-rdc-2.onrender.com";
 
+/* ================= NAVIGATION ================= */
+
 function go(page){
   document.querySelectorAll("section").forEach(s=>{
     s.style.display="none";
@@ -7,22 +9,15 @@ function go(page){
 
   document.getElementById(page).style.display="block";
 
-  if(page==="home") loadFeed();
+  if(page === "home") loadFeed();
 }
 
 function val(id){
   return document.getElementById(id)?.value || "";
 }
 
-function toBase64(file){
-  return new Promise((res)=>{
-    const r = new FileReader();
-    r.onload = ()=>res(r.result);
-    r.readAsDataURL(file);
-  });
-}
+/* ================= FEED ================= */
 
-/* FEED */
 async function loadFeed(){
   const r = await fetch(`${API}/feed`);
   const data = await r.json();
@@ -43,9 +38,9 @@ async function loadFeed(){
   });
 }
 
-/* DETAIL + BOUTON PHOTOS GARANTI */
-function openAnnonce(a){
+/* ================= DETAIL ================= */
 
+function openAnnonce(a){
   go("detail");
 
   const images = a.images || [];
@@ -71,18 +66,18 @@ function openAnnonce(a){
       `).join("")}
     </div>
   `;
-
-  window.currentGallery = images;
 }
 
-/* TOGGLE ULTRA STABLE */
+/* ================= GALLERY TOGGLE ================= */
+
 function togglePhotos(){
   const g = document.getElementById("gallery");
   if(!g) return;
   g.style.display = g.style.display === "none" ? "flex" : "none";
 }
 
-/* REGISTER */
+/* ================= REGISTER ================= */
+
 async function register(){
   await fetch(`${API}/auth/register`,{
     method:"POST",
@@ -96,7 +91,8 @@ async function register(){
   go("login");
 }
 
-/* LOGIN */
+/* ================= LOGIN ================= */
+
 async function login(){
   const r = await fetch(`${API}/auth/login`,{
     method:"POST",
@@ -108,13 +104,15 @@ async function login(){
   });
 
   const data = await r.json();
+
   if(!r.ok) return alert(data.error);
 
   localStorage.setItem("user",JSON.stringify(data));
   go("home");
 }
 
-/* PUBLISH */
+/* ================= PUBLISH ================= */
+
 async function publier(){
 
   const user = JSON.parse(localStorage.getItem("user"));
@@ -147,6 +145,17 @@ async function publier(){
   loadFeed();
 }
 
-/* INIT */
+/* ================= UTIL ================= */
+
+function toBase64(file){
+  return new Promise((res)=>{
+    const r = new FileReader();
+    r.onload = ()=>res(r.result);
+    r.readAsDataURL(file);
+  });
+}
+
+/* ================= INIT ================= */
+
 go("home");
 loadFeed();

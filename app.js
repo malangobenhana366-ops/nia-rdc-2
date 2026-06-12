@@ -1,4 +1,4 @@
-const API = "https://nia-rdc-2.onrender.com";
+const API = ""; // Route relative automatique (plus de bugs d'URLs absolues)
 
 /* FEED */
 async function loadFeed(){
@@ -25,7 +25,6 @@ async function loadFeed(){
             📍 ${a.ville}${a.commune ? `, ${a.commune}` : ''} (${a.quartier})
           </p>
 
-          <!-- GALERIE SWIPE CLIQUABLE -->
           <div class="gallery">
             ${a.images && a.images.length > 0 ? a.images.map(img=>`
               <a href="${link}"><img src="${img}" alt="${a.titre}"></a>
@@ -44,18 +43,55 @@ async function loadFeed(){
   }
 }
 
+/* COMPRESSION AUTOMATIQUE DES PHOTOS VIA CANVAS */
+function compressAndToBase64(file, maxWidth = 1024, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Calcul du redimensionnement proportionnel
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Exportation en Base64 compressé (JPEG)
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedBase64);
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
+}
+
 /* PUBLISH MULTI */
 async function publier(){
   try {
     const files = document.getElementById("image").files;
     let images_base64 = [];
 
+    // Compression et conversion de chaque photo sélectionnée
     for(let f of files){
-      images_base64.push(await toBase64(f));
+      const compressedData = await compressAndToBase64(f, 1024, 0.7);
+      images_base64.push(compressedData);
     }
 
     const bodyData = {
-      user_id: 1, // Utilisateur temporaire pour les tests avant l'authentification globale
+      user_id: 1,
       titre: document.getElementById("titre").value,
       prix: document.getElementById("prix").value,
       periode: document.getElementById("periode").value,
@@ -75,13 +111,13 @@ async function publier(){
     });
 
     if (!res.ok) {
-      throw new Error("Échec de la sauvegarde de l'annonce sur le serveur backend");
+      throw new Error("Échec de la sauvegarde.");
     }
 
     await res.json();
     alert("Votre offre de location est en ligne ! 🚀");
 
-    // Reset du formulaire complet
+    // Reset complet du formulaire
     document.getElementById("titre").value = "";
     document.getElementById("prix").value = "";
     document.getElementById("telephone").value = "";
@@ -93,19 +129,10 @@ async function publier(){
 
     loadFeed();
   } catch (e) {
-    alert("Erreur lors de la publication. Vérifiez votre connexion ou la base de données.");
+    alert("Erreur lors de la publication. Vérifiez votre base de données.");
     console.error(e);
   }
 }
 
-/* BASE64 */
-function toBase64(file){
-  return new Promise((res,rej)=>{
-    const r = new FileReader();
-    r.onload = ()=>res(r.result);
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
-}
-
 loadFeed();
+  

@@ -1,12 +1,27 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import { pool } from "./db.js";
 import { v2 as cloudinary } from "cloudinary";
 
 const app = express();
 
+/* ================= PATH FIX ================= */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/* ================= MIDDLEWARE ================= */
 app.use(cors());
 app.use(express.json({ limit: "25mb" }));
+
+/* 🔥 IMPORTANT: servir fichiers frontend */
+app.use(express.static(__dirname));
+
+/* ================= ROOT FIX (Cannot GET /) ================= */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 /* ================= CLOUDINARY ================= */
 cloudinary.config({
@@ -15,51 +30,57 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* ================= HELPERS ================= */
-
+/* ================= UPLOAD IMAGE ================= */
 async function uploadImage(base64) {
   try {
-    const res = await cloudinary.uploader.upload(base64, {
+    const r = await cloudinary.uploader.upload(base64, {
       folder: "nia_v2"
     });
-    return res.secure_url;
+    return r.secure_url;
   } catch (e) {
+    console.log("upload error:", e);
     return null;
   }
 }
 
-/* ================= AUTH (SIMPLE MVP) ================= */
-
+/* ================= AUTH ================= */
 app.post("/auth/register", async (req, res) => {
-  const { telephone, password } = req.body;
+  try {
+    const { telephone, password } = req.body;
 
-  const r = await pool.query(
-    "INSERT INTO users (telephone, password) VALUES ($1,$2) RETURNING id, telephone",
-    [telephone, password]
-  );
+    const r = await pool.query(
+      "INSERT INTO users (telephone,password) VALUES ($1,$2) RETURNING id,telephone",
+      [telephone, password]
+    );
 
-  res.json(r.rows[0]);
+    res.json(r.rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: "register error" });
+  }
 });
 
 app.post("/auth/login", async (req, res) => {
-  const { telephone, password } = req.body;
+  try {
+    const { telephone, password } = req.body;
 
-  const r = await pool.query(
-    "SELECT * FROM users WHERE telephone=$1",
-    [telephone]
-  );
+    const r = await pool.query(
+      "SELECT * FROM users WHERE telephone=$1",
+      [telephone]
+    );
 
-  const user = r.rows[0];
+    const user = r.rows[0];
 
-  if (!user) return res.status(400).json({ error: "user not found" });
-  if (user.password !== password)
-    return res.status(400).json({ error: "wrong password" });
+    if (!user) return res.status(400).json({ error: "user not found" });
+    if (user.password !== password)
+      return res.status(400).json({ error: "wrong password" });
 
-  res.json({ id: user.id, telephone: user.telephone });
+    res.json({ id: user.id, telephone: user.telephone });
+  } catch (e) {
+    res.status(500).json({ error: "login error" });
+  }
 });
 
 /* ================= CREATE ANNONCE ================= */
-
 app.post("/annonces", async (req, res) => {
   try {
     const {
@@ -73,16 +94,16 @@ app.post("/annonces", async (req, res) => {
       images
     } = req.body;
 
-    let uploadedImages = [];
+    let uploaded = [];
 
     if (Array.isArray(images)) {
       for (const img of images) {
         const url = await uploadImage(img);
-        if (url) uploadedImages.push(url);
+        if (url) uploaded.push(url);
       }
     }
 
-    const mainImage = uploadedImages[0] || "";
+    const mainImage = uploaded[0] || "";
 
     const r = await pool.query(
       `INSERT INTO annonces
@@ -101,32 +122,30 @@ app.post("/annonces", async (req, res) => {
       ]
     );
 
-    const annonce = r.rows[0];
-
-    /* images secondaires */
-    const gallery = uploadedImages;
-
     res.json({
-      ...annonce,
-      images: gallery
+      ...r.rows[0],
+      images: uploaded
     });
 
   } catch (e) {
+    console.log(e);
     res.status(500).json({ error: "create failed" });
   }
 });
 
-/* ================= FEED CLEAN ================= */
-
+/* ================= FEED ================= */
 app.get("/feed", async (req, res) => {
-  const r = await pool.query(
-    "SELECT * FROM annonces ORDER BY id DESC"
-  );
+  try {
+    const r = await pool.query(
+      "SELECT * FROM annonces ORDER BY id DESC"
+    );
 
-  res.json(r.rows);
+    res.json(r.rows);
+  } catch (e) {
+    res.status(500).json([]);
+  }
 });
 
-/* ================= START ================= */
-
+/* ================= START SERVER ================= */
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log("RUNNING", PORT));
+app.listen(PORT, () => console.log("🚀 RUNNING ON", PORT));

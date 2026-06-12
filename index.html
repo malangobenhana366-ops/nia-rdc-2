@@ -10,25 +10,26 @@
 
 <header>
   <h2>🚀 NIA RDC</h2>
+
+  <!-- MENU FIXE -->
+  <div>
+    <button onclick="go('home')">Home</button>
+    <button onclick="go('publish')">Publier</button>
+    <button onclick="go('search')">Rechercher</button>
+    <button onclick="go('profile')">Profil</button>
+  </div>
 </header>
 
 <main>
 
 <!-- HOME -->
-<section id="home" class="page active">
-  <h2>Accueil</h2>
-
-  <button onclick="go('login')">Connexion</button>
-  <button onclick="go('register')">Inscription</button>
-
-  <hr>
-
+<section id="home">
   <h3>Annonces</h3>
   <div id="feed"></div>
 </section>
 
 <!-- LOGIN -->
-<section id="login" class="page" style="display:none;">
+<section id="login" style="display:none;">
   <h2>Connexion</h2>
 
   <input id="login_tel" placeholder="Téléphone">
@@ -39,7 +40,7 @@
 </section>
 
 <!-- REGISTER -->
-<section id="register" class="page" style="display:none;">
+<section id="register" style="display:none;">
   <h2>Inscription</h2>
 
   <input id="reg_tel" placeholder="Téléphone">
@@ -49,9 +50,9 @@
   <button onclick="go('home')">Retour</button>
 </section>
 
-<!-- PUBLISH -->
-<section id="publish" class="page" style="display:none;">
-  <h2>Publier</h2>
+<!-- PUBLISH (RESTAURÉ COMPLET) -->
+<section id="publish" style="display:none;">
+  <h2>Publier une annonce</h2>
 
   <input id="titre" placeholder="Titre">
   <textarea id="desc" placeholder="Description"></textarea>
@@ -80,8 +81,19 @@
   <button onclick="go('home')">Retour</button>
 </section>
 
-<!-- DETAIL -->
+<!-- DETAIL COMPLET -->
 <section id="detail" style="display:none;"></section>
+
+<!-- SEARCH -->
+<section id="search" style="display:none;">
+  <h2>Recherche</h2>
+  <input placeholder="chercher...">
+</section>
+
+<!-- PROFILE -->
+<section id="profile" style="display:none;">
+  <h2>Profil</h2>
+</section>
 
 </main>
 

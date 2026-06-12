@@ -20,14 +20,13 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* UPLOAD IMAGE */
+/* UPLOAD */
 async function uploadImage(base64){
   try {
-    const result = await cloudinary.uploader.upload(base64, {
-      folder: "nia_rdc",
-      resource_type: "image"
+    const res = await cloudinary.uploader.upload(base64, {
+      folder: "nia_rdc"
     });
-    return result.secure_url;
+    return res.secure_url;
   } catch {
     return "";
   }
@@ -45,7 +44,7 @@ app.post("/auth/register", async (req,res)=>{
 
     res.json(result.rows[0]);
   } catch {
-    res.status(500).json({ error: "register error" });
+    res.status(500).json({error:"register error"});
   }
 });
 
@@ -71,9 +70,7 @@ app.post("/auth/login", async (req,res)=>{
   }
 });
 
-/* =========================
-   CREATE ANNONCE (FIX FINAL)
-========================= */
+/* CREATE ANNONCE */
 app.post("/annonces", async (req,res)=>{
   try {
 
@@ -94,7 +91,6 @@ app.post("/annonces", async (req,res)=>{
       return res.status(400).json({error:"titre requis"});
     }
 
-    // image principale
     let main_image = "";
 
     if(images_base64 && images_base64.length > 0){
@@ -103,16 +99,8 @@ app.post("/annonces", async (req,res)=>{
 
     const result = await pool.query(
       `INSERT INTO annonces (
-        user_id,
-        titre,
-        description,
-        prix,
-        prix_type,
-        ville,
-        quartier,
-        telephone,
-        disponibilite,
-        image_url
+        user_id,titre,description,prix,prix_type,
+        ville,quartier,telephone,disponibilite,image_url
       )
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
       RETURNING *`,
@@ -121,7 +109,7 @@ app.post("/annonces", async (req,res)=>{
         titre,
         description || "",
         prix || 0,
-        prix_type || "vente",
+        prix_type || "location",
         ville || "",
         quartier || "",
         telephone || "",
@@ -132,7 +120,7 @@ app.post("/annonces", async (req,res)=>{
 
     res.json(result.rows[0]);
 
-  } catch(e){
+  } catch {
     res.status(500).json({error:"create error"});
   }
 });

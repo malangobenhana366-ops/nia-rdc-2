@@ -28,15 +28,10 @@ async function uploadImage(base64) {
       resource_type: "image"
     });
     return result.secure_url;
-  } catch (e) {
+  } catch {
     return "";
   }
 }
-
-/* HEALTH */
-app.get("/", (req, res) => {
-  res.json({ status: "OK NIA BACKEND 🚀" });
-});
 
 /* REGISTER */
 app.post("/auth/register", async (req, res) => {
@@ -76,7 +71,7 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
-/* CREATE ANNONCE (MULTI IMAGES FIX) */
+/* CREATE ANNONCE (MULTI IMAGES CLEAN) */
 app.post("/annonces", async (req, res) => {
   try {
     const {
@@ -105,6 +100,7 @@ app.post("/annonces", async (req, res) => {
       }
     }
 
+    // on garde 1 image principale pour la table annonces
     const main_image = image_urls[0] || "";
 
     const result = await pool.query(
@@ -136,8 +132,12 @@ app.post("/annonces", async (req, res) => {
       ]
     );
 
-    res.json(result.rows[0]);
-  } catch (e) {
+    res.json({
+      ...result.rows[0],
+      images: image_urls
+    });
+
+  } catch {
     res.status(500).json({ error: "create error" });
   }
 });

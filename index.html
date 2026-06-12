@@ -2,94 +2,58 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NIA RDC</title>
-
-<style>
-body{font-family:Arial;margin:0;background:#f5f5f5}
-header{background:#111;color:#fff;padding:15px}
-nav button{margin:5px;padding:10px}
-section{display:none;padding:15px}
-.active{display:block}
-.card{background:white;padding:10px;margin:10px;border-radius:10px}
-img{border-radius:10px}
-button{padding:10px;margin-top:5px}
-</style>
-
 </head>
 
 <body>
 
 <header>
-  <h2>🚀 NIA RDC</h2>
-  <nav>
-    <button onclick="go('home')">Home</button>
-    <button onclick="go('publish')">Publier</button>
-    <button onclick="go('login')">Connexion</button>
-    <button onclick="go('register')">Inscription</button>
-  </nav>
+  <h2>NIA RDC</h2>
+
+  <button onclick="go('home')">Home</button>
+  <button onclick="go('publish')">Publier</button>
+  <button onclick="go('login')">Login</button>
+  <button onclick="go('register')">Register</button>
 </header>
 
 <main>
 
-<!-- HOME -->
-<section id="home" class="active">
-  <h3>📦 Annonces</h3>
+<section id="home">
   <div id="feed"></div>
 </section>
 
-<!-- LOGIN -->
-<section id="login">
-  <h2>Connexion</h2>
-  <input id="login_tel" placeholder="Téléphone"><br>
-  <input id="login_pass" type="password" placeholder="Mot de passe"><br>
-  <button onclick="login()">Se connecter</button>
+<section id="login" style="display:none;">
+  <input id="login_tel" placeholder="tel">
+  <input id="login_pass" type="password">
+  <button onclick="login()">Login</button>
 </section>
 
-<!-- REGISTER -->
-<section id="register">
-  <h2>Inscription</h2>
-  <input id="reg_tel" placeholder="Téléphone"><br>
-  <input id="reg_pass" type="password"><br>
-  <button onclick="register()">Créer compte</button>
+<section id="register" style="display:none;">
+  <input id="reg_tel" placeholder="tel">
+  <input id="reg_pass" type="password">
+  <button onclick="register()">Register</button>
 </section>
 
-<!-- PUBLISH -->
-<section id="publish">
-  <h2>➕ Publier annonce</h2>
+<section id="publish" style="display:none;">
+  <input id="titre" placeholder="titre">
+  <textarea id="desc"></textarea>
 
-  <input id="titre" placeholder="Titre"><br>
-  <textarea id="desc" placeholder="Description"></textarea><br>
+  <input id="prix" type="number">
 
-  <input id="prix" type="number"><br>
+  <input id="ville" placeholder="ville">
+  <input id="quartier" placeholder="quartier">
+  <input id="telephone" placeholder="tel">
 
-  <select id="prix_type">
-    <option value="location">Location</option>
-    <option value="heure">Heure</option>
-    <option value="jour">Jour</option>
-    <option value="mois">Mois</option>
-  </select><br>
-
-  <input id="ville" placeholder="Ville"><br>
-  <input id="quartier" placeholder="Quartier"><br>
-  <input id="telephone" placeholder="Téléphone"><br>
-
-  <select id="disponibilite">
-    <option value="disponible">Disponible</option>
-    <option value="occupe">Occupé</option>
-  </select><br>
-
-  <input id="image" type="file" multiple><br>
+  <input id="image" type="file" multiple>
 
   <button onclick="publier()">Publier</button>
 </section>
 
-<!-- DETAIL -->
-<section id="detail"></section>
-
-</main>
+<section id="detail" style="display:none;"></section>
 
 <script src="app.js"></script>
+
+</main>
 
 </body>
 </html>

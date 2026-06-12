@@ -6,7 +6,6 @@ import { pool } from "./db.js";
 import { v2 as cloudinary } from "cloudinary";
 
 const app = express();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -22,114 +21,69 @@ cloudinary.config({
 
 async function uploadImage(base64){
   try {
-    const res = await cloudinary.uploader.upload(base64, {
-      folder: "nia_rdc"
-    });
+    const res = await cloudinary.uploader.upload(base64, { folder: "nia_rdc" });
     return res.secure_url;
-  } catch {
-    return "";
-  }
+  } catch { return ""; }
 }
 
-app.post("/auth/register", async (req,res)=>{
-  const {telephone,password} = req.body;
-  try {
-    const result = await pool.query(
-      "INSERT INTO users (telephone,password) VALUES ($1,$2) RETURNING *",
-      [telephone,password]
-    );
-    res.json(result.rows[0]);
-  } catch {
-    res.status(500).json({error:"register error"});
-  }
-});
-
-app.post("/auth/login", async (req,res)=>{
-  const {telephone,password} = req.body;
-  const result = await pool.query(
-    "SELECT * FROM users WHERE telephone=$1",
-    [telephone]
-  );
-  const user = result.rows[0];
-  if(!user) return res.status(400).json({error:"user not found"});
-  if(user.password !== password) return res.status(400).json({error:"wrong password"});
-  res.json({id:user.id,telephone:user.telephone});
-});
-
+/* CRÉATION ANNONCE */
 app.post("/annonces", async (req,res)=>{
   try {
-    let {
-      user_id,
-      titre,
-      description,
-      prix,
-      periode,
-      ville,
-      commune,
-      quartier,
-      telephone,
-      statut,
-      images_base64
-    } = req.body;
-
-    if(!titre){
-      return res.status(400).json({error:"missing fields"});
-    }
-
+    let { user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, images_base64 } = req.body;
     if(!user_id) user_id = 1;
 
     const annonce = await pool.query(
-      `INSERT INTO annonces (user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING id`,
+      `INSERT INTO annonces (user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()) RETURNING id`,
       [user_id, titre, description, prix ? prix : 0, periode, ville, commune, quartier, telephone, statut]
     );
-
     const annonceId = annonce.rows[0].id;
-    let images = [];
 
     if(images_base64 && images_base64.length > 0){
       for(let img of images_base64){
         const url = await uploadImage(img);
-        if(url) images.push(url);
+        if(url) await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [annonceId,url]);
       }
     }
-
-    for(let url of images){
-      await pool.query(
-        "INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)",
-        [annonceId,url]
-      );
-    }
-
-    res.json({id:annonceId,images});
-  } catch(e){
-    console.error(e);
-    res.status(500).json({error:"create error"});
-  }
+    res.json({success: true, id: annonceId});
+  } catch(e){ res.status(500).json({error:"create error"}); }
 });
 
+/* TOUT LE FLUX TRIÉ PAR INSCRIPTION / CRÉATION FRAICHE AVEC LIEN STATUT COMPTE VIP */
 app.get("/feed", async (req,res)=>{
   try {
-    const annonces = await pool.query(
-      "SELECT * FROM annonces ORDER BY id DESC"
-    );
+    const queryStr = `
+      SELECT a.*, u.is_vip 
+      FROM annonces a
+      LEFT JOIN users u ON a.user_id = u.id
+      ORDER BY a.created_at DESC, a.id DESC
+    `;
+    const annonces = await pool.query(queryStr);
     const data = [];
+
     for(let a of annonces.rows){
-      const imgs = await pool.query(
-        "SELECT image_url FROM annonce_images WHERE annonce_id=$1",
-        [a.id]
-      );
+      const imgs = await pool.query("SELECT image_url FROM annonce_images WHERE annonce_id=$1", [a.id]);
       data.push({
         ...a,
         images: imgs.rows.map(i=>i.image_url)
       });
     }
     res.json(data);
-  } catch {
-    res.json([]);
+  } catch (e) { res.json([]); }
+});
+
+/* ACTION ROUTE DE PROPULSION (BOOST) PAR LE TEMPS PUBLICITAIRE */
+app.post("/annonces/:id/boost", async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Mettre à jour created_at fait remonter mécaniquement l'annonce en haut du feed
+    await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [id]);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: "boost error" });
   }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("RUNNING"));
+app.listen(PORT, ()=>console.log("NIA RDC SERVER ONLINE"));
+  

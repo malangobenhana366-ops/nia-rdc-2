@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NIA RDC</title>
-<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -16,13 +15,13 @@
 <main>
 
 <!-- HOME -->
-<section id="home" class="page active">
+<section id="home">
 
   <div id="authBox">
-    <h3>Bienvenue</h3>
+    <h3>Bienvenue 👋</h3>
 
-    <button onclick="go('login')">Connexion</button>
-    <button onclick="go('register')">Inscription</button>
+    <button onclick="showLogin()">Connexion</button>
+    <button onclick="showRegister()">Inscription</button>
   </div>
 
   <div id="appBox" style="display:none;">
@@ -39,7 +38,7 @@
 </section>
 
 <!-- LOGIN -->
-<section id="login" class="page" style="display:none;">
+<section id="login" style="display:none;">
   <h2>Connexion</h2>
 
   <input id="login_tel" placeholder="Téléphone">
@@ -50,18 +49,18 @@
 </section>
 
 <!-- REGISTER -->
-<section id="register" class="page" style="display:none;">
+<section id="register" style="display:none;">
   <h2>Inscription</h2>
 
   <input id="reg_tel" placeholder="Téléphone">
-  <input id="reg_pass" type="password" placeholder="Mot de passe">
+  <input id="reg_pass" type="password">
 
   <button onclick="register()">Créer compte</button>
   <button onclick="go('home')">Retour</button>
 </section>
 
 <!-- PUBLISH -->
-<section id="publish" class="page" style="display:none;">
+<section id="publish" style="display:none;">
   <h2>Publier</h2>
 
   <input id="titre" placeholder="Titre">
@@ -71,8 +70,8 @@
 
   <select id="prix_type">
     <option value="location">Location</option>
-    <option value="jour">Jour</option>
     <option value="heure">Heure</option>
+    <option value="jour">Jour</option>
     <option value="mois">Mois</option>
   </select>
 

@@ -1,15 +1,11 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* ======================
-UTILS
-====================== */
+/* UTILS */
 function val(id){
   return document.getElementById(id)?.value?.trim() || "";
 }
 
-/* ======================
-NAV
-====================== */
+/* NAV */
 function go(page){
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const el = document.getElementById(page);
@@ -17,162 +13,114 @@ function go(page){
   if(page === "home") loadFeed();
 }
 
-/* ======================
-AUTH UI
-====================== */
+/* UI */
 function showLogin(){ go("login"); }
 function showRegister(){ go("register"); }
 
 function showApp(){
-  const auth = document.getElementById("authBox");
-  const app = document.getElementById("appBox");
-  if(auth) auth.style.display = "none";
-  if(app) app.style.display = "block";
+  document.getElementById("authBox").style.display = "none";
+  document.getElementById("appBox").style.display = "block";
 }
 
-/* ======================
-FEED (AFFICHAGE MULTI PHOTOS)
-====================== */
+/* FEED */
 async function loadFeed(){
-  try{
-    const res = await fetch(`${API}/feed`);
-    const data = await res.json();
+  const res = await fetch(`${API}/feed`);
+  const data = await res.json();
 
-    const feed = document.getElementById("feed");
-    if(!feed) return;
+  const feed = document.getElementById("feed");
+  if(!feed) return;
 
-    feed.innerHTML = "";
+  feed.innerHTML = "";
 
-    data.forEach(a => {
+  data.forEach(a => {
+    feed.innerHTML += `
+      <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
+        <h3>${a.titre || ""}</h3>
+        <p>${a.ville || ""} - ${a.quartier || ""}</p>
+        <p>${a.prix || 0} ${a.prix_type || ""}</p>
+        <p>${a.telephone || ""}</p>
 
-      let images = [];
-      try {
-        images = a.images ? JSON.parse(a.images) : [];
-      } catch(e){}
-
-      feed.innerHTML += `
-        <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
-          <h3>${a.titre || ""}</h3>
-          <p>📍 ${a.ville || ""} - ${a.quartier || ""}</p>
-          <p>💰 ${a.prix || 0} ${a.prix_type || ""}</p>
-          <p>📞 ${a.telephone || ""}</p>
-
-          ${images.map(img => `
-            <img src="${img}" style="width:100%;margin-top:8px;border-radius:10px">
-          `).join("")}
-
-        </div>
-      `;
-    });
-
-  } catch(err){
-    console.log("FEED ERROR", err);
-  }
+        ${a.image_url ? `<img src="${a.image_url}" style="width:100%;margin-top:10px">` : ""}
+      </div>
+    `;
+  });
 }
 
-/* ======================
-REGISTER
-====================== */
+/* REGISTER */
 async function register(){
-  try{
-    const res = await fetch(`${API}/auth/register`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        telephone: val("reg_tel"),
-        password: val("reg_pass")
-      })
-    });
+  await fetch(`${API}/auth/register`, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      telephone: val("reg_tel"),
+      password: val("reg_pass")
+    })
+  });
 
-    const data = await res.json();
-    if(!res.ok) return alert(data.error || "Erreur inscription");
-
-    alert("Compte créé");
-    go("login");
-
-  }catch(e){
-    alert("Erreur serveur");
-  }
+  alert("Compte créé");
+  go("login");
 }
 
-/* ======================
-LOGIN
-====================== */
+/* LOGIN */
 async function login(){
-  try{
-    const res = await fetch(`${API}/auth/login`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        telephone: val("login_tel"),
-        password: val("login_pass")
-      })
-    });
+  const res = await fetch(`${API}/auth/login`, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      telephone: val("login_tel"),
+      password: val("login_pass")
+    })
+  });
 
-    const data = await res.json();
-    if(!res.ok) return alert(data.error);
+  const data = await res.json();
 
-    localStorage.setItem("user", JSON.stringify(data));
+  if(!res.ok) return alert(data.error);
 
-    showApp();
-    go("home");
-
-  }catch(e){
-    alert("Erreur serveur");
-  }
+  localStorage.setItem("user", JSON.stringify(data));
+  showApp();
+  go("home");
 }
 
-/* ======================
-PUBLISH MULTI IMAGES
-====================== */
+/* PUBLISH (IMPORTANT FIX IMAGE) */
 async function publier(){
-  try{
-    const user = JSON.parse(localStorage.getItem("user"));
-    if(!user) return alert("Connecte-toi");
+  const user = JSON.parse(localStorage.getItem("user"));
+  if(!user) return alert("Connecte-toi");
 
-    const files = document.getElementById("image").files;
+  const file = document.getElementById("image")?.files?.[0];
 
-    if(!files.length) return alert("Ajoute des images");
+  let image_base64 = "";
 
-    let images = [];
-
-    for(let f of files){
-      const b64 = await toBase64(f);
-      images.push(b64);
-    }
-
-    const res = await fetch(`${API}/annonces`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        user_id:user.id,
-        titre:val("titre"),
-        description:val("desc"),
-        prix:val("prix"),
-        prix_type:val("prix_type"),
-        ville:val("ville"),
-        quartier:val("quartier"),
-        telephone:val("telephone"),
-        disponibilite:val("disponibilite"),
-        images
-      })
-    });
-
-    const data = await res.json();
-    if(!res.ok) return alert(data.error);
-
-    alert("Annonce publiée 🚀");
-    go("home");
-    loadFeed();
-
-  }catch(e){
-    alert("Erreur serveur");
+  if(file){
+    image_base64 = await toBase64(file);
   }
+
+  const res = await fetch(`${API}/annonces`, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      user_id:user.id,
+      titre:val("titre"),
+      description:val("desc"),
+      prix:val("prix"),
+      prix_type:val("prix_type"),
+      ville:val("ville"),
+      quartier:val("quartier"),
+      telephone:val("telephone"),
+      disponibilite:val("disponibilite"),
+      image_base64
+    })
+  });
+
+  const data = await res.json();
+
+  if(!res.ok) return alert(data.error);
+
+  alert("Annonce publiée 🚀");
+  go("home");
+  loadFeed();
 }
 
-/* ======================
-BASE64
-====================== */
+/* BASE64 */
 function toBase64(file){
   return new Promise((resolve,reject)=>{
     const r = new FileReader();

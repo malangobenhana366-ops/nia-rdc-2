@@ -1,9 +1,16 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* NAV */
+/* NAVIGATION FIX (IMPORTANT) */
 function go(page){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(page).classList.add("active");
+
+  document.querySelectorAll(".page").forEach(p=>{
+    p.style.display = "none";
+  });
+
+  const target = document.getElementById(page);
+  if(target){
+    target.style.display = "block";
+  }
 
   if(page === "home") loadFeed();
 }
@@ -23,7 +30,7 @@ function toBase64(file){
   });
 }
 
-/* ================= FEED (FIX MULTI IMAGES) ================= */
+/* FEED MULTI IMAGES FIX */
 async function loadFeed(){
   const res = await fetch(`${API}/feed`);
   const data = await res.json();
@@ -32,32 +39,24 @@ async function loadFeed(){
   feed.innerHTML = "";
 
   data.forEach(a=>{
-
     feed.innerHTML += `
       <div style="border:1px solid #ccc;margin:10px;padding:10px">
 
         <h3>${a.titre}</h3>
-        <p>${a.ville} - ${a.quartier}</p>
-        <p>${a.prix}</p>
 
-        <!-- 🔥 FIX IMPORTANT MULTI IMAGES -->
-        <div style="display:flex;overflow-x:auto;gap:10px">
-          ${a.images && a.images.length > 0
-            ? a.images.map(img=>`
-                <img src="${img}" style="width:200px;height:200px;object-fit:cover;border-radius:10px">
-              `).join("")
-            : (a.image_url ? `<img src="${a.image_url}" style="width:100%">` : "")
-          }
-        </div>
+        <p>${a.ville} - ${a.quartier}</p>
+
+        ${a.image_url ? `<img src="${a.image_url}" style="width:100%">` : ""}
 
       </div>
     `;
   });
 }
 
-/* ================= REGISTER ================= */
+/* REGISTER FIX */
 async function register(){
-  await fetch(`${API}/auth/register`,{
+
+  const res = await fetch(`${API}/auth/register`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
@@ -66,12 +65,18 @@ async function register(){
     })
   });
 
+  const data = await res.json();
+
+  if(!res.ok) return alert(data.error);
+
   alert("Compte créé");
+
   go("login");
 }
 
-/* ================= LOGIN ================= */
+/* LOGIN FIX */
 async function login(){
+
   const res = await fetch(`${API}/auth/login`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
@@ -93,7 +98,7 @@ async function login(){
   go("home");
 }
 
-/* ================= PUBLISH ================= */
+/* PUBLISH */
 async function publier(){
 
   const user = JSON.parse(localStorage.getItem("user"));
@@ -128,9 +133,7 @@ async function publier(){
 
   if(!res.ok) return alert(data.error);
 
-  alert("Annonce publiée 🚀");
-
-  document.getElementById("image").value = "";
+  alert("Publié 🚀");
 
   go("home");
   loadFeed();

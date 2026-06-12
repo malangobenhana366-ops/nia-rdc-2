@@ -1,12 +1,15 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* NAV */
+/* NAVIGATION SIMPLE ET FIABLE */
 function go(page){
   document.querySelectorAll("section").forEach(s=>{
     s.style.display = "none";
   });
 
-  document.getElementById(page).style.display = "block";
+  const target = document.getElementById(page);
+  if(target){
+    target.style.display = "block";
+  }
 
   if(page === "home") loadFeed();
 }
@@ -26,7 +29,7 @@ function toBase64(file){
   });
 }
 
-/* FEED (CARDS + CLICK DETAIL) */
+/* FEED */
 async function loadFeed(){
   const res = await fetch(`${API}/feed`);
   const data = await res.json();
@@ -35,10 +38,9 @@ async function loadFeed(){
   feed.innerHTML = "";
 
   data.forEach(a=>{
-
     feed.innerHTML += `
       <div onclick='openAnnonce(${JSON.stringify(a)})'
-           style="border:1px solid #ddd;margin:10px;padding:10px;cursor:pointer">
+           style="border:1px solid #ccc;margin:10px;padding:10px;cursor:pointer">
 
         <img src="${a.image_url}" style="width:100%;height:180px;object-fit:cover">
 
@@ -51,7 +53,7 @@ async function loadFeed(){
   });
 }
 
-/* DETAIL ANNONCE */
+/* DETAIL */
 function openAnnonce(a){
 
   document.querySelectorAll("section").forEach(s=>{
@@ -66,11 +68,7 @@ function openAnnonce(a){
 
     <h2>${a.titre}</h2>
 
-    <div style="display:flex;overflow-x:auto;gap:10px">
-      ${(a.images || []).map(img=>`
-        <img src="${img}" style="width:250px;height:250px;object-fit:cover">
-      `).join("")}
-    </div>
+    <img src="${a.image_url}" style="width:100%">
 
     <p><b>Prix:</b> ${a.prix}</p>
     <p><b>Ville:</b> ${a.ville}</p>
@@ -79,8 +77,29 @@ function openAnnonce(a){
   `;
 }
 
-/* LOGIN */
+/* REGISTER (FIX OK) */
+async function register(){
+
+  const res = await fetch(`${API}/auth/register`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      telephone: val("reg_tel"),
+      password: val("reg_pass")
+    })
+  });
+
+  const data = await res.json();
+
+  if(!res.ok) return alert(data.error);
+
+  alert("Compte créé");
+  go("login");
+}
+
+/* LOGIN (FIX OK) */
 async function login(){
+
   const res = await fetch(`${API}/auth/login`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
@@ -96,25 +115,48 @@ async function login(){
 
   localStorage.setItem("user", JSON.stringify(data));
 
-  document.getElementById("authBox").style.display = "none";
-  document.getElementById("appBox").style.display = "block";
-
   go("home");
 }
 
-/* REGISTER */
-async function register(){
-  await fetch(`${API}/auth/register`,{
+/* PUBLISH (OK MULTI IMAGES) */
+async function publier(){
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  if(!user) return alert("Connecte-toi");
+
+  const files = document.getElementById("image").files;
+
+  let images_base64 = [];
+
+  for(let f of files){
+    images_base64.push(await toBase64(f));
+  }
+
+  const res = await fetch(`${API}/annonces`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
-      telephone: val("reg_tel"),
-      password: val("reg_pass")
+      user_id: user.id,
+      titre: val("titre"),
+      description: val("desc"),
+      prix: val("prix"),
+      prix_type: val("prix_type"),
+      ville: val("ville"),
+      quartier: val("quartier"),
+      telephone: val("telephone"),
+      disponibilite: val("disponibilite"),
+      images_base64
     })
   });
 
-  alert("OK");
-  go("login");
+  const data = await res.json();
+
+  if(!res.ok) return alert(data.error);
+
+  alert("Annonce publiée 🚀");
+
+  go("home");
+  loadFeed();
 }
 
 /* INIT */

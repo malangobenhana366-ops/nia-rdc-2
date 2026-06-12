@@ -13,6 +13,8 @@
     --text: #1e293b;
     --text-light: #64748b;
     --border: #e2e8f0;
+    --success: #10b981;
+    --danger: #ef4444;
   }
 
   body {
@@ -181,14 +183,55 @@
   #feed {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
   }
 
+  /* DESIGN DE LA CARTE D'ANNONCE ENTIÈRE */
+  .annonce-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    background: var(--card-bg);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+  }
+
+  .annonce-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.4rem;
+    color: var(--text);
+  }
+
+  .annonce-price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 5px 0;
+  }
+
+  .annonce-meta {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: 12px;
+  }
+
+  .annonce-description {
+    background: #f8fafc;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: #334155;
+    margin: 15px 0;
+    white-space: pre-line;
+    border-left: 4px solid var(--primary);
+  }
+
+  /* GALERIE PHOTO : VERROUILLAGE SANS COUPER (CONTAIN) */
   .gallery {
     display: flex;
     overflow-x: auto;
     gap: 12px;
-    padding-bottom: 8px;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
   }
 
   .gallery::-webkit-scrollbar {
@@ -200,13 +243,60 @@
     border-radius: 4px;
   }
 
-  .gallery img {
-    width: 260px;
-    height: 200px;
-    object-fit: cover;
+  .gallery-item {
+    width: 100%;
+    max-width: 350px;
+    height: 250px;
+    object-fit: contain; /* Solution pour voir la photo entièrement sans coupure */
+    background-color: #0f172a; /* Fond sombre pour combler élégamment les bords vides */
     border-radius: 8px;
     flex-shrink: 0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  }
+
+  .annonce-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .btn-contact {
+    background-color: #10b981;
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s;
+  }
+
+  .btn-contact:hover {
+    background-color: #059669;
+  }
+
+  .badge-status {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .status-disponible {
+    background-color: #ecfdf5;
+    color: var(--success);
+  }
+
+  .status-occupe {
+    background-color: #fef2f2;
+    color: var(--danger);
   }
 </style>
 </head>
@@ -292,3 +382,4 @@
 <script src="app.js"></script>
 </body>
 </html>
+

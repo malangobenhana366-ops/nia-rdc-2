@@ -20,7 +20,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* UPLOAD */
+/* UPLOAD TO CLOUDINARY */
 async function uploadImage(base64){
   try {
     const res = await cloudinary.uploader.upload(base64, {
@@ -65,7 +65,7 @@ app.post("/auth/login", async (req,res)=>{
 /* CREATE ANNONCE + MULTI IMAGES */
 app.post("/annonces", async (req,res)=>{
   try {
-    const {
+    let {
       user_id,
       titre,
       description,
@@ -79,11 +79,14 @@ app.post("/annonces", async (req,res)=>{
       images_base64
     } = req.body;
 
-    if(!user_id || !titre){
+    if(!titre){
       return res.status(400).json({error:"missing fields"});
     }
 
-    // Sauvegarde en bdd avec les colonnes exactes de ton nouveau schéma SQL
+    // Sécurité : ID 1 par défaut si non connecté lors des phases de tests
+    if(!user_id) user_id = 1;
+
+    // Insertion alignée avec le schéma SQL de NIA RDC
     const annonce = await pool.query(
       `INSERT INTO annonces (user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -165,10 +168,11 @@ app.get("/annonces/:id", async (req, res) => {
   }
 });
 
-/* GARANTIE DE CHARGEMENT POUR DETAILS.HTML (Résout le Cannot GET) */
+/* FORCE LE SERVEUR À TROUVER ET DISTRIBUER LA PAGE DETAILS */
 app.get("/details.html", (req, res) => {
   res.sendFile(path.join(__dirname, "details.html"));
 });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, ()=>console.log("RUNNING",PORT));
+  

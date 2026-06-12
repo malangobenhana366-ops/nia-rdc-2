@@ -23,10 +23,10 @@ cloudinary.config({
 /* UPLOAD */
 async function uploadImage(base64){
   try {
-    const res = await cloudinary.uploader.upload(base64, {
+    const r = await cloudinary.uploader.upload(base64, {
       folder: "nia_rdc"
     });
-    return res.secure_url;
+    return r.secure_url;
   } catch {
     return "";
   }

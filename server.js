@@ -32,7 +32,7 @@ async function uploadImage(base64){
   }
 }
 
-/* REGISTER */
+/* AUTH */
 app.post("/auth/register", async (req,res)=>{
   try {
     const { telephone, password } = req.body;
@@ -48,7 +48,6 @@ app.post("/auth/register", async (req,res)=>{
   }
 });
 
-/* LOGIN */
 app.post("/auth/login", async (req,res)=>{
   try {
     const { telephone, password } = req.body;
@@ -70,7 +69,7 @@ app.post("/auth/login", async (req,res)=>{
   }
 });
 
-/* CREATE ANNONCE */
+/* CREATE ANNONCE (MULTI IMAGES FIX) */
 app.post("/annonces", async (req,res)=>{
   try {
 
@@ -91,11 +90,16 @@ app.post("/annonces", async (req,res)=>{
       return res.status(400).json({error:"titre requis"});
     }
 
-    let main_image = "";
+    let images = [];
 
     if(images_base64 && images_base64.length > 0){
-      main_image = await uploadImage(images_base64[0]);
+      for(const img of images_base64){
+        const url = await uploadImage(img);
+        if(url) images.push(url);
+      }
     }
+
+    const main = images[0] || "";
 
     const result = await pool.query(
       `INSERT INTO annonces (
@@ -114,11 +118,14 @@ app.post("/annonces", async (req,res)=>{
         quartier || "",
         telephone || "",
         disponibilite || "disponible",
-        main_image
+        main
       ]
     );
 
-    res.json(result.rows[0]);
+    res.json({
+      ...result.rows[0],
+      images
+    });
 
   } catch {
     res.status(500).json({error:"create error"});
@@ -128,10 +135,8 @@ app.post("/annonces", async (req,res)=>{
 /* FEED */
 app.get("/feed", async (req,res)=>{
   try {
-    const result = await pool.query(
-      "SELECT * FROM annonces ORDER BY id DESC"
-    );
-    res.json(result.rows);
+    const r = await pool.query("SELECT * FROM annonces ORDER BY id DESC");
+    res.json(r.rows);
   } catch {
     res.json([]);
   }

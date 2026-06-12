@@ -20,7 +20,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* UPLOAD TO CLOUDINARY */
 async function uploadImage(base64){
   try {
     const res = await cloudinary.uploader.upload(base64, {
@@ -32,7 +31,6 @@ async function uploadImage(base64){
   }
 }
 
-/* REGISTER */
 app.post("/auth/register", async (req,res)=>{
   const {telephone,password} = req.body;
   try {
@@ -46,7 +44,6 @@ app.post("/auth/register", async (req,res)=>{
   }
 });
 
-/* LOGIN */
 app.post("/auth/login", async (req,res)=>{
   const {telephone,password} = req.body;
   const result = await pool.query(
@@ -54,15 +51,11 @@ app.post("/auth/login", async (req,res)=>{
     [telephone]
   );
   const user = result.rows[0];
-
   if(!user) return res.status(400).json({error:"user not found"});
-  if(user.password !== password)
-    return res.status(400).json({error:"wrong password"});
-
+  if(user.password !== password) return res.status(400).json({error:"wrong password"});
   res.json({id:user.id,telephone:user.telephone});
 });
 
-/* CREATE ANNONCE + MULTI IMAGES */
 app.post("/annonces", async (req,res)=>{
   try {
     let {
@@ -93,8 +86,8 @@ app.post("/annonces", async (req,res)=>{
     );
 
     const annonceId = annonce.rows[0].id;
-
     let images = [];
+
     if(images_base64 && images_base64.length > 0){
       for(let img of images_base64){
         const url = await uploadImage(img);
@@ -110,21 +103,18 @@ app.post("/annonces", async (req,res)=>{
     }
 
     res.json({id:annonceId,images});
-
   } catch(e){
     console.error(e);
     res.status(500).json({error:"create error"});
   }
 });
 
-/* FEED COMPLET */
 app.get("/feed", async (req,res)=>{
   try {
     const annonces = await pool.query(
       "SELECT * FROM annonces ORDER BY id DESC"
     );
     const data = [];
-
     for(let a of annonces.rows){
       const imgs = await pool.query(
         "SELECT image_url FROM annonce_images WHERE annonce_id=$1",
@@ -142,4 +132,4 @@ app.get("/feed", async (req,res)=>{
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("RUNNING ON PORT", PORT));
+app.listen(PORT, ()=>console.log("RUNNING"));

@@ -1,6 +1,6 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* NAV SIMPLE */
+/* NAV */
 function go(page){
   document.querySelectorAll("section").forEach(s=>{
     s.style.display = "none";
@@ -27,7 +27,7 @@ function toBase64(file){
   });
 }
 
-/* FEED (CARDS PRO) */
+/* FEED */
 async function loadFeed(){
   const res = await fetch(`${API}/feed`);
   const data = await res.json();
@@ -44,13 +44,13 @@ async function loadFeed(){
 
         <h3>${a.titre}</h3>
         <p>${a.ville} - ${a.quartier}</p>
-        <p><b>${a.prix}</b></p>
+        <p>${a.prix}</p>
       </div>
     `;
   });
 }
 
-/* DETAIL COMPLET FIX */
+/* DETAIL COMPLET AVEC GALERIE */
 function openAnnonce(a){
 
   document.querySelectorAll("section").forEach(s=>{
@@ -60,16 +60,18 @@ function openAnnonce(a){
   const d = document.getElementById("detail");
   d.style.display = "block";
 
+  const images = a.images || [];
+
   d.innerHTML = `
     <button onclick="go('home')">⬅ Retour</button>
 
     <h2>${a.titre}</h2>
 
-    <!-- GALERIE -->
-    <div style="display:flex;overflow-x:auto;gap:10px">
-      ${(a.images || []).map(img=>`
-        <img src="${img}" style="width:250px;height:250px;object-fit:cover">
-      `).join("")}
+    <div style="display:flex;overflow-x:auto;gap:10px;padding:10px">
+      ${images.length > 0 ? images.map(img=>`
+        <img src="${img}"
+          style="width:250px;height:250px;object-fit:cover;border-radius:10px">
+      `).join("") : "<p>Aucune image</p>"}
     </div>
 
     <p><b>Prix:</b> ${a.prix}</p>
@@ -96,7 +98,6 @@ async function login(){
   if(!res.ok) return alert(data.error);
 
   localStorage.setItem("user", JSON.stringify(data));
-
   go("home");
 }
 
@@ -118,7 +119,7 @@ async function register(){
   go("login");
 }
 
-/* PUBLISH FIX FINAL */
+/* PUBLISH */
 async function publier(){
 
   const user = JSON.parse(localStorage.getItem("user"));
@@ -153,7 +154,6 @@ async function publier(){
   if(!res.ok) return alert(data.error);
 
   alert("Publié 🚀");
-
   go("home");
   loadFeed();
 }

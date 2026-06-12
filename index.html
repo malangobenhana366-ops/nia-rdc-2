@@ -4,41 +4,61 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NIA RDC</title>
-<style>
-  .gallery {
-    display:flex;
-    overflow-x:auto;
-    gap:10px;
-  }
-  .gallery img {
-    width:250px;
-    height:250px;
-    object-fit:cover;
-    border-radius:10px;
-    flex-shrink:0;
-  }
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<h1>NIA RDC</h1>
+<header class="topbar">
+  <div class="logo">🚀 NIA RDC</div>
+</header>
 
-<section>
-  <input id="titre" placeholder="Titre">
-  <input id="prix" type="number">
-  <input id="ville">
-  <input id="quartier">
+<main>
 
-  <!-- MULTI IMAGES -->
+<section id="publish" class="page active">
+
+  <h2>➕ Publier une annonce</h2>
+
+  <input id="titre" placeholder="Titre *">
+
+  <textarea id="desc" placeholder="Description (optionnel)"></textarea>
+
+  <input id="prix" type="number" placeholder="Prix (optionnel)">
+
+  <!-- prix type -->
+  <select id="prix_type">
+    <option value="vente">Vente</option>
+    <option value="heure">Par heure</option>
+    <option value="jour">Par jour</option>
+    <option value="semaine">Par semaine</option>
+    <option value="mois">Par mois</option>
+  </select>
+
+  <input id="ville" placeholder="Ville (optionnel)">
+  <input id="quartier" placeholder="Quartier (optionnel)">
+  <input id="telephone" placeholder="Téléphone (optionnel)">
+
+  <!-- disponibilité -->
+  <select id="disponibilite">
+    <option value="disponible">Disponible</option>
+    <option value="occupe">Occupé</option>
+  </select>
+
+  <h3>📷 Images</h3>
   <input id="image" type="file" accept="image/*" multiple>
 
-  <button onclick="publier()">Publier</button>
+  <br><br>
+
+  <button onclick="publier()">Publier 🚀</button>
+
 </section>
 
-<hr>
+<section>
+  <h2>Feed</h2>
+  <div id="feed"></div>
+</section>
 
-<div id="feed"></div>
+</main>
 
 <script src="app.js"></script>
 

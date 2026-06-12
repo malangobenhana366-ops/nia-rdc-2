@@ -15,6 +15,7 @@
     --border: #e2e8f0;
     --success: #10b981;
     --danger: #ef4444;
+    --vip-gold: #f59e0b;
   }
 
   body {
@@ -26,216 +27,114 @@
     line-height: 1.6;
   }
 
+  /* BARRE SUPÉRIEURE (LOGO + ENGRENAGE) */
   header {
     background-color: var(--card-bg);
     border-bottom: 1px solid var(--border);
-    padding: 20px;
-    text-align: center;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   }
 
-  header h1 {
+  header .logo {
     margin: 0;
     color: var(--primary);
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 1.6rem;
+    font-weight: 800;
     letter-spacing: 0.5px;
   }
 
-  header p {
-    margin: 5px 0 0 0;
-    color: var(--text-light);
-    font-size: 0.95rem;
-  }
-
-  main {
-    max-width: 900px;
-    margin: 30px auto;
-    padding: 0 20px;
-  }
-
-  .publish-card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
-    border: 1px solid var(--border);
-  }
-
-  .publish-card h2 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    font-size: 1.3rem;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-
-  @media (max-width: 600px) {
-    .form-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .form-group.full-width {
-    grid-column: span 2;
-  }
-
-  @media (max-width: 600px) {
-    .form-group.full-width {
-      grid-column: span 1;
-    }
-  }
-
-  .price-container {
-    display: flex;
-    gap: 10px;
-  }
-
-  .price-container input {
-    flex: 2;
-  }
-
-  .price-container select {
-    flex: 1;
-  }
-
-  label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-light);
-  }
-
-  input, select, textarea {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.95rem;
-    box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    background-color: #fff;
-  }
-
-  textarea {
-    resize: vertical;
-    min-height: 80px;
-    font-family: inherit;
-  }
-
-  input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-  }
-
-  input[type="file"] {
-    padding: 8px;
-    background: #f1f5f9;
-    cursor: pointer;
-  }
-
-  button {
-    grid-column: span 2;
-    background-color: var(--primary);
-    color: white;
+  header .settings-btn {
+    background: none;
     border: none;
-    padding: 12px 24px;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 8px;
+    font-size: 1.5rem;
     cursor: pointer;
-    transition: background-color 0.2s;
-    margin-top: 8px;
+    padding: 5px;
+    transition: transform 0.3s;
+    width: auto; /* Évite que le bouton prenne 100% */
   }
 
-  @media (max-width: 600px) {
-    button {
-      grid-column: span 1;
-    }
+  header .settings-btn:hover {
+    transform: rotate(45deg);
   }
 
-  button:hover {
-    background-color: var(--primary-hover);
+  /* ZONE PRINCIPALE (ANNONCES RÉCENTES) */
+  main {
+    max-width: 800px;
+    margin: 10px auto 220px auto; /* Marge en bas importante pour ne pas cacher le contenu sous les menus fixes */
+    padding: 0 15px;
   }
 
   .section-title {
-    margin-top: 40px;
-    margin-bottom: 20px;
-    font-size: 1.4rem;
-    font-weight: 600;
+    margin: 15px 0;
+    font-size: 1.2rem;
+    font-weight: 700;
     color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   #feed {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
   }
 
-  /* DESIGN DE LA CARTE D'ANNONCE ENTIÈRE */
+  /* DESIGN CARTE ANNONCE */
   .annonce-card {
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 20px;
+    padding: 15px;
     background: var(--card-bg);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
   }
 
   .annonce-card h3 {
-    margin: 0 0 10px 0;
-    font-size: 1.4rem;
+    margin: 0 0 8px 0;
+    font-size: 1.25rem;
     color: var(--text);
   }
 
   .annonce-price {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: var(--primary);
-    margin: 5px 0;
+    margin: 4px 0;
   }
 
   .annonce-meta {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-light);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .annonce-description {
-    background: #f8fafc;
-    padding: 12px 16px;
+    background: #f1f5f9;
+    padding: 10px 14px;
     border-radius: 8px;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: #334155;
-    margin: 15px 0;
+    margin: 12px 0;
     white-space: pre-line;
-    border-left: 4px solid var(--primary);
+    border-left: 3px solid var(--primary);
   }
 
-  /* GALERIE PHOTO : VERROUILLAGE SANS COUPER (CONTAIN) */
+  /* GALERIE PHOTO ENTIÈRE SANS COUPURE */
   .gallery {
     display: flex;
     overflow-x: auto;
-    gap: 12px;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+    gap: 10px;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
   }
 
   .gallery::-webkit-scrollbar {
-    height: 6px;
+    height: 5px;
   }
   
   .gallery::-webkit-scrollbar-thumb {
@@ -244,23 +143,21 @@
   }
 
   .gallery-item {
-    width: 100%;
-    max-width: 350px;
-    height: 250px;
-    object-fit: contain; /* Solution pour voir la photo entièrement sans coupure */
-    background-color: #0f172a; /* Fond sombre pour combler élégamment les bords vides */
+    width: 280px;
+    height: 200px;
+    object-fit: contain;
+    background-color: #0f172a;
     border-radius: 8px;
     flex-shrink: 0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
   }
 
   .annonce-footer {
     display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
-    padding-top: 12px;
+    padding-top: 10px;
     border-top: 1px dashed var(--border);
   }
 
@@ -268,13 +165,10 @@
     background-color: #10b981;
     color: white;
     text-decoration: none;
-    padding: 8px 16px;
+    padding: 6px 12px;
     border-radius: 6px;
     font-weight: 600;
-    font-size: 0.9rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    font-size: 0.85rem;
     transition: background-color 0.2s;
   }
 
@@ -283,9 +177,9 @@
   }
 
   .badge-status {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 15px;
+    font-size: 0.75rem;
     font-weight: 600;
   }
 
@@ -298,88 +192,111 @@
     background-color: #fef2f2;
     color: var(--danger);
   }
+
+  /* ================= ZONE FIXE EN BAS (BOUTONS + ADSENSE) ================= */
+  .bottom-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--card-bg);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* REGROUPEMENT DES NOUVEAUX BOUTONS */
+  .bottom-nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-btn {
+    background: none;
+    border: none;
+    padding: 12px 5px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  .nav-btn:hover {
+    background-color: #f1f5f9;
+    color: var(--primary);
+  }
+
+  .nav-btn .icon {
+    font-size: 1.3rem;
+  }
+
+  .nav-btn.vip-btn {
+    color: var(--vip-gold);
+  }
+
+  /* ESPACE RÉSERVÉ GOOGLE ADSENSE (BANNIÈRE AFRIQUE / RDC OPTIMISÉE) */
+  .adsense-space {
+    background-color: #f1f5f9;
+    height: 60px; /* Taille standard pour bannière mobile (320x50 ou 468x60) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>NIA RDC</h1>
-  <p>Louez rapidement des voitures, vêtements, instruments, objets et services en RDC</p>
-</header>
+  <header>
+    <div class="logo">NIA RDC</div>
+    <button class="settings-btn" onclick="alert('Paramètres (Fonctionnalité à venir)')">⚙️</button>
+  </header>
 
-<main>
+  <main>
+    <div class="section-title">Annonces récentes</div>
+    <div id="feed">Chargement des offres en cours...</div>
+  </main>
 
-  <section class="publish-card">
-    <h2>📢 Publier une nouvelle offre de location</h2>
+  <div class="bottom-area">
     
-    <div class="form-grid">
-      <div class="form-group full-width">
-        <label for="titre">Nom de l'objet ou du service</label>
-        <input id="titre" placeholder="Ex: Sonorisation complète, Toyota TXL, Robe de mariée...">
-      </div>
+    <nav class="bottom-nav">
+      <button class="nav-btn" onclick="alert('Publier (Fonctionnalité à venir)')">
+        <span class="icon">📢</span>
+        <span>Publier</span>
+      </button>
+      <button class="nav-btn" onclick="alert('Rechercher (Fonctionnalité à venir)')">
+        <span class="icon">🔍</span>
+        <span>Rechercher</span>
+      </button>
+      <button class="nav-btn vip-btn" onclick="alert('Espace VIP (Fonctionnalité à venir)')">
+        <span class="icon">👑</span>
+        <span>VIP</span>
+      </button>
+      <button class="nav-btn" onclick="alert('Mon Profil (Fonctionnalité à venir)')">
+        <span class="icon">👤</span>
+        <span>Profil</span>
+      </button>
+    </nav>
 
-      <div class="form-group">
-        <label for="prix">Tarif de location (USD / CDF)</label>
-        <div class="price-container">
-          <input id="prix" type="number" placeholder="Ex: 50">
-          <select id="periode">
-            <option value="heure">par heure</option>
-            <option value="jour" selected>par jour</option>
-            <option value="semaine">par semaine</option>
-            <option value="mois">par mois</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="telephone">Numéro de téléphone</label>
-        <input id="telephone" type="tel" placeholder="Ex: +243 820 000 000">
-      </div>
-
-      <div class="form-group full-width">
-        <label for="description">Description de l'objet / service</label>
-        <textarea id="description" placeholder="Décrivez l'état de l'objet, les conditions de location, etc."></textarea>
-      </div>
-
-      <div class="form-group">
-        <label for="ville">Ville</label>
-        <input id="ville" placeholder="Ex: Lubumbashi">
-      </div>
-
-      <div class="form-group">
-        <label for="commune">Commune</label>
-        <input id="commune" placeholder="Ex: Kampemba, Ruashi...">
-      </div>
-
-      <div class="form-group">
-        <label for="quartier">Quartier</label>
-        <input id="quartier" placeholder="Ex: Golf">
-      </div>
-
-      <div class="form-group">
-        <label for="image">Photos (Sélection multiple)</label>
-        <input id="image" type="file" accept="image/*" multiple>
-      </div>
-
-      <div class="form-group full-width">
-        <label for="statut">Statut initial de disponibilité</label>
-        <select id="statut">
-          <option value="disponible" selected>🟢 Disponible</option>
-          <option value="occupe">🔴 Occupé</option>
-        </select>
-      </div>
-
-      <button onclick="publier()">🚀 Mettre en location</button>
+    <div class="adsense-space">
+      ⚡ ESPACE PUBLICITAIRE ADSENSE (BANNIÈRE) ⚡
     </div>
-  </section>
 
-  <h2 class="section-title">Annonces récentes</h2>
-  
-  <div id="feed"></div>
+  </div>
 
-</main>
-
-<script src="app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
-
+    

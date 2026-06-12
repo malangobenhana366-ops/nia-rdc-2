@@ -20,13 +20,14 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* UPLOAD */
+/* UPLOAD IMAGE */
 async function uploadImage(base64){
   try {
-    const res = await cloudinary.uploader.upload(base64, {
-      folder: "nia_rdc"
+    const result = await cloudinary.uploader.upload(base64, {
+      folder: "nia_rdc",
+      resource_type: "image"
     });
-    return res.secure_url;
+    return result.secure_url;
   } catch {
     return "";
   }
@@ -34,113 +35,115 @@ async function uploadImage(base64){
 
 /* REGISTER */
 app.post("/auth/register", async (req,res)=>{
-  const {telephone,password} = req.body;
-
   try {
+    const { telephone, password } = req.body;
+
     const result = await pool.query(
-      "INSERT INTO users (telephone,password) VALUES ($1,$2) RETURNING *",
+      "INSERT INTO users (telephone,password) VALUES ($1,$2) RETURNING id,telephone",
       [telephone,password]
     );
+
     res.json(result.rows[0]);
   } catch {
-    res.status(500).json({error:"register error"});
+    res.status(500).json({ error: "register error" });
   }
 });
 
 /* LOGIN */
 app.post("/auth/login", async (req,res)=>{
-  const {telephone,password} = req.body;
+  try {
+    const { telephone, password } = req.body;
 
-  const result = await pool.query(
-    "SELECT * FROM users WHERE telephone=$1",
-    [telephone]
-  );
+    const result = await pool.query(
+      "SELECT * FROM users WHERE telephone=$1",
+      [telephone]
+    );
 
-  const user = result.rows[0];
+    const user = result.rows[0];
 
-  if(!user) return res.status(400).json({error:"user not found"});
-  if(user.password !== password)
-    return res.status(400).json({error:"wrong password"});
+    if(!user) return res.status(400).json({error:"user not found"});
+    if(user.password !== password)
+      return res.status(400).json({error:"wrong password"});
 
-  res.json({id:user.id,telephone:user.telephone});
+    res.json({id:user.id,telephone:user.telephone});
+  } catch {
+    res.status(500).json({error:"login error"});
+  }
 });
 
-/* CREATE ANNONCE + MULTI IMAGES */
+/* =========================
+   CREATE ANNONCE (FIX FINAL)
+========================= */
 app.post("/annonces", async (req,res)=>{
   try {
+
     const {
       user_id,
       titre,
       description,
       prix,
+      prix_type,
       ville,
       quartier,
       telephone,
+      disponibilite,
       images_base64
     } = req.body;
 
     if(!user_id || !titre){
-      return res.status(400).json({error:"missing fields"});
+      return res.status(400).json({error:"titre requis"});
     }
 
-    // 1. create annonce
-    const annonce = await pool.query(
-      `INSERT INTO annonces (user_id,titre,description,prix,ville,quartier,telephone)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
-       RETURNING id`,
-      [user_id,titre,description,prix,ville,quartier,telephone]
-    );
-
-    const annonceId = annonce.rows[0].id;
-
-    // 2. upload images
-    let images = [];
+    // image principale
+    let main_image = "";
 
     if(images_base64 && images_base64.length > 0){
-      for(let img of images_base64){
-        const url = await uploadImage(img);
-        if(url) images.push(url);
-      }
+      main_image = await uploadImage(images_base64[0]);
     }
 
-    // 3. save images in table
-    for(let url of images){
-      await pool.query(
-        "INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)",
-        [annonceId,url]
-      );
-    }
+    const result = await pool.query(
+      `INSERT INTO annonces (
+        user_id,
+        titre,
+        description,
+        prix,
+        prix_type,
+        ville,
+        quartier,
+        telephone,
+        disponibilite,
+        image_url
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      RETURNING *`,
+      [
+        user_id,
+        titre,
+        description || "",
+        prix || 0,
+        prix_type || "vente",
+        ville || "",
+        quartier || "",
+        telephone || "",
+        disponibilite || "disponible",
+        main_image
+      ]
+    );
 
-    res.json({id:annonceId,images});
+    res.json(result.rows[0]);
 
   } catch(e){
     res.status(500).json({error:"create error"});
   }
 });
 
-/* FEED + IMAGES */
+/* FEED */
 app.get("/feed", async (req,res)=>{
   try {
-    const annonces = await pool.query(
+    const result = await pool.query(
       "SELECT * FROM annonces ORDER BY id DESC"
     );
-
-    const data = [];
-
-    for(let a of annonces.rows){
-      const imgs = await pool.query(
-        "SELECT image_url FROM annonce_images WHERE annonce_id=$1",
-        [a.id]
-      );
-
-      data.push({
-        ...a,
-        images: imgs.rows.map(i=>i.image_url)
-      });
-    }
-
-    res.json(data);
-
+    res.json(result.rows);
   } catch {
     res.json([]);
   }

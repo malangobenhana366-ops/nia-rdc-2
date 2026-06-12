@@ -15,7 +15,8 @@
     --border: #e2e8f0;
     --success: #10b981;
     --danger: #ef4444;
-    --vip-gold: #f59e0b;
+    --vip-gold: #d97706;
+    --vip-bg: #fef3c7;
   }
 
   body {
@@ -53,12 +54,7 @@
     font-size: 1.5rem;
     cursor: pointer;
     padding: 5px;
-    transition: transform 0.3s;
     width: auto;
-  }
-
-  header .settings-btn:hover {
-    transform: rotate(45deg);
   }
 
   main {
@@ -91,7 +87,7 @@
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
-    display: none; /* Apparaît seulement si une recherche est active */
+    display: none;
   }
 
   #feed {
@@ -100,19 +96,40 @@
     gap: 20px;
   }
 
-  /* DESIGN CARTE ANNONCE */
+  /* DESIGN CARTE ANNONCE OPTIMISÉE VIP */
   .annonce-card {
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 15px;
     background: var(--card-bg);
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    position: relative;
+  }
+
+  .annonce-card.vip-premium {
+    border: 2px solid var(--vip-gold);
+    background: #fffdf5;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.1);
+  }
+
+  .vip-badge-tag {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background-color: var(--vip-gold);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
   }
 
   .annonce-card h3 {
-    margin: 0 0 8px 0;
+    margin: 0 0 4px 0;
     font-size: 1.25rem;
     color: var(--text);
+    max-width: 85%;
   }
 
   .annonce-price {
@@ -139,6 +156,11 @@
     border-left: 3px solid var(--primary);
   }
 
+  .annonce-card.vip-premium .annonce-description {
+    background: #fef8e7;
+    border-left-color: var(--vip-gold);
+  }
+
   /* GALERIE PHOTO ENTIÈRE */
   .gallery {
     display: flex;
@@ -148,14 +170,8 @@
     margin-bottom: 12px;
   }
 
-  .gallery::-webkit-scrollbar {
-    height: 5px;
-  }
-  
-  .gallery::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 4px;
-  }
+  .gallery::-webkit-scrollbar { height: 5px; }
+  .gallery::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
   .gallery-item {
     width: 280px;
@@ -168,11 +184,17 @@
 
   .annonce-footer {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     gap: 10px;
     padding-top: 10px;
     border-top: 1px dashed var(--border);
+  }
+
+  .footer-actions {
+    display: flex;
+    gap: 8px;
   }
 
   .btn-contact {
@@ -185,6 +207,28 @@
     font-size: 0.85rem;
   }
 
+  .btn-shop {
+    background-color: var(--vip-gold);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .btn-boost {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
   .badge-status {
     padding: 3px 8px;
     border-radius: 15px;
@@ -192,24 +236,14 @@
     font-weight: 600;
   }
 
-  .status-disponible {
-    background-color: #ecfdf5;
-    color: var(--success);
-  }
+  .status-disponible { background-color: #ecfdf5; color: var(--success); }
+  .status-occupe { background-color: #fef2f2; color: var(--danger); }
 
-  .status-occupe {
-    background-color: #fef2f2;
-    color: var(--danger);
-  }
-
-  /* ================= FENÊTRES MODALES (POPUPS FORMULAIRES) ================= */
+  /* ================= MODALS INTERFACES ================= */
   .modal {
-    display: none; /* Masqué par défaut */
+    display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     background-color: rgba(15, 23, 42, 0.6);
     backdrop-filter: blur(4px);
     z-index: 2000;
@@ -240,155 +274,79 @@
     padding-bottom: 10px;
   }
 
-  .modal-header h2 {
-    margin: 0;
-    font-size: 1.3rem;
-    color: var(--text);
-  }
-
   .close-modal {
     background: #f1f5f9;
     border: none;
     font-size: 1.1rem;
-    width: 32px;
-    height: 32px;
+    width: 32px; height: 32px;
     border-radius: 50%;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
   }
 
-  /* STRUCTURES FORMULAIRES DANS MODAL */
-  .form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .form-group.full-width {
-    grid-column: span 2;
-  }
-
-  .price-container {
-    display: flex;
-    gap: 8px;
-  }
-
+  .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full-width { grid-column: span 2; }
+  .price-container { display: flex; gap: 8px; }
   .price-container input { flex: 2; }
   .price-container select { flex: 1; }
 
-  label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-light);
-  }
-
-  input, select, textarea {
-    width: 100%;
-    padding: 9px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.9rem;
-    box-sizing: border-box;
-    background-color: #fff;
-  }
-
-  textarea { min-height: 70px; font-family: inherit; resize: vertical; }
-
-  input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-  }
+  label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
+  input, select, textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; box-sizing: border-box; }
 
   .modal-submit-btn {
-    grid-column: span 2;
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    padding: 12px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 10px;
+    grid-column: span 2; background-color: var(--primary); color: white; border: none; padding: 12px; font-size: 0.95rem; font-weight: 600; border-radius: 8px; cursor: pointer; margin-top: 10px;
   }
-
-  .modal-submit-btn:hover { background-color: var(--primary-hover); }
   .modal-submit-btn.search-color { background-color: #0f172a; }
+  .modal-submit-btn.vip-color { background-color: var(--vip-gold); }
 
-  @media (max-width: 480px) {
-    .form-grid { grid-template-columns: 1fr; }
-    .form-group.full-width { grid-column: span 1; }
-    .modal-submit-btn { grid-column: span 1; }
+  /* ÉLÉMENT D'OBJET EN MASSE VIP */
+  .bulk-item-box {
+    border: 1px dashed var(--vip-gold);
+    background: #fffdf9;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    position: relative;
   }
+
+  .btn-remove-bulk {
+    position: absolute; top: 5px; right: 5px; background: none; border: none; color: var(--danger); font-weight: bold; cursor: pointer;
+  }
+
+  /* PUB MODAL WATCH-TO-BOOST */
+  .pub-simulation {
+    background: #0f172a;
+    color: white;
+    height: 200px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin: 15px 0;
+  }
+
+  .countdown-number { font-size: 3rem; font-weight: 800; color: var(--vip-gold); }
 
   /* ================= ZONE FIXE EN BAS ================= */
   .bottom-area {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: var(--card-bg);
-    border-top: 1px solid var(--border);
-    box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
+    position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--card-bg); border-top: 1px solid var(--border); box-shadow: 0 -4px 10px rgba(0,0,0,0.05); z-index: 1000; display: flex; flex-direction: column;
   }
-
-  .bottom-nav {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .nav-btn {
-    background: none;
-    border: none;
-    padding: 12px 5px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-light);
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .nav-btn:hover, .nav-btn.active {
-    background-color: #f1f5f9;
-    color: var(--primary);
-  }
-
+  .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--border); }
+  .nav-btn { background: none; border: none; padding: 12px 5px; font-size: 0.8rem; font-weight: 600; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .nav-btn:hover { background-color: #f1f5f9; color: var(--primary); }
   .nav-btn .icon { font-size: 1.3rem; }
   .nav-btn.vip-btn { color: var(--vip-gold); }
-
-  .adsense-space {
-    background-color: #f1f5f9;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 0.75rem;
-    font-weight: bold;
-    letter-spacing: 1px;
-  }
+  .adsense-space { background-color: #f1f5f9; height: 60px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.75rem; font-weight: bold; letter-spacing: 1px; }
 </style>
 </head>
 <body>
 
   <header>
     <div class="logo">NIA RDC</div>
-    <button class="settings-btn" onclick="alert('Paramètres en cours de développement')">⚙️</button>
+    <button class="settings-btn" onclick="alert('Configuration générale')">⚙️</button>
   </header>
 
   <main>
@@ -402,68 +360,50 @@
   <div class="modal" id="modal-publier">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>📢 Mettre un objet ou service en location</h2>
+        <h2>📢 Publier une offre de location</h2>
         <button class="close-modal" onclick="fermerModal('publier')">✕</button>
       </div>
-      
       <div class="form-grid">
         <div class="form-group full-width">
-          <label for="titre">Nom de l'objet ou du service</label>
-          <input id="titre" placeholder="Ex: Sonorisation complète, Toyota TXL, Robe...">
+          <label>Nom de l'objet ou service</label>
+          <input id="titre" placeholder="Ex: Groupe électrogène 10KVA...">
         </div>
-
         <div class="form-group">
-          <label for="prix">Tarif de location</label>
+          <label>Tarif</label>
           <div class="price-container">
-            <input id="prix" type="number" placeholder="Ex: 50">
+            <input id="prix" type="number" placeholder="Ex: 40">
             <select id="periode">
               <option value="heure">par heure</option>
               <option value="jour" selected>par jour</option>
               <option value="semaine">par semaine</option>
-              <option value="mois">par mois</option>
             </select>
           </div>
         </div>
-
         <div class="form-group">
-          <label for="telephone">Numéro de téléphone</label>
-          <input id="telephone" type="tel" placeholder="Ex: +243 820 000 000">
+          <label>Téléphone de contact</label>
+          <input id="telephone" type="tel" placeholder="+243...">
         </div>
-
         <div class="form-group full-width">
-          <label for="description">Description complète</label>
-          <textarea id="description" placeholder="État, cautions, inclus ou non..."></textarea>
+          <label>Description</label>
+          <textarea id="description"></textarea>
         </div>
-
         <div class="form-group">
-          <label for="ville">Ville</label>
-          <input id="ville" placeholder="Ex: Lubumbashi">
+          <label>Ville</label>
+          <input id="ville" placeholder="Lubumbashi">
         </div>
-
         <div class="form-group">
-          <label for="commune">Commune</label>
-          <input id="commune" placeholder="Ex: Kampemba (Optionnel)">
+          <label>Commune</label>
+          <input id="commune">
         </div>
-
         <div class="form-group">
-          <label for="quartier">Quartier</label>
-          <input id="quartier" placeholder="Ex: Golf (Optionnel)">
+          <label>Quartier</label>
+          <input id="quartier">
         </div>
-
         <div class="form-group">
-          <label for="image">Photos (Multi-sélection)</label>
+          <label>Photos</label>
           <input id="image" type="file" accept="image/*" multiple>
         </div>
-
-        <div class="form-group full-width">
-          <label for="statut">Disponibilité initiale</label>
-          <select id="statut">
-            <option value="disponible" selected>🟢 Disponible immédiatement</option>
-            <option value="occupe">🔴 Actuellement occupé</option>
-          </select>
-        </div>
-
-        <button class="modal-submit-btn" onclick="publier()">🚀 Lancer la publication</button>
+        <button class="modal-submit-btn" onclick="publier()">🚀 Mettre en ligne</button>
       </div>
     </div>
   </div>
@@ -471,62 +411,100 @@
   <div class="modal" id="modal-rechercher">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>🔍 Filtrer la recherche de location</h2>
+        <h2>🔍 Recherche ciblée</h2>
         <button class="close-modal" onclick="fermerModal('rechercher')">✕</button>
       </div>
-      
       <div class="form-grid">
         <div class="form-group full-width">
-          <label for="search-titre">Nom de l'objet / service recherché</label>
-          <input id="search-titre" placeholder="Que cherchez-vous à louer ?">
+          <label>Que cherchez-vous ?</label>
+          <input id="search-titre" placeholder="Ex: Robe de mariée, Camion...">
         </div>
-
         <div class="form-group full-width">
-          <label for="search-ville">Ville</label>
-          <input id="search-ville" placeholder="Ex: Lubumbashi">
+          <label>Ville</label>
+          <input id="search-ville" placeholder="Lubumbashi">
         </div>
-
         <div class="form-group">
-          <label for="search-commune">Commune (Optionnelle)</label>
-          <input id="search-commune" placeholder="Ex: Ruashi">
+          <label>Commune (Optionnelle)</label>
+          <input id="search-commune">
         </div>
-
         <div class="form-group">
-          <label for="search-quartier">Quartier (Optionnel)</label>
-          <input id="search-quartier" placeholder="Ex: Kalubwe">
+          <label>Quartier (Optionnel)</label>
+          <input id="search-quartier">
         </div>
-
-        <button class="modal-submit-btn search-color" onclick="rechercher()">🔍 Lancer la recherche</button>
+        <button class="modal-submit-btn search-color" onclick="rechercher()">🔍 Filtrer le flux</button>
       </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-vip">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>👑 Espace Boutique Professionnelle VIP</h2>
+        <button class="close-modal" onclick="fermerModal('vip')">✕</button>
+      </div>
+      
+      <p style="font-size: 0.85rem; color: var(--text-light); margin-top:0;">
+        Remplissez vos infos de boutique, puis ajoutez autant d'objets différents que vous le souhaitez. Chaque objet sera publié comme une annonce indépendante !
+      </p>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nom de votre Maison / Agence</label>
+          <input id="vip-shop-name" placeholder="Ex: Maison Elégance, Agence Horizon">
+        </div>
+        <div class="form-group">
+          <label>Téléphone Clientèle</label>
+          <input id="vip-phone" placeholder="+243...">
+        </div>
+        <div class="form-group">
+          <label>Ville</label>
+          <input id="vip-ville" placeholder="Lubumbashi">
+        </div>
+        <div class="form-group">
+          <label>Commune</label>
+          <input id="vip-commune">
+        </div>
+
+        <div class="form-group full-width" style="border-top: 1px solid var(--border); padding-top:15px; margin-top:5px;">
+          <label style="font-size:1rem; color:var(--vip-gold)">📦 Liste des objets à ajouter au catalogue :</label>
+          <div id="bulk-items-container" style="margin-top:10px;">
+            </div>
+          <button type="button" style="background:#fef3c7; color:var(--vip-gold); border:1px solid var(--vip-gold); padding:8px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="ajouterChampObjetUnique()">
+            ➕ Ajouter un autre objet à la liste
+          </button>
+        </div>
+
+        <button class="modal-submit-btn vip-color" onclick="publierCatalogueEnMasse()">🚀 Publier tout le catalogue en un clic</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-boost-pub">
+    <div class="modal-content" style="max-width:400px; text-align:center;">
+      <h3>🚀 Boost Gratuit AdSense</h3>
+      <p>Regardez cette annonce publicitaire jusqu'au bout pour remonter votre offre tout en haut de la liste !</p>
+      
+      <div class="pub-simulation">
+        <span style="font-size:0.8rem; color:#64748b; letter-spacing:1px;">SPONSORISÉ PAR GOOGLE</span>
+        <div class="countdown-number" id="countdown">15</div>
+        <span style="font-size:0.9rem; padding:0 10px; text-align:center;"> NIA RDC : Louez tout en un clic !</span>
+      </div>
+
+      <button id="btn-finaliser-boost" style="width:100%; background:var(--success); display:none;" onclick="executerRemonteeBdd()">✅ Valider et Propulser mon Annonce</button>
     </div>
   </div>
 
   <div class="bottom-area">
     <nav class="bottom-nav">
-      <button class="nav-btn" onclick="ouvrirModal('publier')">
-        <span class="icon">📢</span>
-        <span>Publier</span>
-      </button>
-      <button class="nav-btn" onclick="ouvrirModal('rechercher')">
-        <span class="icon">🔍</span>
-        <span>Rechercher</span>
-      </button>
-      <button class="nav-btn vip-btn" onclick="alert('Espace VIP en cours de configuration')">
-        <span class="icon">👑</span>
-        <span>VIP</span>
-      </button>
-      <button class="nav-btn" onclick="alert('Profil bientôt disponible')">
-        <span class="icon">👤</span>
-        <span>Profil</span>
-      </button>
+      <button class="nav-btn" onclick="ouvrirModal('publier')"><span class="icon">📢</span><span>Publier</span></button>
+      <button class="nav-btn" onclick="ouvrirModal('rechercher')"><span class="icon">🔍</span><span>Rechercher</span></button>
+      <button class="nav-btn vip-btn" onclick="ouvrirEspaceVip()"><span class="icon">👑</span><span>VIP</span></button>
+      <button class="nav-btn" onclick="alert('Profil disponible prochainement')"><span class="icon">👤</span><span>Profil</span></button>
     </nav>
-
-    <div class="adsense-space">
-      ⚡ ESPACE PUBLICITAIRE ADSENSE (BANNIÈRE) ⚡
-    </div>
+    <div class="adsense-space">⚡ ESPACE PUBLICITAIRE ADSENSE (BANNIÈRE) ⚡</div>
   </div>
 
   <script src="app.js"></script>
 </body>
   </html>
-
+  

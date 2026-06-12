@@ -24,7 +24,7 @@ async function loadFeed(){
   data.forEach(a=>{
     feed.innerHTML += `
       <div onclick='openAnnonce(${JSON.stringify(a)})'
-        style="background:#fff;margin:10px;padding:10px;border-radius:10px">
+        style="border:1px solid #ccc;margin:10px;padding:10px;cursor:pointer">
 
         <img src="${a.image_url}" style="width:100%;height:180px;object-fit:cover">
 
@@ -38,34 +38,33 @@ async function loadFeed(){
 function openAnnonce(a){
   go("detail");
 
-  let images = [];
+  const images = a.images || [];
 
-  if(Array.isArray(a.images)){
-    images = a.images;
-  } else if(a.image_url){
-    images = [a.image_url];
-  }
+  const d = document.getElementById("detail");
 
-  document.getElementById("detail").innerHTML = `
-    <button onclick="go('home')">⬅ retour</button>
+  d.innerHTML = `
+    <button onclick="go('home')">⬅ Retour</button>
 
     <h2>${a.titre}</h2>
     <p>${a.description}</p>
     <p>${a.prix}</p>
     <p>${a.ville}</p>
     <p>${a.quartier}</p>
+    <p>${a.telephone}</p>
 
-    <button onclick="toggle()">📸 photos</button>
+    <button onclick="togglePhotos()">📸 Voir les photos</button>
 
-    <div id="gal" style="display:none">
-      ${images.map(i=>`<img src="${i}" style="width:200px">`).join("")}
+    <div id="gallery" style="display:none">
+      ${images.map(img=>`
+        <img src="${img}" style="width:200px">
+      `).join("")}
     </div>
   `;
 }
 
 /* ================= TOGGLE ================= */
-function toggle(){
-  const g = document.getElementById("gal");
+function togglePhotos(){
+  const g = document.getElementById("gallery");
   if(!g) return;
   g.style.display = g.style.display === "none" ? "block" : "none";
 }

@@ -1,6 +1,6 @@
-const API = ""; // Route relative automatique (plus de bugs d'URLs absolues)
+const API = ""; // Route relative automatique
 
-/* FEED */
+/* CHARGEMENT DU FIL D'ACTUALITÉ COMPLET */
 async function loadFeed(){
   try {
     const res = await fetch(`${API}/feed`);
@@ -10,29 +10,42 @@ async function loadFeed(){
     feed.innerHTML = "";
 
     data.forEach(a=>{
-      const link = `details.html?id=${a.id}`;
+      // Construction propre de l'adresse de localisation
+      let localisation = `📍 ${a.ville || 'RDC'}`;
+      if(a.commune) localisation += `, Q/ ${a.commune}`;
+      if(a.quartier) localisation += ` (Quartier ${a.quartier})`;
 
       feed.innerHTML += `
-        <div style="border:1px solid #ccc; margin:10px; padding:15px; border-radius:8px; background:#fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <div class="annonce-card">
 
-          <h3><a href="${link}" style="text-decoration:none; color:#2563eb; font-size:1.2rem;">${a.titre}</a></h3>
+          <h3>${a.titre}</h3>
           
-          <p style="font-weight:bold; color:#1e293b; margin:5px 0;">
-            ${a.prix ? `${a.prix} USD / ${a.periode || 'jour'}` : 'Prix non spécifié'}
-          </p>
+          <div class="annonce-price">
+            ${a.prix ? `${a.prix} USD / par ${a.periode || 'jour'}` : 'Prix à discuter'}
+          </div>
 
-          <p style="color:#64748b; font-size:0.9rem; margin-bottom: 10px;">
-            📍 ${a.ville}${a.commune ? `, ${a.commune}` : ''} (${a.quartier})
-          </p>
+          <div class="annonce-meta">
+            ${localisation}
+          </div>
 
           <div class="gallery">
             ${a.images && a.images.length > 0 ? a.images.map(img=>`
-              <a href="${link}"><img src="${img}" alt="${a.titre}"></a>
-            `).join("") : '<p style="color:#64748b;font-style:italic;">Aucune photo</p>'}
+              <img src="${img}" class="gallery-item" alt="${a.titre}">
+            `).join("") : '<p style="color:#64748b;font-style:italic;padding:10px;">Aucune photo fournie</p>'}
           </div>
 
-          <div style="margin-top:12px; font-size:0.85rem; font-weight:600;">
-            ${a.statut === 'occupe' ? '🔴 Actuellement occupé' : '🟢 Disponible'}
+          ${a.description ? `<div class="annonce-description">${a.description}</div>` : ''}
+
+          <div class="annonce-footer">
+            <span class="badge-status ${a.statut === 'occupe' ? 'status-occupe' : 'status-disponible'}">
+              ${a.statut === 'occupe' ? '🔴 Actuellement occupé' : '🟢 Disponible'}
+            </span>
+
+            ${a.telephone ? `
+              <a href="tel:${a.telephone}" class="btn-contact">
+                📞 Appeler (${a.telephone})
+              </a>
+            ` : '<span style="color:#64748b;font-size:0.85rem;">Aucun contact renseigné</span>'}
           </div>
 
         </div>
@@ -56,7 +69,6 @@ function compressAndToBase64(file, maxWidth = 1024, quality = 0.7) {
         let width = img.width;
         let height = img.height;
 
-        // Calcul du redimensionnement proportionnel
         if (width > maxWidth) {
           height = Math.round((height * maxWidth) / width);
           width = maxWidth;
@@ -68,7 +80,6 @@ function compressAndToBase64(file, maxWidth = 1024, quality = 0.7) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Exportation en Base64 compressé (JPEG)
         const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
         resolve(compressedBase64);
       };
@@ -84,7 +95,6 @@ async function publier(){
     const files = document.getElementById("image").files;
     let images_base64 = [];
 
-    // Compression et conversion de chaque photo sélectionnée
     for(let f of files){
       const compressedData = await compressAndToBase64(f, 1024, 0.7);
       images_base64.push(compressedData);
@@ -104,20 +114,23 @@ async function publier(){
       images_base64
     };
 
+    if(!bodyData.titre) {
+      alert("Veuillez donner un nom à votre annonce !");
+      return;
+    }
+
     const res = await fetch(`${API}/annonces`,{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify(bodyData)
     });
 
-    if (!res.ok) {
-      throw new Error("Échec de la sauvegarde.");
-    }
+    if (!res.ok) throw new Error("Échec de sauvegarde");
 
     await res.json();
     alert("Votre offre de location est en ligne ! 🚀");
 
-    // Reset complet du formulaire
+    // Reset du formulaire
     document.getElementById("titre").value = "";
     document.getElementById("prix").value = "";
     document.getElementById("telephone").value = "";
@@ -135,4 +148,4 @@ async function publier(){
 }
 
 loadFeed();
-  
+      

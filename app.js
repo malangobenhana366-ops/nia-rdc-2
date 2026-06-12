@@ -1,16 +1,19 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* NAV */
+/* ================= NAV ================= */
 function go(page){
-  document.querySelectorAll("section").forEach(s=>s.style.display="none");
+  document.querySelectorAll("section").forEach(s=>{
+    s.style.display="none";
+  });
+
   document.getElementById(page).style.display="block";
-  if(page==="home") loadFeed();
+
+  if(page === "home") loadFeed();
 }
 
-/* VALUE */
 const val = (id)=>document.getElementById(id)?.value || "";
 
-/* FEED */
+/* ================= FEED ================= */
 async function loadFeed(){
   const r = await fetch(`${API}/feed`);
   const data = await r.json();
@@ -31,11 +34,17 @@ async function loadFeed(){
   });
 }
 
-/* DETAIL */
+/* ================= DETAIL ================= */
 function openAnnonce(a){
   go("detail");
 
-  const images = a.images || [a.image_url];
+  let images = [];
+
+  if(Array.isArray(a.images)){
+    images = a.images;
+  } else if(a.image_url){
+    images = [a.image_url];
+  }
 
   document.getElementById("detail").innerHTML = `
     <button onclick="go('home')">⬅ retour</button>
@@ -46,7 +55,7 @@ function openAnnonce(a){
     <p>${a.ville}</p>
     <p>${a.quartier}</p>
 
-    <button onclick="toggle()">photos</button>
+    <button onclick="toggle()">📸 photos</button>
 
     <div id="gal" style="display:none">
       ${images.map(i=>`<img src="${i}" style="width:200px">`).join("")}
@@ -54,13 +63,14 @@ function openAnnonce(a){
   `;
 }
 
-/* TOGGLE */
+/* ================= TOGGLE ================= */
 function toggle(){
   const g = document.getElementById("gal");
+  if(!g) return;
   g.style.display = g.style.display === "none" ? "block" : "none";
 }
 
-/* AUTH */
+/* ================= AUTH ================= */
 async function register(){
   await fetch(`${API}/auth/register`,{
     method:"POST",
@@ -85,18 +95,20 @@ async function login(){
   });
 
   const data = await r.json();
+
   if(!r.ok) return alert(data.error);
 
   localStorage.setItem("user",JSON.stringify(data));
   go("home");
 }
 
-/* PUBLISH */
+/* ================= PUBLISH ================= */
 async function publier(){
   const user = JSON.parse(localStorage.getItem("user"));
-  if(!user) return alert("login");
+  if(!user) return alert("login first");
 
   const files = document.getElementById("image").files;
+
   let images = [];
 
   for(const f of files){
@@ -122,7 +134,7 @@ async function publier(){
   loadFeed();
 }
 
-/* BASE64 */
+/* ================= BASE64 ================= */
 function toBase64(file){
   return new Promise(res=>{
     const r = new FileReader();
@@ -131,5 +143,6 @@ function toBase64(file){
   });
 }
 
+/* INIT */
 go("home");
 loadFeed();

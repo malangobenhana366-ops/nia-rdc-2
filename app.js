@@ -1,36 +1,25 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* NAVIGATION FIX (IMPORTANT) */
+/* NAV SIMPLE (IMPORTANT) */
 function go(page){
 
-  document.querySelectorAll(".page").forEach(p=>{
-    p.style.display = "none";
+  document.querySelectorAll("section").forEach(s=>{
+    s.style.display = "none";
   });
 
-  const target = document.getElementById(page);
-  if(target){
-    target.style.display = "block";
-  }
+  document.getElementById(page).style.display = "block";
 
   if(page === "home") loadFeed();
 }
 
-/* VAL */
+function showLogin(){ go("login"); }
+function showRegister(){ go("register"); }
+
 function val(id){
-  return document.getElementById(id)?.value?.trim() || "";
+  return document.getElementById(id)?.value || "";
 }
 
-/* BASE64 */
-function toBase64(file){
-  return new Promise((res,rej)=>{
-    const r = new FileReader();
-    r.onload = ()=>res(r.result);
-    r.onerror = rej;
-    r.readAsDataURL(file);
-  });
-}
-
-/* FEED MULTI IMAGES FIX */
+/* FEED */
 async function loadFeed(){
   const res = await fetch(`${API}/feed`);
   const data = await res.json();
@@ -41,22 +30,18 @@ async function loadFeed(){
   data.forEach(a=>{
     feed.innerHTML += `
       <div style="border:1px solid #ccc;margin:10px;padding:10px">
-
         <h3>${a.titre}</h3>
-
         <p>${a.ville} - ${a.quartier}</p>
-
+        <p>${a.prix}</p>
         ${a.image_url ? `<img src="${a.image_url}" style="width:100%">` : ""}
-
       </div>
     `;
   });
 }
 
-/* REGISTER FIX */
+/* REGISTER */
 async function register(){
-
-  const res = await fetch(`${API}/auth/register`,{
+  await fetch(`${API}/auth/register`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
@@ -65,18 +50,12 @@ async function register(){
     })
   });
 
-  const data = await res.json();
-
-  if(!res.ok) return alert(data.error);
-
   alert("Compte créé");
-
   go("login");
 }
 
-/* LOGIN FIX */
+/* LOGIN */
 async function login(){
-
   const res = await fetch(`${API}/auth/login`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
@@ -98,7 +77,7 @@ async function login(){
   go("home");
 }
 
-/* PUBLISH */
+/* PUBLISH (STABLE) */
 async function publier(){
 
   const user = JSON.parse(localStorage.getItem("user"));
@@ -137,6 +116,16 @@ async function publier(){
 
   go("home");
   loadFeed();
+}
+
+/* BASE64 */
+function toBase64(file){
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = ()=>res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
 }
 
 /* INIT */

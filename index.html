@@ -15,47 +15,105 @@
 
 <main>
 
-<section id="publish" class="page active">
+<!-- ================= HOME ================= -->
+<section id="home" class="page active">
 
+  <div id="authBox">
+    <h2>Bienvenue 👋</h2>
+
+    <button onclick="go('login')">Connexion</button>
+    <button onclick="go('register')">Inscription</button>
+  </div>
+
+  <div id="appBox" style="display:none;">
+    <h2>🏠 Accueil</h2>
+
+    <button onclick="go('publish')">➕ Publier</button>
+    <button onclick="go('search')">🔍 Rechercher</button>
+    <button onclick="go('profile')">👤 Profil</button>
+
+    <hr>
+
+    <h3>📦 Annonces récentes</h3>
+    <div id="feed"></div>
+  </div>
+
+</section>
+
+<!-- ================= LOGIN ================= -->
+<section id="login" class="page">
+  <h2>Connexion</h2>
+
+  <input id="login_tel" placeholder="Téléphone">
+  <input id="login_pass" type="password" placeholder="Mot de passe">
+
+  <button onclick="login()">Se connecter</button>
+  <button onclick="go('home')">Retour</button>
+</section>
+
+<!-- ================= REGISTER ================= -->
+<section id="register" class="page">
+  <h2>Inscription</h2>
+
+  <input id="reg_tel" placeholder="Téléphone">
+  <input id="reg_pass" type="password" placeholder="Mot de passe">
+
+  <button onclick="register()">Créer compte</button>
+  <button onclick="go('home')">Retour</button>
+</section>
+
+<!-- ================= PUBLISH ================= -->
+<section id="publish" class="page">
   <h2>➕ Publier une annonce</h2>
 
   <input id="titre" placeholder="Titre *">
+  <textarea id="desc" placeholder="Description"></textarea>
 
-  <textarea id="desc" placeholder="Description (optionnel)"></textarea>
+  <input id="prix" type="number" placeholder="Prix">
 
-  <input id="prix" type="number" placeholder="Prix (optionnel)">
-
-  <!-- prix type -->
+  <!-- TYPE LOCATION / USAGE -->
   <select id="prix_type">
-    <option value="vente">Vente</option>
-    <option value="heure">Par heure</option>
+    <option value="location">Location</option>
     <option value="jour">Par jour</option>
-    <option value="semaine">Par semaine</option>
+    <option value="heure">Par heure</option>
     <option value="mois">Par mois</option>
   </select>
 
-  <input id="ville" placeholder="Ville (optionnel)">
-  <input id="quartier" placeholder="Quartier (optionnel)">
-  <input id="telephone" placeholder="Téléphone (optionnel)">
+  <input id="ville" placeholder="Ville">
+  <input id="quartier" placeholder="Quartier">
+  <input id="telephone" placeholder="Téléphone">
 
-  <!-- disponibilité -->
   <select id="disponibilite">
     <option value="disponible">Disponible</option>
     <option value="occupe">Occupé</option>
   </select>
 
-  <h3>📷 Images</h3>
   <input id="image" type="file" accept="image/*" multiple>
 
   <br><br>
 
   <button onclick="publier()">Publier 🚀</button>
-
+  <button onclick="go('home')">Retour</button>
 </section>
 
-<section>
-  <h2>Feed</h2>
-  <div id="feed"></div>
+<!-- ================= SEARCH ================= -->
+<section id="search" class="page">
+  <h2>🔍 Recherche</h2>
+
+  <input placeholder="Rechercher...">
+  <button>Rechercher</button>
+
+  <button onclick="go('home')">Retour</button>
+</section>
+
+<!-- ================= PROFILE ================= -->
+<section id="profile" class="page">
+  <h2>👤 Profil</h2>
+
+  <button>Mes annonces</button>
+  <button>Paramètres</button>
+
+  <button onclick="go('home')">Retour</button>
 </section>
 
 </main>

@@ -1,23 +1,16 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* ================= NAVIGATION ================= */
-
+/* NAV */
 function go(page){
-  document.querySelectorAll("section").forEach(s=>{
-    s.style.display="none";
-  });
-
+  document.querySelectorAll("section").forEach(s=>s.style.display="none");
   document.getElementById(page).style.display="block";
-
-  if(page === "home") loadFeed();
+  if(page==="home") loadFeed();
 }
 
-function val(id){
-  return document.getElementById(id)?.value || "";
-}
+/* VALUE */
+const val = (id)=>document.getElementById(id)?.value || "";
 
-/* ================= FEED ================= */
-
+/* FEED */
 async function loadFeed(){
   const r = await fetch(`${API}/feed`);
   const data = await r.json();
@@ -28,7 +21,7 @@ async function loadFeed(){
   data.forEach(a=>{
     feed.innerHTML += `
       <div onclick='openAnnonce(${JSON.stringify(a)})'
-        style="border:1px solid #ccc;margin:10px;padding:10px;cursor:pointer">
+        style="background:#fff;margin:10px;padding:10px;border-radius:10px">
 
         <img src="${a.image_url}" style="width:100%;height:180px;object-fit:cover">
 
@@ -38,46 +31,36 @@ async function loadFeed(){
   });
 }
 
-/* ================= DETAIL ================= */
-
+/* DETAIL */
 function openAnnonce(a){
   go("detail");
 
-  const images = a.images || [];
+  const images = a.images || [a.image_url];
 
-  const d = document.getElementById("detail");
-
-  d.innerHTML = `
-    <button onclick="go('home')">⬅ Retour</button>
+  document.getElementById("detail").innerHTML = `
+    <button onclick="go('home')">⬅ retour</button>
 
     <h2>${a.titre}</h2>
-
     <p>${a.description}</p>
     <p>${a.prix}</p>
     <p>${a.ville}</p>
     <p>${a.quartier}</p>
-    <p>${a.telephone}</p>
 
-    <button onclick="togglePhotos()">📸 Voir les photos</button>
+    <button onclick="toggle()">photos</button>
 
-    <div id="gallery" style="display:none;flex;overflow-x:auto;gap:10px">
-      ${images.map(img=>`
-        <img src="${img}" style="width:250px;height:250px;object-fit:cover">
-      `).join("")}
+    <div id="gal" style="display:none">
+      ${images.map(i=>`<img src="${i}" style="width:200px">`).join("")}
     </div>
   `;
 }
 
-/* ================= GALLERY TOGGLE ================= */
-
-function togglePhotos(){
-  const g = document.getElementById("gallery");
-  if(!g) return;
-  g.style.display = g.style.display === "none" ? "flex" : "none";
+/* TOGGLE */
+function toggle(){
+  const g = document.getElementById("gal");
+  g.style.display = g.style.display === "none" ? "block" : "none";
 }
 
-/* ================= REGISTER ================= */
-
+/* AUTH */
 async function register(){
   await fetch(`${API}/auth/register`,{
     method:"POST",
@@ -91,8 +74,6 @@ async function register(){
   go("login");
 }
 
-/* ================= LOGIN ================= */
-
 async function login(){
   const r = await fetch(`${API}/auth/login`,{
     method:"POST",
@@ -104,22 +85,18 @@ async function login(){
   });
 
   const data = await r.json();
-
   if(!r.ok) return alert(data.error);
 
   localStorage.setItem("user",JSON.stringify(data));
   go("home");
 }
 
-/* ================= PUBLISH ================= */
-
+/* PUBLISH */
 async function publier(){
-
   const user = JSON.parse(localStorage.getItem("user"));
-  if(!user) return alert("login first");
+  if(!user) return alert("login");
 
   const files = document.getElementById("image").files;
-
   let images = [];
 
   for(const f of files){
@@ -137,7 +114,7 @@ async function publier(){
       ville:val("ville"),
       quartier:val("quartier"),
       telephone:val("telephone"),
-      images_base64:images
+      images
     })
   });
 
@@ -145,17 +122,14 @@ async function publier(){
   loadFeed();
 }
 
-/* ================= UTIL ================= */
-
+/* BASE64 */
 function toBase64(file){
-  return new Promise((res)=>{
+  return new Promise(res=>{
     const r = new FileReader();
-    r.onload = ()=>res(r.result);
+    r.onload=()=>res(r.result);
     r.readAsDataURL(file);
   });
 }
-
-/* ================= INIT ================= */
 
 go("home");
 loadFeed();

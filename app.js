@@ -1,147 +1,74 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* ================= NAV ================= */
-function go(page){
-  document.querySelectorAll("section").forEach(s=>{
-    s.style.display="none";
-  });
-
-  document.getElementById(page).style.display="block";
-
-  if(page === "home") loadFeed();
-}
-
-const val = (id)=>document.getElementById(id)?.value || "";
-
-/* ================= FEED ================= */
+/* FEED */
 async function loadFeed(){
-  const r = await fetch(`${API}/feed`);
-  const data = await r.json();
+  const res = await fetch(`${API}/feed`);
+  const data = await res.json();
 
   const feed = document.getElementById("feed");
   feed.innerHTML = "";
 
   data.forEach(a=>{
-    feed.innerHTML += `
-      <div onclick='openAnnonce(${JSON.stringify(a)})'
-        style="border:1px solid #ccc;margin:10px;padding:10px;cursor:pointer">
 
-        <img src="${a.image_url}" style="width:100%;height:180px;object-fit:cover">
+    feed.innerHTML += `
+      <div style="border:1px solid #ccc;margin:10px;padding:10px">
 
         <h3>${a.titre}</h3>
+        <p>${a.ville} - ${a.quartier}</p>
+
+        <!-- 🔥 GALERIE SWIPE -->
+        <div class="gallery">
+          ${a.images.map(img=>`
+            <img src="${img}">
+          `).join("")}
+        </div>
+
       </div>
     `;
   });
 }
 
-/* ================= DETAIL ================= */
-function openAnnonce(a){
-  go("detail");
-
-  const images = a.images || [];
-
-  const d = document.getElementById("detail");
-
-  d.innerHTML = `
-    <button onclick="go('home')">⬅ Retour</button>
-
-    <h2>${a.titre}</h2>
-    <p>${a.description}</p>
-    <p>${a.prix}</p>
-    <p>${a.ville}</p>
-    <p>${a.quartier}</p>
-    <p>${a.telephone}</p>
-
-    <button onclick="togglePhotos()">📸 Voir les photos</button>
-
-    <div id="gallery" style="display:none">
-      ${images.map(img=>`
-        <img src="${img}" style="width:200px">
-      `).join("")}
-    </div>
-  `;
-}
-
-/* ================= TOGGLE ================= */
-function togglePhotos(){
-  const g = document.getElementById("gallery");
-  if(!g) return;
-  g.style.display = g.style.display === "none" ? "block" : "none";
-}
-
-/* ================= AUTH ================= */
-async function register(){
-  await fetch(`${API}/auth/register`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      telephone:val("reg_tel"),
-      password:val("reg_pass")
-    })
-  });
-
-  go("login");
-}
-
-async function login(){
-  const r = await fetch(`${API}/auth/login`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      telephone:val("login_tel"),
-      password:val("login_pass")
-    })
-  });
-
-  const data = await r.json();
-
-  if(!r.ok) return alert(data.error);
-
-  localStorage.setItem("user",JSON.stringify(data));
-  go("home");
-}
-
-/* ================= PUBLISH ================= */
+/* PUBLISH MULTI */
 async function publier(){
-  const user = JSON.parse(localStorage.getItem("user"));
-  if(!user) return alert("login first");
 
   const files = document.getElementById("image").files;
 
-  let images = [];
+  let images_base64 = [];
 
-  for(const f of files){
-    images.push(await toBase64(f));
+  for(let f of files){
+    images_base64.push(await toBase64(f));
   }
 
-  await fetch(`${API}/annonces`,{
+  const res = await fetch(`${API}/annonces`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
-      user_id:user.id,
-      titre:val("titre"),
-      description:val("desc"),
-      prix:val("prix"),
-      ville:val("ville"),
-      quartier:val("quartier"),
-      telephone:val("telephone"),
-      images
+      user_id:1,
+      titre:document.getElementById("titre").value,
+      prix:document.getElementById("prix").value,
+      ville:document.getElementById("ville").value,
+      quartier:document.getElementById("quartier").value,
+      images_base64
     })
   });
 
-  go("home");
+  await res.json();
+
+  alert("Publié 🚀");
+
+  document.getElementById("image").value = "";
+
   loadFeed();
 }
 
-/* ================= BASE64 ================= */
+/* BASE64 */
 function toBase64(file){
-  return new Promise(res=>{
+  return new Promise((res,rej)=>{
     const r = new FileReader();
-    r.onload=()=>res(r.result);
+    r.onload = ()=>res(r.result);
+    r.onerror = rej;
     r.readAsDataURL(file);
   });
 }
 
-/* INIT */
-go("home");
 loadFeed();

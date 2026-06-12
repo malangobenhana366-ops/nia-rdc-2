@@ -38,7 +38,7 @@ async function loadFeed(){
   data.forEach(a=>{
     feed.innerHTML += `
       <div onclick='openAnnonce(${JSON.stringify(a)})'
-           style="border:1px solid #ddd;margin:10px;padding:10px;cursor:pointer">
+        style="border:1px solid #ddd;margin:10px;padding:10px;cursor:pointer">
 
         <img src="${a.image_url}" style="width:100%;height:180px;object-fit:cover">
 
@@ -50,7 +50,7 @@ async function loadFeed(){
   });
 }
 
-/* DETAIL COMPLET AVEC GALERIE */
+/* DETAIL AVEC BOUTON PHOTOS */
 function openAnnonce(a){
 
   document.querySelectorAll("section").forEach(s=>{
@@ -67,20 +67,31 @@ function openAnnonce(a){
 
     <h2>${a.titre}</h2>
 
-    <div style="display:flex;overflow-x:auto;gap:10px;padding:10px">
-      ${images.length > 0 ? images.map(img=>`
-        <img src="${img}"
-          style="width:250px;height:250px;object-fit:cover;border-radius:10px">
-      `).join("") : "<p>Aucune image</p>"}
-    </div>
-
     <p><b>Prix:</b> ${a.prix}</p>
     <p><b>Ville:</b> ${a.ville}</p>
     <p><b>Quartier:</b> ${a.quartier}</p>
     <p><b>Téléphone:</b> ${a.telephone}</p>
     <p><b>Description:</b> ${a.description}</p>
-    <p><b>Disponibilité:</b> ${a.disponibilite}</p>
+
+    <button onclick="togglePhotos()">📸 Voir les photos</button>
+
+    <div id="gallery" style="display:none;margin-top:10px;display:flex;overflow-x:auto;gap:10px">
+      ${
+        images.length
+          ? images.map(img=>`
+              <img src="${img}" style="width:250px;height:250px;object-fit:cover;border-radius:10px">
+            `).join("")
+          : "<p>Aucune image</p>"
+      }
+    </div>
   `;
+}
+
+/* TOGGLE */
+function togglePhotos(){
+  const g = document.getElementById("gallery");
+  if(!g) return;
+  g.style.display = g.style.display === "none" ? "flex" : "none";
 }
 
 /* LOGIN */
@@ -129,7 +140,7 @@ async function publier(){
 
   let images_base64 = [];
 
-  for(let f of files){
+  for(const f of files){
     images_base64.push(await toBase64(f));
   }
 

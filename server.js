@@ -20,7 +20,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* UPLOAD IMAGE */
 async function uploadImage(base64){
   try {
     const r = await cloudinary.uploader.upload(base64, {
@@ -37,12 +36,12 @@ app.post("/auth/register", async (req,res)=>{
   try {
     const { telephone, password } = req.body;
 
-    const result = await pool.query(
+    const r = await pool.query(
       "INSERT INTO users (telephone,password) VALUES ($1,$2) RETURNING id,telephone",
       [telephone,password]
     );
 
-    res.json(result.rows[0]);
+    res.json(r.rows[0]);
   } catch {
     res.status(500).json({error:"register error"});
   }
@@ -53,12 +52,12 @@ app.post("/auth/login", async (req,res)=>{
   try {
     const { telephone, password } = req.body;
 
-    const result = await pool.query(
+    const r = await pool.query(
       "SELECT * FROM users WHERE telephone=$1",
       [telephone]
     );
 
-    const user = result.rows[0];
+    const user = r.rows[0];
 
     if(!user) return res.status(400).json({error:"user not found"});
     if(user.password !== password)
@@ -70,7 +69,7 @@ app.post("/auth/login", async (req,res)=>{
   }
 });
 
-/* CREATE ANNONCE (MULTI IMAGES CLEAN) */
+/* CREATE ANNONCE */
 app.post("/annonces", async (req,res)=>{
   try {
 
@@ -102,7 +101,7 @@ app.post("/annonces", async (req,res)=>{
 
     const main = images[0] || "";
 
-    const result = await pool.query(
+    const r = await pool.query(
       `INSERT INTO annonces (
         user_id,titre,description,prix,prix_type,
         ville,quartier,telephone,disponibilite,image_url
@@ -124,7 +123,7 @@ app.post("/annonces", async (req,res)=>{
     );
 
     res.json({
-      ...result.rows[0],
+      ...r.rows[0],
       images
     });
 

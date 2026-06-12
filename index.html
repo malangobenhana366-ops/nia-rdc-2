@@ -4,59 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NIA RDC</title>
-<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<header class="topbar">
-  <div class="logo">🚀 NIA RDC</div>
-</header>
+<h1>NIA RDC</h1>
 
-<main>
-
-<section id="home" class="page active">
-
-  <div id="authBox">
-    <h2>Bienvenue 👋</h2>
-    <button onclick="showLogin()">Connexion</button>
-    <button onclick="showRegister()">Inscription</button>
-  </div>
-
-  <div id="appBox" style="display:none;">
-    <h2>Accueil</h2>
-
-    <button onclick="go('publish')">Publier</button>
-    <button onclick="go('search')">Rechercher</button>
-
-    <h3>Annonces</h3>
-    <div id="feed"></div>
-  </div>
-
-</section>
-
-<section id="login" class="page">
-  <h2>Login</h2>
-  <input id="login_tel" placeholder="Téléphone">
-  <input id="login_pass" type="password" placeholder="Mot de passe">
-  <button onclick="login()">Connexion</button>
-  <button onclick="go('home')">Retour</button>
-</section>
-
-<section id="register" class="page">
-  <h2>Register</h2>
-  <input id="reg_tel" placeholder="Téléphone">
-  <input id="reg_pass" type="password">
-  <button onclick="register()">Créer</button>
-  <button onclick="go('home')">Retour</button>
-</section>
-
-<section id="publish" class="page">
-
-  <h2>Publier</h2>
+<section id="publish">
 
   <input id="titre" placeholder="Titre">
-  <textarea id="desc" placeholder="Description"></textarea>
+  <textarea id="desc"></textarea>
 
   <input id="prix" type="number">
 
@@ -64,15 +21,19 @@
   <input id="quartier" placeholder="Quartier">
   <input id="telephone" placeholder="Téléphone">
 
-  <!-- MULTI IMAGES FIX -->
+  <!-- MULTI IMAGES -->
   <input id="image" type="file" accept="image/*" multiple>
 
   <button onclick="publier()">Publier</button>
-  <button onclick="go('home')">Retour</button>
 
 </section>
 
-</main>
+<hr>
+
+<section>
+  <h2>Feed</h2>
+  <div id="feed"></div>
+</section>
 
 <script src="app.js"></script>
 

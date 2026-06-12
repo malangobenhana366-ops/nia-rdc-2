@@ -4,36 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NIA RDC</title>
+<style>
+  .gallery {
+    display:flex;
+    overflow-x:auto;
+    gap:10px;
+  }
+  .gallery img {
+    width:250px;
+    height:250px;
+    object-fit:cover;
+    border-radius:10px;
+    flex-shrink:0;
+  }
+</style>
 </head>
 
 <body>
 
 <h1>NIA RDC</h1>
 
-<section id="publish">
-
+<section>
   <input id="titre" placeholder="Titre">
-  <textarea id="desc"></textarea>
-
   <input id="prix" type="number">
-
-  <input id="ville" placeholder="Ville">
-  <input id="quartier" placeholder="Quartier">
-  <input id="telephone" placeholder="Téléphone">
+  <input id="ville">
+  <input id="quartier">
 
   <!-- MULTI IMAGES -->
   <input id="image" type="file" accept="image/*" multiple>
 
   <button onclick="publier()">Publier</button>
-
 </section>
 
 <hr>
 
-<section>
-  <h2>Feed</h2>
-  <div id="feed"></div>
-</section>
+<div id="feed"></div>
 
 <script src="app.js"></script>
 

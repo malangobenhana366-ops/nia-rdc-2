@@ -10,49 +10,36 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/* ======================
-MIDDLEWARE
-====================== */
 app.use(cors());
 app.use(express.json({ limit: "25mb" }));
 app.use(express.static(__dirname));
 
-/* ======================
-CLOUDINARY
-====================== */
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* ======================
-UPLOAD FUNCTION
-====================== */
-async function uploadImage(base64){
+/* UPLOAD IMAGE */
+async function uploadImage(base64) {
   try {
     const result = await cloudinary.uploader.upload(base64, {
       folder: "nia_rdc",
       resource_type: "image"
     });
     return result.secure_url;
-  } catch (e) {
-    console.log("UPLOAD ERROR:", e.message);
+  } catch {
     return "";
   }
 }
 
-/* ======================
-HEALTH
-====================== */
-app.get("/", (req,res)=>{
-  res.json({status:"OK"});
+/* HEALTH */
+app.get("/", (req, res) => {
+  res.json({ status: "OK NIA BACKEND 🚀" });
 });
 
-/* ======================
-REGISTER
-====================== */
-app.post("/auth/register", async (req,res)=>{
+/* REGISTER */
+app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
 
@@ -62,15 +49,13 @@ app.post("/auth/register", async (req,res)=>{
     );
 
     res.json(result.rows[0]);
-  } catch (e) {
-    res.status(500).json({ error:"register error" });
+  } catch {
+    res.status(500).json({ error: "register error" });
   }
 });
 
-/* ======================
-LOGIN
-====================== */
-app.post("/auth/login", async (req,res)=>{
+/* LOGIN */
+app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
 
@@ -81,23 +66,19 @@ app.post("/auth/login", async (req,res)=>{
 
     const user = result.rows[0];
 
-    if(!user) return res.status(400).json({error:"user not found"});
-    if(user.password !== password)
-      return res.status(400).json({error:"wrong password"});
+    if (!user) return res.status(400).json({ error: "user not found" });
+    if (user.password !== password)
+      return res.status(400).json({ error: "wrong password" });
 
-    res.json({id:user.id, telephone:user.telephone});
-
+    res.json({ id: user.id, telephone: user.telephone });
   } catch {
-    res.status(500).json({ error:"login error" });
+    res.status(500).json({ error: "login error" });
   }
 });
 
-/* ======================
-CREATE ANNONCE (MULTI PHOTOS FIX)
-====================== */
-app.post("/annonces", async (req,res)=>{
+/* CREATE ANNONCE */
+app.post("/annonces", async (req, res) => {
   try {
-
     const {
       user_id,
       titre,
@@ -108,24 +89,18 @@ app.post("/annonces", async (req,res)=>{
       quartier,
       telephone,
       disponibilite,
-      images_base64
+      image_base64
     } = req.body;
 
-    if(!user_id || !titre){
-      return res.status(400).json({error:"missing fields"});
+    if (!user_id || !titre) {
+      return res.status(400).json({ error: "missing fields" });
     }
 
-    let images_urls = [];
+    let image_url = "";
 
-    /* UPLOAD MULTIPLE IMAGES */
-    if(images_base64 && Array.isArray(images_base64)){
-      for(const img of images_base64){
-        const url = await uploadImage(img);
-        if(url) images_urls.push(url);
-      }
+    if (image_base64) {
+      image_url = await uploadImage(image_base64);
     }
-
-    const main_image = images_urls[0] || "";
 
     const result = await pool.query(
       `INSERT INTO annonces (
@@ -152,25 +127,18 @@ app.post("/annonces", async (req,res)=>{
         quartier || "",
         telephone || "",
         disponibilite || "disponible",
-        main_image
+        image_url
       ]
     );
 
-    res.json({
-      ...result.rows[0],
-      images: images_urls
-    });
-
+    res.json(result.rows[0]);
   } catch (e) {
-    console.log("CREATE ERROR:", e.message);
-    res.status(500).json({ error:"create error" });
+    res.status(500).json({ error: "create error" });
   }
 });
 
-/* ======================
-FEED
-====================== */
-app.get("/feed", async (req,res)=>{
+/* FEED */
+app.get("/feed", async (req, res) => {
   try {
     const result = await pool.query(
       "SELECT * FROM annonces ORDER BY id DESC"
@@ -182,4 +150,4 @@ app.get("/feed", async (req,res)=>{
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("RUNNING", PORT));
+app.listen(PORT, () => console.log("🚀 RUNNING", PORT));

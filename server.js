@@ -33,40 +33,32 @@ async function uploadImage(base64){
 
 /* REGISTER */
 app.post("/auth/register", async (req,res)=>{
-  try {
-    const { telephone, password } = req.body;
+  const {telephone,password} = req.body;
 
-    const r = await pool.query(
-      "INSERT INTO users (telephone,password) VALUES ($1,$2) RETURNING id,telephone",
-      [telephone,password]
-    );
+  const r = await pool.query(
+    "INSERT INTO users (telephone,password) VALUES ($1,$2) RETURNING id,telephone",
+    [telephone,password]
+  );
 
-    res.json(r.rows[0]);
-  } catch {
-    res.status(500).json({error:"register error"});
-  }
+  res.json(r.rows[0]);
 });
 
 /* LOGIN */
 app.post("/auth/login", async (req,res)=>{
-  try {
-    const { telephone, password } = req.body;
+  const {telephone,password} = req.body;
 
-    const r = await pool.query(
-      "SELECT * FROM users WHERE telephone=$1",
-      [telephone]
-    );
+  const r = await pool.query(
+    "SELECT * FROM users WHERE telephone=$1",
+    [telephone]
+  );
 
-    const user = r.rows[0];
+  const user = r.rows[0];
 
-    if(!user) return res.status(400).json({error:"user not found"});
-    if(user.password !== password)
-      return res.status(400).json({error:"wrong password"});
+  if(!user) return res.status(400).json({error:"not found"});
+  if(user.password !== password)
+    return res.status(400).json({error:"wrong password"});
 
-    res.json({id:user.id, telephone:user.telephone});
-  } catch {
-    res.status(500).json({error:"login error"});
-  }
+  res.json({id:user.id,telephone:user.telephone});
 });
 
 /* CREATE ANNONCE */
@@ -85,10 +77,6 @@ app.post("/annonces", async (req,res)=>{
       disponibilite,
       images_base64
     } = req.body;
-
-    if(!user_id || !titre){
-      return res.status(400).json({error:"missing fields"});
-    }
 
     let images = [];
 
@@ -122,25 +110,22 @@ app.post("/annonces", async (req,res)=>{
       ]
     );
 
+    /* 🔥 IMPORTANT: images toujours envoyées */
     res.json({
       ...r.rows[0],
-      images
+      images: images
     });
 
-  } catch {
+  } catch(e){
     res.status(500).json({error:"create error"});
   }
 });
 
 /* FEED */
 app.get("/feed", async (req,res)=>{
-  try {
-    const r = await pool.query("SELECT * FROM annonces ORDER BY id DESC");
-    res.json(r.rows);
-  } catch {
-    res.json([]);
-  }
+  const r = await pool.query("SELECT * FROM annonces ORDER BY id DESC");
+  res.json(r.rows);
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("SERVER RUNNING", PORT));
+app.listen(PORT, ()=>console.log("RUNNING",PORT));

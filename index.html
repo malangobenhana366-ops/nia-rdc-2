@@ -9,39 +9,37 @@
 
 <body>
 
-<header class="topbar">
-  <div class="logo">🚀 NIA RDC</div>
+<header>
+  <h2>🚀 NIA RDC</h2>
 </header>
 
 <main>
 
-<!-- ================= HOME ================= -->
+<!-- HOME -->
 <section id="home" class="page active">
 
   <div id="authBox">
-    <h2>Bienvenue 👋</h2>
+    <h3>Bienvenue</h3>
 
     <button onclick="go('login')">Connexion</button>
     <button onclick="go('register')">Inscription</button>
   </div>
 
   <div id="appBox" style="display:none;">
-    <h2>🏠 Accueil</h2>
+    <h3>Accueil</h3>
 
-    <button onclick="go('publish')">➕ Publier</button>
-    <button onclick="go('search')">🔍 Rechercher</button>
-    <button onclick="go('profile')">👤 Profil</button>
+    <button onclick="go('publish')">Publier</button>
+    <button onclick="go('home')">Home</button>
 
     <hr>
 
-    <h3>📦 Annonces récentes</h3>
     <div id="feed"></div>
   </div>
 
 </section>
 
-<!-- ================= LOGIN ================= -->
-<section id="login" class="page">
+<!-- LOGIN -->
+<section id="login" class="page" style="display:none;">
   <h2>Connexion</h2>
 
   <input id="login_tel" placeholder="Téléphone">
@@ -51,8 +49,8 @@
   <button onclick="go('home')">Retour</button>
 </section>
 
-<!-- ================= REGISTER ================= -->
-<section id="register" class="page">
+<!-- REGISTER -->
+<section id="register" class="page" style="display:none;">
   <h2>Inscription</h2>
 
   <input id="reg_tel" placeholder="Téléphone">
@@ -62,57 +60,34 @@
   <button onclick="go('home')">Retour</button>
 </section>
 
-<!-- ================= PUBLISH ================= -->
-<section id="publish" class="page">
-  <h2>➕ Publier une annonce</h2>
+<!-- PUBLISH -->
+<section id="publish" class="page" style="display:none;">
+  <h2>Publier</h2>
 
-  <input id="titre" placeholder="Titre *">
-  <textarea id="desc" placeholder="Description"></textarea>
+  <input id="titre" placeholder="Titre">
+  <textarea id="desc"></textarea>
 
-  <input id="prix" type="number" placeholder="Prix">
+  <input id="prix" type="number">
 
-  <!-- TYPE LOCATION / USAGE -->
   <select id="prix_type">
     <option value="location">Location</option>
-    <option value="jour">Par jour</option>
-    <option value="heure">Par heure</option>
-    <option value="mois">Par mois</option>
+    <option value="jour">Jour</option>
+    <option value="heure">Heure</option>
+    <option value="mois">Mois</option>
   </select>
 
-  <input id="ville" placeholder="Ville">
-  <input id="quartier" placeholder="Quartier">
-  <input id="telephone" placeholder="Téléphone">
+  <input id="ville">
+  <input id="quartier">
+  <input id="telephone">
 
   <select id="disponibilite">
     <option value="disponible">Disponible</option>
     <option value="occupe">Occupé</option>
   </select>
 
-  <input id="image" type="file" accept="image/*" multiple>
+  <input id="image" type="file" multiple>
 
-  <br><br>
-
-  <button onclick="publier()">Publier 🚀</button>
-  <button onclick="go('home')">Retour</button>
-</section>
-
-<!-- ================= SEARCH ================= -->
-<section id="search" class="page">
-  <h2>🔍 Recherche</h2>
-
-  <input placeholder="Rechercher...">
-  <button>Rechercher</button>
-
-  <button onclick="go('home')">Retour</button>
-</section>
-
-<!-- ================= PROFILE ================= -->
-<section id="profile" class="page">
-  <h2>👤 Profil</h2>
-
-  <button>Mes annonces</button>
-  <button>Paramètres</button>
-
+  <button onclick="publier()">Publier</button>
   <button onclick="go('home')">Retour</button>
 </section>
 

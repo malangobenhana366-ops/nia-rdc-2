@@ -1,76 +1,37 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* NAV */
-function go(page){
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  const el = document.getElementById(page);
-  if(el) el.classList.add("active");
-  if(page === "home") loadFeed();
-}
-
-function val(id){
-  return document.getElementById(id)?.value?.trim() || "";
-}
-
 /* FEED */
 async function loadFeed(){
   const res = await fetch(`${API}/feed`);
   const data = await res.json();
 
   const feed = document.getElementById("feed");
-  if(!feed) return;
-
   feed.innerHTML = "";
 
   data.forEach(a => {
+
     feed.innerHTML += `
-      <div style="margin:10px;padding:10px;background:#fff">
+      <div style="border:1px solid #ccc;margin:10px;padding:10px">
+
         <h3>${a.titre}</h3>
+
         <p>${a.ville} - ${a.quartier}</p>
-        <p>${a.prix} ${a.prix_type}</p>
-        <img src="${a.image_url}" style="width:100%">
+        <p>${a.prix}</p>
+
+        <!-- 🔥 AFFICHAGE MULTI IMAGES (IMPORTANT FIX) -->
+        <div style="display:flex;overflow-x:auto;gap:10px">
+          ${a.image_url ? `
+            <img src="${a.image_url}" style="width:200px;height:200px;object-fit:cover">
+          ` : ""}
+        </div>
+
       </div>
     `;
   });
 }
 
-/* LOGIN */
-async function login(){
-  const res = await fetch(`${API}/auth/login`, {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      telephone: val("login_tel"),
-      password: val("login_pass")
-    })
-  });
-
-  const data = await res.json();
-  if(!res.ok) return alert(data.error);
-
-  localStorage.setItem("user", JSON.stringify(data));
-  go("home");
-}
-
-/* REGISTER */
-async function register(){
-  await fetch(`${API}/auth/register`, {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      telephone: val("reg_tel"),
-      password: val("reg_pass")
-    })
-  });
-
-  alert("OK");
-  go("login");
-}
-
-/* PUBLISH MULTI IMAGES */
+/* UPLOAD MULTI */
 async function publier(){
-  const user = JSON.parse(localStorage.getItem("user"));
-  if(!user) return alert("login d'abord");
 
   const files = document.getElementById("image").files;
 
@@ -84,23 +45,27 @@ async function publier(){
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
-      user_id: user.id,
-      titre: val("titre"),
-      description: val("desc"),
-      prix: val("prix"),
-      ville: val("ville"),
-      quartier: val("quartier"),
-      telephone: val("telephone"),
+      user_id: 1,
+      titre: document.getElementById("titre").value,
+      description: document.getElementById("desc").value,
+      prix: document.getElementById("prix").value,
+      ville: document.getElementById("ville").value,
+      quartier: document.getElementById("quartier").value,
+      telephone: document.getElementById("telephone").value,
       images_base64
     })
   });
 
   const data = await res.json();
 
-  if(!res.ok) return alert(data.error);
+  if(!res.ok) return alert("Erreur");
 
   alert("Publié 🚀");
-  go("home");
+
+  // 🔥 FIX IMPORTANT RESET INPUT
+  document.getElementById("image").value = "";
+
+  loadFeed();
 }
 
 /* BASE64 */
@@ -113,5 +78,4 @@ function toBase64(file){
   });
 }
 
-go("home");
 loadFeed();

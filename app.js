@@ -1,29 +1,16 @@
 const API = "https://nia-rdc-2.onrender.com";
 
+/* NAV */
+function go(page){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(page).classList.add("active");
+
+  if(page === "home") loadFeed();
+}
+
 /* VAL */
 function val(id){
   return document.getElementById(id)?.value?.trim() || "";
-}
-
-/* FEED */
-async function loadFeed(){
-  const res = await fetch(`${API}/feed`);
-  const data = await res.json();
-
-  const feed = document.getElementById("feed");
-  feed.innerHTML = "";
-
-  data.forEach(a=>{
-    feed.innerHTML += `
-      <div style="border:1px solid #ccc;margin:10px;padding:10px">
-        <h3>${a.titre}</h3>
-        <p>${a.ville} - ${a.quartier}</p>
-        <p>${a.prix} ${a.prix_type}</p>
-
-        ${a.image_url ? `<img src="${a.image_url}" style="width:100%;margin-top:10px;border-radius:10px">` : ""}
-      </div>
-    `;
-  });
 }
 
 /* BASE64 */
@@ -36,9 +23,77 @@ function toBase64(file){
   });
 }
 
-/* =====================
-   PUBLIER FIX FINAL
-===================== */
+/* ================= FEED (FIX MULTI IMAGES) ================= */
+async function loadFeed(){
+  const res = await fetch(`${API}/feed`);
+  const data = await res.json();
+
+  const feed = document.getElementById("feed");
+  feed.innerHTML = "";
+
+  data.forEach(a=>{
+
+    feed.innerHTML += `
+      <div style="border:1px solid #ccc;margin:10px;padding:10px">
+
+        <h3>${a.titre}</h3>
+        <p>${a.ville} - ${a.quartier}</p>
+        <p>${a.prix}</p>
+
+        <!-- 🔥 FIX IMPORTANT MULTI IMAGES -->
+        <div style="display:flex;overflow-x:auto;gap:10px">
+          ${a.images && a.images.length > 0
+            ? a.images.map(img=>`
+                <img src="${img}" style="width:200px;height:200px;object-fit:cover;border-radius:10px">
+              `).join("")
+            : (a.image_url ? `<img src="${a.image_url}" style="width:100%">` : "")
+          }
+        </div>
+
+      </div>
+    `;
+  });
+}
+
+/* ================= REGISTER ================= */
+async function register(){
+  await fetch(`${API}/auth/register`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      telephone: val("reg_tel"),
+      password: val("reg_pass")
+    })
+  });
+
+  alert("Compte créé");
+  go("login");
+}
+
+/* ================= LOGIN ================= */
+async function login(){
+  const res = await fetch(`${API}/auth/login`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      telephone: val("login_tel"),
+      password: val("login_pass")
+    })
+  });
+
+  const data = await res.json();
+
+  if(!res.ok) return alert(data.error);
+
+  localStorage.setItem("user", JSON.stringify(data));
+
+  document.getElementById("authBox").style.display = "none";
+  document.getElementById("appBox").style.display = "block";
+
+  go("home");
+}
+
+/* ================= PUBLISH ================= */
 async function publier(){
 
   const user = JSON.parse(localStorage.getItem("user"));
@@ -48,10 +103,8 @@ async function publier(){
 
   let images_base64 = [];
 
-  if(files && files.length > 0){
-    for(let f of files){
-      images_base64.push(await toBase64(f));
-    }
+  for(let f of files){
+    images_base64.push(await toBase64(f));
   }
 
   const res = await fetch(`${API}/annonces`,{
@@ -73,22 +126,16 @@ async function publier(){
 
   const data = await res.json();
 
-  if(!res.ok){
-    return alert(data.error || "Erreur");
-  }
+  if(!res.ok) return alert(data.error);
 
   alert("Annonce publiée 🚀");
 
-  /* reset clean */
-  document.getElementById("titre").value = "";
-  document.getElementById("desc").value = "";
-  document.getElementById("prix").value = "";
-  document.getElementById("ville").value = "";
-  document.getElementById("quartier").value = "";
-  document.getElementById("telephone").value = "";
   document.getElementById("image").value = "";
 
+  go("home");
   loadFeed();
 }
 
+/* INIT */
+go("home");
 loadFeed();

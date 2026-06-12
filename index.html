@@ -1,194 +1,44 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NIA RDC</title>
-
-  <style>
-    body{
-      margin:0;
-      font-family: Arial, sans-serif;
-      background:#f2f2f2;
-    }
-
-    header{
-      background:#111;
-      color:white;
-      padding:15px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-
-    header h2{
-      margin:0;
-      font-size:18px;
-    }
-
-    header button{
-      margin:5px;
-      padding:8px 12px;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-      background:#333;
-      color:white;
-    }
-
-    header button:hover{
-      background:#555;
-    }
-
-    main{
-      padding:15px;
-    }
-
-    section{
-      display:none;
-    }
-
-    input, textarea{
-      width:100%;
-      padding:12px;
-      margin:6px 0;
-      border:1px solid #ccc;
-      border-radius:8px;
-      box-sizing:border-box;
-    }
-
-    button{
-      padding:12px;
-      border:none;
-      border-radius:8px;
-      background:#111;
-      color:white;
-      cursor:pointer;
-      width:100%;
-      margin-top:8px;
-    }
-
-    button:hover{
-      opacity:0.85;
-    }
-
-    /* FEED */
-    #feed{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .card{
-      background:white;
-      border-radius:12px;
-      overflow:hidden;
-      box-shadow:0 2px 6px rgba(0,0,0,0.08);
-      cursor:pointer;
-      transition:transform 0.2s ease;
-    }
-
-    .card:hover{
-      transform:scale(1.01);
-    }
-
-    .card img{
-      width:100%;
-      height:200px;
-      object-fit:cover;
-    }
-
-    .card-content{
-      padding:10px;
-    }
-
-    .price{
-      color:green;
-      font-weight:bold;
-    }
-
-    /* DETAIL */
-    #detail{
-      background:white;
-      padding:15px;
-      border-radius:12px;
-    }
-
-    #gallery{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:10px;
-    }
-
-    #gallery img{
-      width:150px;
-      height:150px;
-      object-fit:cover;
-      border-radius:8px;
-    }
-
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIA RDC</title>
+<style>
+  .gallery {
+    display:flex;
+    overflow-x:auto;
+    gap:10px;
+  }
+  .gallery img {
+    width:250px;
+    height:250px;
+    object-fit:cover;
+    border-radius:10px;
+    flex-shrink:0;
+  }
+</style>
 </head>
 
 <body>
 
-<header>
-  <h2>🚀 NIA RDC</h2>
+<h1>NIA RDC</h1>
 
-  <div>
-    <button onclick="go('home')">🏠 Home</button>
-    <button onclick="go('publish')">➕ Publier</button>
-    <button onclick="go('login')">🔐 Login</button>
-    <button onclick="go('register')">📝 Register</button>
-  </div>
-</header>
+<section>
+  <input id="titre" placeholder="Titre">
+  <input id="prix" type="number">
+  <input id="ville">
+  <input id="quartier">
 
-<main>
+  <!-- MULTI IMAGES -->
+  <input id="image" type="file" accept="image/*" multiple>
 
-  <!-- HOME -->
-  <section id="home">
-    <div id="feed"></div>
-  </section>
+  <button onclick="publier()">Publier</button>
+</section>
 
-  <!-- LOGIN -->
-  <section id="login">
-    <h3>Connexion</h3>
-    <input id="login_tel" placeholder="Téléphone">
-    <input id="login_pass" type="password" placeholder="Mot de passe">
-    <button onclick="login()">Se connecter</button>
-  </section>
+<hr>
 
-  <!-- REGISTER -->
-  <section id="register">
-    <h3>Créer un compte</h3>
-    <input id="reg_tel" placeholder="Téléphone">
-    <input id="reg_pass" type="password" placeholder="Mot de passe">
-    <button onclick="register()">S'inscrire</button>
-  </section>
-
-  <!-- PUBLISH -->
-  <section id="publish">
-    <h3>Publier une annonce</h3>
-
-    <input id="titre" placeholder="Titre">
-    <textarea id="desc" placeholder="Description"></textarea>
-
-    <input id="prix" type="number" placeholder="Prix">
-    <input id="ville" placeholder="Ville">
-    <input id="quartier" placeholder="Quartier">
-    <input id="telephone" placeholder="Téléphone">
-
-    <input id="image" type="file" multiple>
-
-    <button onclick="publier()">Publier</button>
-  </section>
-
-  <!-- DETAIL -->
-  <section id="detail"></section>
-
-</main>
+<div id="feed"></div>
 
 <script src="app.js"></script>
 

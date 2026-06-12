@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NIA RDC v2</title>
+  <title>NIA RDC</title>
 
   <style>
     body{
       margin:0;
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       background:#f2f2f2;
     }
 
@@ -22,12 +22,23 @@
       flex-wrap:wrap;
     }
 
+    header h2{
+      margin:0;
+      font-size:18px;
+    }
+
     header button{
       margin:5px;
       padding:8px 12px;
       border:none;
       border-radius:6px;
       cursor:pointer;
+      background:#333;
+      color:white;
+    }
+
+    header button:hover{
+      background:#555;
     }
 
     main{
@@ -40,39 +51,46 @@
 
     input, textarea{
       width:100%;
-      padding:10px;
-      margin:5px 0;
+      padding:12px;
+      margin:6px 0;
       border:1px solid #ccc;
-      border-radius:6px;
+      border-radius:8px;
+      box-sizing:border-box;
     }
 
     button{
-      padding:10px;
+      padding:12px;
       border:none;
-      border-radius:6px;
+      border-radius:8px;
       background:#111;
       color:white;
       cursor:pointer;
-      margin-top:5px;
+      width:100%;
+      margin-top:8px;
     }
 
     button:hover{
-      opacity:0.8;
+      opacity:0.85;
     }
 
     /* FEED */
     #feed{
       display:flex;
       flex-direction:column;
-      gap:10px;
+      gap:12px;
     }
 
     .card{
       background:white;
-      border-radius:10px;
+      border-radius:12px;
       overflow:hidden;
-      box-shadow:0 2px 6px rgba(0,0,0,0.1);
+      box-shadow:0 2px 6px rgba(0,0,0,0.08);
       cursor:pointer;
+      transition:transform 0.2s ease;
+    }
+
+    .card:hover{
+      transform:scale(1.01);
     }
 
     .card img{
@@ -81,28 +99,43 @@
       object-fit:cover;
     }
 
-    .card h3{
-      margin:10px;
+    .card-content{
+      padding:10px;
+    }
+
+    .price{
+      color:green;
+      font-weight:bold;
     }
 
     /* DETAIL */
     #detail{
       background:white;
       padding:15px;
-      border-radius:10px;
+      border-radius:12px;
     }
 
-    #gal img{
-      margin:5px;
+    #gallery{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    #gallery img{
+      width:150px;
+      height:150px;
+      object-fit:cover;
       border-radius:8px;
     }
+
   </style>
 </head>
 
 <body>
 
 <header>
-  <h2>🚀 NIA RDC v2</h2>
+  <h2>🚀 NIA RDC</h2>
 
   <div>
     <button onclick="go('home')">🏠 Home</button>
@@ -116,7 +149,6 @@
 
   <!-- HOME -->
   <section id="home">
-    <h3>📢 Annonces</h3>
     <div id="feed"></div>
   </section>
 
@@ -125,20 +157,20 @@
     <h3>Connexion</h3>
     <input id="login_tel" placeholder="Téléphone">
     <input id="login_pass" type="password" placeholder="Mot de passe">
-    <button onclick="login()">Login</button>
+    <button onclick="login()">Se connecter</button>
   </section>
 
   <!-- REGISTER -->
   <section id="register">
-    <h3>Inscription</h3>
+    <h3>Créer un compte</h3>
     <input id="reg_tel" placeholder="Téléphone">
     <input id="reg_pass" type="password" placeholder="Mot de passe">
-    <button onclick="register()">Créer compte</button>
+    <button onclick="register()">S'inscrire</button>
   </section>
 
   <!-- PUBLISH -->
   <section id="publish">
-    <h3>Publier annonce</h3>
+    <h3>Publier une annonce</h3>
 
     <input id="titre" placeholder="Titre">
     <textarea id="desc" placeholder="Description"></textarea>

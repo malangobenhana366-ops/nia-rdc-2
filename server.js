@@ -28,7 +28,7 @@ async function uploadImage(base64) {
       resource_type: "image"
     });
     return result.secure_url;
-  } catch {
+  } catch (e) {
     return "";
   }
 }
@@ -76,7 +76,7 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
-/* CREATE ANNONCE */
+/* CREATE ANNONCE (MULTI IMAGES FIX) */
 app.post("/annonces", async (req, res) => {
   try {
     const {
@@ -89,18 +89,23 @@ app.post("/annonces", async (req, res) => {
       quartier,
       telephone,
       disponibilite,
-      image_base64
+      images_base64
     } = req.body;
 
     if (!user_id || !titre) {
       return res.status(400).json({ error: "missing fields" });
     }
 
-    let image_url = "";
+    let image_urls = [];
 
-    if (image_base64) {
-      image_url = await uploadImage(image_base64);
+    if (images_base64 && images_base64.length > 0) {
+      for (let img of images_base64) {
+        const url = await uploadImage(img);
+        if (url) image_urls.push(url);
+      }
     }
+
+    const main_image = image_urls[0] || "";
 
     const result = await pool.query(
       `INSERT INTO annonces (
@@ -127,7 +132,7 @@ app.post("/annonces", async (req, res) => {
         quartier || "",
         telephone || "",
         disponibilite || "disponible",
-        image_url
+        main_image
       ]
     );
 

@@ -83,17 +83,16 @@ app.post("/annonces", async (req,res)=>{
       return res.status(400).json({error:"missing fields"});
     }
 
-    // 1. Create annonce (avec tous les nouveaux champs)
+    // Sauvegarde en bdd avec les colonnes exactes de ton nouveau schéma SQL
     const annonce = await pool.query(
       `INSERT INTO annonces (user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
-      [user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut]
+      [user_id, titre, description, prix ? prix : 0, periode, ville, commune, quartier, telephone, statut]
     );
 
     const annonceId = annonce.rows[0].id;
 
-    // 2. Upload images
     let images = [];
     if(images_base64 && images_base64.length > 0){
       for(let img of images_base64){
@@ -102,7 +101,6 @@ app.post("/annonces", async (req,res)=>{
       }
     }
 
-    // 3. Save images in table
     for(let url of images){
       await pool.query(
         "INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)",
@@ -113,6 +111,7 @@ app.post("/annonces", async (req,res)=>{
     res.json({id:annonceId,images});
 
   } catch(e){
+    console.error(e);
     res.status(500).json({error:"create error"});
   }
 });
@@ -164,6 +163,11 @@ app.get("/annonces/:id", async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: "Erreur serveur détails" });
   }
+});
+
+/* GARANTIE DE CHARGEMENT POUR DETAILS.HTML (Résout le Cannot GET) */
+app.get("/details.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "details.html"));
 });
 
 const PORT = process.env.PORT || 5000;

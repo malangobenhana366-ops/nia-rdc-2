@@ -35,7 +35,6 @@ async function uploadImage(base64){
 /* REGISTER */
 app.post("/auth/register", async (req,res)=>{
   const {telephone,password} = req.body;
-
   try {
     const result = await pool.query(
       "INSERT INTO users (telephone,password) VALUES ($1,$2) RETURNING *",
@@ -50,12 +49,10 @@ app.post("/auth/register", async (req,res)=>{
 /* LOGIN */
 app.post("/auth/login", async (req,res)=>{
   const {telephone,password} = req.body;
-
   const result = await pool.query(
     "SELECT * FROM users WHERE telephone=$1",
     [telephone]
   );
-
   const user = result.rows[0];
 
   if(!user) return res.status(400).json({error:"user not found"});
@@ -73,9 +70,12 @@ app.post("/annonces", async (req,res)=>{
       titre,
       description,
       prix,
+      periode,
       ville,
+      commune,
       quartier,
       telephone,
+      statut,
       images_base64
     } = req.body;
 
@@ -83,19 +83,18 @@ app.post("/annonces", async (req,res)=>{
       return res.status(400).json({error:"missing fields"});
     }
 
-    // 1. create annonce
+    // 1. Create annonce (avec tous les nouveaux champs)
     const annonce = await pool.query(
-      `INSERT INTO annonces (user_id,titre,description,prix,ville,quartier,telephone)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
+      `INSERT INTO annonces (user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
-      [user_id,titre,description,prix,ville,quartier,telephone]
+      [user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut]
     );
 
     const annonceId = annonce.rows[0].id;
 
-    // 2. upload images
+    // 2. Upload images
     let images = [];
-
     if(images_base64 && images_base64.length > 0){
       for(let img of images_base64){
         const url = await uploadImage(img);
@@ -103,7 +102,7 @@ app.post("/annonces", async (req,res)=>{
       }
     }
 
-    // 3. save images in table
+    // 3. Save images in table
     for(let url of images){
       await pool.query(
         "INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)",
@@ -124,7 +123,6 @@ app.get("/feed", async (req,res)=>{
     const annonces = await pool.query(
       "SELECT * FROM annonces ORDER BY id DESC"
     );
-
     const data = [];
 
     for(let a of annonces.rows){
@@ -132,17 +130,39 @@ app.get("/feed", async (req,res)=>{
         "SELECT image_url FROM annonce_images WHERE annonce_id=$1",
         [a.id]
       );
-
       data.push({
         ...a,
         images: imgs.rows.map(i=>i.image_url)
       });
     }
-
     res.json(data);
-
   } catch {
     res.json([]);
+  }
+});
+
+/* OBTENIR UNE SEULE ANNONCE POUR LA PAGE DÉTAILS */
+app.get("/annonces/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query("SELECT * FROM annonces WHERE id = $1", [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Annonce introuvable" });
+    }
+
+    const annonce = result.rows[0];
+    const imgs = await pool.query(
+      "SELECT image_url FROM annonce_images WHERE annonce_id = $1",
+      [id]
+    );
+
+    res.json({
+      ...annonce,
+      images: imgs.rows.map(i => i.image_url)
+    });
+  } catch (e) {
+    res.status(500).json({ error: "Erreur serveur détails" });
   }
 });
 

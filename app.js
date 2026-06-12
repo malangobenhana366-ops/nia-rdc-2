@@ -8,21 +8,19 @@ async function loadFeed(){
   const feed = document.getElementById("feed");
   feed.innerHTML = "";
 
-  data.forEach(a => {
+  data.forEach(a=>{
 
     feed.innerHTML += `
       <div style="border:1px solid #ccc;margin:10px;padding:10px">
 
         <h3>${a.titre}</h3>
-
         <p>${a.ville} - ${a.quartier}</p>
-        <p>${a.prix}</p>
 
-        <!-- 🔥 AFFICHAGE MULTI IMAGES (IMPORTANT FIX) -->
-        <div style="display:flex;overflow-x:auto;gap:10px">
-          ${a.image_url ? `
-            <img src="${a.image_url}" style="width:200px;height:200px;object-fit:cover">
-          ` : ""}
+        <!-- 🔥 GALERIE SWIPE -->
+        <div class="gallery">
+          ${a.images.map(img=>`
+            <img src="${img}">
+          `).join("")}
         </div>
 
       </div>
@@ -30,7 +28,7 @@ async function loadFeed(){
   });
 }
 
-/* UPLOAD MULTI */
+/* PUBLISH MULTI */
 async function publier(){
 
   const files = document.getElementById("image").files;
@@ -41,28 +39,23 @@ async function publier(){
     images_base64.push(await toBase64(f));
   }
 
-  const res = await fetch(`${API}/annonces`, {
+  const res = await fetch(`${API}/annonces`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
-      user_id: 1,
-      titre: document.getElementById("titre").value,
-      description: document.getElementById("desc").value,
-      prix: document.getElementById("prix").value,
-      ville: document.getElementById("ville").value,
-      quartier: document.getElementById("quartier").value,
-      telephone: document.getElementById("telephone").value,
+      user_id:1,
+      titre:document.getElementById("titre").value,
+      prix:document.getElementById("prix").value,
+      ville:document.getElementById("ville").value,
+      quartier:document.getElementById("quartier").value,
       images_base64
     })
   });
 
-  const data = await res.json();
-
-  if(!res.ok) return alert("Erreur");
+  await res.json();
 
   alert("Publié 🚀");
 
-  // 🔥 FIX IMPORTANT RESET INPUT
   document.getElementById("image").value = "";
 
   loadFeed();
@@ -72,7 +65,7 @@ async function publier(){
 function toBase64(file){
   return new Promise((res,rej)=>{
     const r = new FileReader();
-    r.onload = () => res(r.result);
+    r.onload = ()=>res(r.result);
     r.onerror = rej;
     r.readAsDataURL(file);
   });

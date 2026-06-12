@@ -1,15 +1,13 @@
 const API = "https://nia-rdc-2.onrender.com";
 
-/* NAVIGATION SIMPLE ET FIABLE */
+/* NAV SIMPLE */
 function go(page){
   document.querySelectorAll("section").forEach(s=>{
     s.style.display = "none";
   });
 
-  const target = document.getElementById(page);
-  if(target){
-    target.style.display = "block";
-  }
+  const el = document.getElementById(page);
+  if(el) el.style.display = "block";
 
   if(page === "home") loadFeed();
 }
@@ -29,7 +27,7 @@ function toBase64(file){
   });
 }
 
-/* FEED */
+/* FEED (CARDS PRO) */
 async function loadFeed(){
   const res = await fetch(`${API}/feed`);
   const data = await res.json();
@@ -40,20 +38,19 @@ async function loadFeed(){
   data.forEach(a=>{
     feed.innerHTML += `
       <div onclick='openAnnonce(${JSON.stringify(a)})'
-           style="border:1px solid #ccc;margin:10px;padding:10px;cursor:pointer">
+           style="border:1px solid #ddd;margin:10px;padding:10px;cursor:pointer">
 
         <img src="${a.image_url}" style="width:100%;height:180px;object-fit:cover">
 
         <h3>${a.titre}</h3>
         <p>${a.ville} - ${a.quartier}</p>
-        <p>${a.prix}</p>
-
+        <p><b>${a.prix}</b></p>
       </div>
     `;
   });
 }
 
-/* DETAIL */
+/* DETAIL COMPLET FIX */
 function openAnnonce(a){
 
   document.querySelectorAll("section").forEach(s=>{
@@ -68,38 +65,24 @@ function openAnnonce(a){
 
     <h2>${a.titre}</h2>
 
-    <img src="${a.image_url}" style="width:100%">
+    <!-- GALERIE -->
+    <div style="display:flex;overflow-x:auto;gap:10px">
+      ${(a.images || []).map(img=>`
+        <img src="${img}" style="width:250px;height:250px;object-fit:cover">
+      `).join("")}
+    </div>
 
     <p><b>Prix:</b> ${a.prix}</p>
     <p><b>Ville:</b> ${a.ville}</p>
     <p><b>Quartier:</b> ${a.quartier}</p>
+    <p><b>Téléphone:</b> ${a.telephone}</p>
     <p><b>Description:</b> ${a.description}</p>
+    <p><b>Disponibilité:</b> ${a.disponibilite}</p>
   `;
 }
 
-/* REGISTER (FIX OK) */
-async function register(){
-
-  const res = await fetch(`${API}/auth/register`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      telephone: val("reg_tel"),
-      password: val("reg_pass")
-    })
-  });
-
-  const data = await res.json();
-
-  if(!res.ok) return alert(data.error);
-
-  alert("Compte créé");
-  go("login");
-}
-
-/* LOGIN (FIX OK) */
+/* LOGIN */
 async function login(){
-
   const res = await fetch(`${API}/auth/login`,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
@@ -110,7 +93,6 @@ async function login(){
   });
 
   const data = await res.json();
-
   if(!res.ok) return alert(data.error);
 
   localStorage.setItem("user", JSON.stringify(data));
@@ -118,7 +100,25 @@ async function login(){
   go("home");
 }
 
-/* PUBLISH (OK MULTI IMAGES) */
+/* REGISTER */
+async function register(){
+  const res = await fetch(`${API}/auth/register`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      telephone: val("reg_tel"),
+      password: val("reg_pass")
+    })
+  });
+
+  const data = await res.json();
+  if(!res.ok) return alert(data.error);
+
+  alert("Compte créé");
+  go("login");
+}
+
+/* PUBLISH FIX FINAL */
 async function publier(){
 
   const user = JSON.parse(localStorage.getItem("user"));
@@ -150,10 +150,9 @@ async function publier(){
   });
 
   const data = await res.json();
-
   if(!res.ok) return alert(data.error);
 
-  alert("Annonce publiée 🚀");
+  alert("Publié 🚀");
 
   go("home");
   loadFeed();

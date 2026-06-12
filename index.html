@@ -11,20 +11,17 @@
 <header>
   <h2>🚀 NIA RDC</h2>
 
-  <!-- MENU FIXE -->
-  <div>
-    <button onclick="go('home')">Home</button>
-    <button onclick="go('publish')">Publier</button>
-    <button onclick="go('search')">Rechercher</button>
-    <button onclick="go('profile')">Profil</button>
-  </div>
+  <button onclick="go('home')">Home</button>
+  <button onclick="go('publish')">Publier</button>
+  <button onclick="go('login')">Connexion</button>
+  <button onclick="go('register')">Inscription</button>
 </header>
 
 <main>
 
 <!-- HOME -->
 <section id="home">
-  <h3>Annonces</h3>
+  <h3>Annonces récentes</h3>
   <div id="feed"></div>
 </section>
 
@@ -50,7 +47,7 @@
   <button onclick="go('home')">Retour</button>
 </section>
 
-<!-- PUBLISH (RESTAURÉ COMPLET) -->
+<!-- PUBLISH -->
 <section id="publish" style="display:none;">
   <h2>Publier une annonce</h2>
 
@@ -81,19 +78,8 @@
   <button onclick="go('home')">Retour</button>
 </section>
 
-<!-- DETAIL COMPLET -->
+<!-- DETAIL -->
 <section id="detail" style="display:none;"></section>
-
-<!-- SEARCH -->
-<section id="search" style="display:none;">
-  <h2>Recherche</h2>
-  <input placeholder="chercher...">
-</section>
-
-<!-- PROFILE -->
-<section id="profile" style="display:none;">
-  <h2>Profil</h2>
-</section>
 
 </main>
 

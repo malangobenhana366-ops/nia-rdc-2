@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NIA RDC - Immobilier & Services</title>
+<title>NIA RDC - Location d'Objets & Services</title>
 <style>
   :root {
     --primary: #2563eb;
@@ -98,13 +98,26 @@
     }
   }
 
+  .price-container {
+    display: flex;
+    gap: 10px;
+  }
+
+  .price-container input {
+    flex: 2;
+  }
+
+  .price-container select {
+    flex: 1;
+  }
+
   label {
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-light);
   }
 
-  input {
+  input, select, textarea {
     width: 100%;
     padding: 10px 14px;
     border: 1px solid var(--border);
@@ -112,9 +125,16 @@
     font-size: 0.95rem;
     box-sizing: border-box;
     transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: #fff;
   }
 
-  input:focus {
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+  }
+
+  input:focus, select:focus, textarea:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
@@ -158,7 +178,6 @@
     color: var(--text);
   }
 
-  /* Style conservé et amélioré pour le flux d'annonces */
   #feed {
     display: flex;
     flex-direction: column;
@@ -196,24 +215,41 @@
 
 <header>
   <h1>NIA RDC</h1>
-  <p>Trouvez rapidement des maisons, appartements et services en RDC</p>
+  <p>Louez rapidement des voitures, vêtements, instruments, objets et services en RDC</p>
 </header>
 
 <main>
 
-  <!-- FORMULAIRE DE PUBLICATION -->
   <section class="publish-card">
-    <h2>📢 Publier une nouvelle annonce</h2>
+    <h2>📢 Publier une nouvelle offre de location</h2>
     
     <div class="form-grid">
       <div class="form-group full-width">
-        <label for="titre">Titre de l'annonce</label>
-        <input id="titre" placeholder="Ex: Bel appartement 3 chambres, Gombe...">
+        <label for="titre">Nom de l'objet ou du service</label>
+        <input id="titre" placeholder="Ex: Rig de sonorisation complète, Toyota TXL, Robe de mariée...">
       </div>
 
       <div class="form-group">
-        <label for="prix">Prix (USD / CDF)</label>
-        <input id="prix" type="number" placeholder="Ex: 500">
+        <label for="prix">Tarif de location (USD / CDF)</label>
+        <div class="price-container">
+          <input id="prix" type="number" placeholder="Ex: 50">
+          <select id="periode">
+            <option value="heure">par heure</option>
+            <option value="jour" selected>par jour</option>
+            <option value="semaine">par semaine</option>
+            <option value="mois">par mois</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="telephone">Numéro de téléphone</label>
+        <input id="telephone" type="tel" placeholder="Ex: +243 820 000 000">
+      </div>
+
+      <div class="form-group full-width">
+        <label for="description">Description de l'objet / service</label>
+        <textarea id="description" placeholder="Décrivez l'état de l'objet, les conditions de location, etc."></textarea>
       </div>
 
       <div class="form-group">
@@ -222,23 +258,34 @@
       </div>
 
       <div class="form-group">
+        <label for="commune">Commune</label>
+        <input id="commune" placeholder="Ex: Kampemba, Lubumbashi...">
+      </div>
+
+      <div class="form-group">
         <label for="quartier">Quartier</label>
         <input id="quartier" placeholder="Ex: Golf">
       </div>
 
       <div class="form-group">
-        <label for="image">Photos de la propriété (Sélection multiple)</label>
-        <!-- MULTI IMAGES (Identifiant inchangé) -->
+        <label for="image">Photos (Sélection multiple)</label>
         <input id="image" type="file" accept="image/*" multiple>
       </div>
 
-      <button onclick="publier()">🚀 Publier l'annonce</button>
+      <div class="form-group full-width">
+        <label for="statut">Statut initial de disponibilité</label>
+        <select id="statut">
+          <option value="disponible" selected>🟢 Disponible</option>
+          <option value="occupe">🔴 Occupé</option>
+        </select>
+      </div>
+
+      <button onclick="publier()">🚀 Mettre en location</button>
     </div>
   </section>
 
   <h2 class="section-title">Annonces récentes</h2>
   
-  <!-- LE FLUX D'ANNONCES (Identifiant inchangé) -->
   <div id="feed"></div>
 
 </main>

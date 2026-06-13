@@ -3,17 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NIA RDC - Profil & Boutiques VIP</title>
+<title>NIA RDC - Version Sécurisée</title>
 <style>
   :root {
-    --primary: #2563eb; --primary-hover: #1d4ed8; --bg: #f8fafc; --card-bg: #ffffff;
+    --primary: #2563eb; --bg: #f8fafc; --card-bg: #ffffff;
     --text: #1e293b; --text-light: #64748b; --border: #e2e8f0; --success: #10b981;
     --danger: #ef4444; --vip-gold: #d97706; --vip-bg: #fef3c7;
   }
   body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; }
   header { background-color: var(--card-bg); border-bottom: 1px solid var(--border); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
   header .logo { margin: 0; color: var(--primary); font-size: 1.6rem; font-weight: 800; }
-  header .settings-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
   main { max-width: 800px; margin: 10px auto 220px auto; padding: 0 15px; }
   .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
   .section-title { margin: 0; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; }
@@ -61,7 +60,6 @@
   .pub-simulation { background: #0f172a; color: white; height: 160px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; margin: 15px 0; }
   .countdown-number { font-size: 2.5rem; font-weight: 800; color: var(--vip-gold); }
 
-  /* EN-TÊTE VITRINE BOUTIQUE VIP */
   .shop-banner { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid var(--vip-gold); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center; }
   .shop-banner h2 { margin: 0 0 5px 0; color: var(--vip-gold); font-size: 1.6rem; }
   .shop-banner p { margin: 0; color: #78350f; font-size: 0.9rem; }
@@ -83,7 +81,6 @@
 
   <main>
     <div id="shop-header-container"></div>
-
     <div class="section-header-flex">
       <div class="section-title" id="feed-title">Annonces récentes</div>
       <button class="btn-reset-search" id="reset-btn" onclick="annulerRecherche()">Voir tout 🔄</button>
@@ -113,38 +110,37 @@
     <div class="modal-content">
       <div class="modal-header"><h2>🔍 Recherche</h2><button class="close-modal" onclick="fermerModal('rechercher')">✕</button></div>
       <div class="form-grid">
-        <div class="form-group full-width"><label>Recherche par mot-clé</label><input id="search-titre"></div>
+        <div class="form-group full-width"><label>Que cherchez-vous ? (Standard ou VIP)</label><input id="search-titre" placeholder="Ex: Robe, Voiture, Groupe..."></div>
         <div class="form-group full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div>
         <div class="form-group"><label>Commune</label><input id="search-commune"></div>
         <div class="form-group"><label>Quartier</label><input id="search-quartier"></div>
-        <button class="modal-submit-btn" style="background:#0f172a;" onclick="rechercher()">Filtrer</button>
+        <button class="modal-submit-btn" style="background:#0f172a;" onclick="rechercher()">Lancer la recherche</button>
       </div>
     </div>
   </div>
 
   <div class="modal" id="modal-vip">
     <div class="modal-content">
-      <div class="modal-header"><h2 id="vip-modal-title">👑 Devenir Espace Boutique VIP</h2><button class="close-modal" onclick="fermerModal('vip')">✕</button></div>
-      <div class="form-grid" id="vip-form-body">
-        </div>
+      <div class="modal-header"><h2 id="vip-modal-title">👑 Devenir Boutique VIP</h2><button class="close-modal" onclick="fermerModal('vip')">✕</button></div>
+      <div class="form-grid" id="vip-form-body"></div>
     </div>
   </div>
 
   <div class="modal" id="modal-modifier-annonce">
     <div class="modal-content">
-      <div class="modal-header"><h2>📝 Modifier votre annonce</h2><button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button></div>
+      <div class="modal-header"><h2>📝 Modifier l'annonce</h2><button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button></div>
       <div class="form-grid">
         <input type="hidden" id="edit-id">
         <div class="form-group full-width"><label>Titre de l'objet</label><input id="edit-titre"></div>
         <div class="form-group"><label>Prix (USD)</label><input id="edit-prix" type="number"></div>
-        <div class="form-group"><label>Période</label><select id="edit-periode"><option value="heure">heure</option><option value="jour">jour</option><option value="semaine">semaine</option></select></div>
-        <div class="form-group"><label>Disponibilité</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option><option value="vip">👑 VIP Permanent</option></select></div>
+        <div class="form-group"><label>Période</label><select id="edit-periode"><option value="heure">heure</option><option value="jour">jour</option></select></div>
+        <div class="form-group"><label>Disponibilité</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option><option value="vip">👑 VIP</option></select></div>
         <div class="form-group full-width"><label>Description</label><textarea id="edit-description"></textarea></div>
         <div class="form-group"><label>Ville</label><input id="edit-ville"></div>
         <div class="form-group"><label>Commune</label><input id="edit-commune"></div>
         <div class="form-group"><label>Quartier</label><input id="edit-quartier"></div>
-        <div class="form-group full-width"><label>Téléphone de contact</label><input id="edit-telephone" type="tel"></div>
-        <button class="modal-submit-btn" style="background:var(--success);" onclick="sauvegarderModificationAnnonce()">💾 Enregistrer les modifications</button>
+        <div class="form-group full-width"><label>Téléphone</label><input id="edit-telephone" type="tel"></div>
+        <button class="modal-submit-btn" style="background:var(--success);" onclick="sauvegarderModificationAnnonce()">💾 Sauvegarder</button>
       </div>
     </div>
   </div>
@@ -152,22 +148,15 @@
   <div class="modal" id="modal-boost-pub">
     <div class="modal-content" style="max-width:400px; text-align:center;">
       <h3>🚀 Boost Gratuit AdSense</h3>
-      <div class="pub-simulation">
-        <span style="font-size:0.75rem; color:#64748b;">PUBLICITÉ SPONSORISÉE</span>
-        <div class="countdown-number" id="countdown">15</div>
-      </div>
+      <div class="pub-simulation"><div class="countdown-number" id="countdown">15</div></div>
       <button id="btn-finaliser-boost" class="modal-submit-btn" style="background:var(--success); display:none;" onclick="executerRemonteeBdd()">✅ Propulser au top</button>
     </div>
   </div>
 
   <div class="modal" id="modal-profil">
     <div class="modal-content">
-      <div class="modal-header"><h2>👤 Mon Espace Personnel</h2><button class="close-modal" onclick="fermerModal('profil')">✕</button></div>
-      <p><strong>Mon Compte :</strong> <span id="profil-tel">Compte de test (0000)</span></p>
-      <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
-      <h3 style="margin-bottom:10px;">📋 Gérer mes annonces mises en ligne :</h3>
-      <div id="profil-mes-annonces-list" style="display:flex; flex-direction:column; gap:10px;"></div>
-      <button class="modal-submit-btn" style="background:#0f172a; margin-top:20px;" onclick="alert('Déconnexion réussie')">🚪 Se déconnecter</button>
+      <div class="modal-header"><h2 id="profil-modal-title">👤 Mon Profil Personnel</h2><button class="close-modal" onclick="fermerModal('profil')">✕</button></div>
+      <div id="profil-view-content"></div>
     </div>
   </div>
 
@@ -175,13 +164,12 @@
     <nav class="bottom-nav">
       <button class="nav-btn" onclick="ouvrirModal('publier')"><span>📢</span><span>Publier</span></button>
       <button class="nav-btn" onclick="ouvrirModal('rechercher')"><span>🔍</span><span>Rechercher</span></button>
-      <button class="nav-btn vip-btn" onclick="gererClicBoutonVipMenu()"><span>👑</span><span>VIP</span></button>
-      <button class="nav-btn" onclick="ouvrirMonProfilStandard()"><span>👤</span><span>Mon Profil</span></button>
+      <button class="nav-btn vip-btn" onclick="gererClicBoutonVipMenu()"><span>👑</span><span>Espace VIP</span></button>
+      <button class="nav-btn" id="main-profile-nav-btn" onclick="ouvrirMonProfilOuMaBoutique()"><span>👤</span><span>Mon Profil</span></button>
     </nav>
-    <div class="adsense-space">⚡ BANNIÈRE PUBLICITAIRE ADSENSE INFÉRIEURE ⚡</div>
+    <div class="adsense-space">⚡ ESPACE PUBLICITAIRE NIA RDC ⚡</div>
   </div>
 
   <script src="app.js"></script>
 </body>
-                                                                           </html>
-                                                                           
+</html>

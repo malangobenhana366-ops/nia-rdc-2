@@ -3,353 +3,87 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NIA RDC - Location d'Objets & Services</title>
+<title>NIA RDC - Profil & Boutiques VIP</title>
 <style>
   :root {
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --bg: #f8fafc;
-    --card-bg: #ffffff;
-    --text: #1e293b;
-    --text-light: #64748b;
-    --border: #e2e8f0;
-    --success: #10b981;
-    --danger: #ef4444;
-    --vip-gold: #d97706;
-    --vip-bg: #fef3c7;
+    --primary: #2563eb; --primary-hover: #1d4ed8; --bg: #f8fafc; --card-bg: #ffffff;
+    --text: #1e293b; --text-light: #64748b; --border: #e2e8f0; --success: #10b981;
+    --danger: #ef4444; --vip-gold: #d97706; --vip-bg: #fef3c7;
   }
-
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
-    margin: 0;
-    padding: 0;
-    line-height: 1.6;
-  }
-
-  header {
-    background-color: var(--card-bg);
-    border-bottom: 1px solid var(--border);
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  }
-
-  header .logo {
-    margin: 0;
-    color: var(--primary);
-    font-size: 1.6rem;
-    font-weight: 800;
-  }
-
-  header .settings-btn {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 5px;
-    width: auto;
-  }
-
-  main {
-    max-width: 800px;
-    margin: 10px auto 220px auto;
-    padding: 0 15px;
-  }
-
-  .section-header-flex {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 15px 0;
-  }
-
-  .section-title {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--text);
-    text-transform: uppercase;
-  }
-
-  .btn-reset-search {
-    background: #e2e8f0;
-    color: var(--text);
-    border: none;
-    padding: 5px 10px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: none;
-  }
-
-  #feed {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  /* DESIGN CARTE ANNONCE OPTIMISÉE VIP */
-  .annonce-card {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 15px;
-    background: var(--card-bg);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    position: relative;
-  }
-
-  .annonce-card.vip-premium {
-    border: 2px solid var(--vip-gold);
-    background: #fffdf5;
-    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.1);
-  }
-
-  .vip-badge-tag {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background-color: var(--vip-gold);
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 6px;
-    text-transform: uppercase;
-  }
-
-  .annonce-card h3 {
-    margin: 0 0 4px 0;
-    font-size: 1.25rem;
-    color: var(--text);
-    max-width: 85%;
-  }
-
-  .annonce-price {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin: 4px 0;
-  }
-
-  .annonce-meta {
-    font-size: 0.85rem;
-    color: var(--text-light);
-    margin-bottom: 10px;
-  }
-
-  .annonce-description {
-    background: #f1f5f9;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    color: #334155;
-    margin: 12px 0;
-    white-space: pre-line;
-    border-left: 3px solid var(--primary);
-  }
-
-  .annonce-card.vip-premium .annonce-description {
-    background: #fef8e7;
-    border-left-color: var(--vip-gold);
-  }
-
-  /* GALERIE PHOTO ENTIÈRE */
-  .gallery {
-    display: flex;
-    overflow-x: auto;
-    gap: 10px;
-    padding-bottom: 8px;
-    margin-bottom: 12px;
-  }
-
-  .gallery::-webkit-scrollbar { height: 5px; }
-  .gallery::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-  .gallery-item {
-    width: 280px;
-    height: 200px;
-    object-fit: contain;
-    background-color: #0f172a;
-    border-radius: 8px;
-    flex-shrink: 0;
-  }
-
-  .annonce-footer {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed var(--border);
-  }
-
-  .footer-actions {
-    display: flex;
-    gap: 8px;
-  }
-
-  .btn-contact {
-    background-color: #10b981;
-    color: white;
-    text-decoration: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.85rem;
-  }
-
-  .btn-shop {
-    background-color: var(--vip-gold);
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-  }
-
-  .btn-boost {
-    background-color: #3b82f6;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-  }
-
-  .badge-status {
-    padding: 3px 8px;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-
+  body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; }
+  header { background-color: var(--card-bg); border-bottom: 1px solid var(--border); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+  header .logo { margin: 0; color: var(--primary); font-size: 1.6rem; font-weight: 800; }
+  header .settings-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+  main { max-width: 800px; margin: 10px auto 220px auto; padding: 0 15px; }
+  .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
+  .section-title { margin: 0; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; }
+  .btn-reset-search { background: #e2e8f0; color: var(--text); border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: none; }
+  #feed { display: flex; flex-direction: column; gap: 20px; }
+  
+  /* CARTES ANNONCES */
+  .annonce-card { border: 1px solid var(--border); border-radius: 12px; padding: 15px; background: var(--card-bg); position: relative; }
+  .annonce-card.vip-premium { border: 2px solid var(--vip-gold); background: #fffdf5; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.1); }
+  .vip-badge-tag { position: absolute; top: 15px; right: 15px; background-color: var(--vip-gold); color: white; font-size: 0.75rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; }
+  .annonce-price { font-size: 1.15rem; font-weight: 700; color: var(--primary); margin: 4px 0; }
+  .annonce-meta { font-size: 0.85rem; color: var(--text-light); margin-bottom: 10px; }
+  .annonce-description { background: #f1f5f9; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; margin: 12px 0; white-space: pre-line; border-left: 3px solid var(--primary); }
+  .annonce-card.vip-premium .annonce-description { background: #fef8e7; border-left-color: var(--vip-gold); }
+  
+  .gallery { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 8px; }
+  .gallery-item { width: 280px; height: 200px; object-fit: contain; background-color: #0f172a; border-radius: 8px; flex-shrink: 0; }
+  .annonce-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .footer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  
+  /* BOUTONS */
+  .btn-contact { background-color: #10b981; color: white; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; }
+  .btn-shop { background-color: var(--vip-gold); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+  .btn-boost { background-color: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+  .btn-edit { background-color: #64748b; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+  .btn-delete { background-color: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+  .badge-status { padding: 3px 8px; border-radius: 15px; font-size: 0.75rem; font-weight: 600; }
   .status-disponible { background-color: #ecfdf5; color: var(--success); }
   .status-occupe { background-color: #fef2f2; color: var(--danger); }
 
-  /* ================= MODALS INTERFACES ================= */
-  .modal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    justify-content: center;
-    align-items: center;
-    padding: 15px;
-  }
-
-  .modal-content {
-    background-color: var(--card-bg);
-    border-radius: 16px;
-    width: 100%;
-    max-width: 550px;
-    max-height: 85vh;
-    overflow-y: auto;
-    padding: 24px;
-    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
-    position: relative;
-    box-sizing: border-box;
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 10px;
-  }
-
-  .close-modal {
-    background: #f1f5f9;
-    border: none;
-    font-size: 1.1rem;
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-  }
-
+  /* MODALS */
+  .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
+  .modal-content { background-color: var(--card-bg); border-radius: 16px; width: 100%; max-width: 550px; max-height: 85vh; overflow-y: auto; padding: 24px; box-sizing: border-box; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+  .close-modal { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  
   .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .form-group { display: flex; flex-direction: column; gap: 5px; }
   .form-group.full-width { grid-column: span 2; }
-  .price-container { display: flex; gap: 8px; }
-  .price-container input { flex: 2; }
-  .price-container select { flex: 1; }
-
-  label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
   input, select, textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; box-sizing: border-box; }
+  .modal-submit-btn { grid-column: span 2; background-color: var(--primary); color: white; border: none; padding: 12px; font-size: 0.95rem; font-weight: 600; border-radius: 8px; cursor: pointer; }
+  
+  .bulk-item-box { border: 1px dashed var(--vip-gold); background: #fffdf9; padding: 12px; border-radius: 8px; margin-bottom: 10px; position: relative; }
+  .btn-remove-bulk { position: absolute; top: 5px; right: 5px; background: none; border: none; color: var(--danger); cursor: pointer; }
+  .pub-simulation { background: #0f172a; color: white; height: 160px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; margin: 15px 0; }
+  .countdown-number { font-size: 2.5rem; font-weight: 800; color: var(--vip-gold); }
 
-  .modal-submit-btn {
-    grid-column: span 2; background-color: var(--primary); color: white; border: none; padding: 12px; font-size: 0.95rem; font-weight: 600; border-radius: 8px; cursor: pointer; margin-top: 10px;
-  }
-  .modal-submit-btn.search-color { background-color: #0f172a; }
-  .modal-submit-btn.vip-color { background-color: var(--vip-gold); }
+  /* EN-TÊTE VITRINE BOUTIQUE VIP */
+  .shop-banner { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid var(--vip-gold); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center; }
+  .shop-banner h2 { margin: 0 0 5px 0; color: var(--vip-gold); font-size: 1.6rem; }
+  .shop-banner p { margin: 0; color: #78350f; font-size: 0.9rem; }
 
-  /* ÉLÉMENT D'OBJET EN MASSE VIP */
-  .bulk-item-box {
-    border: 1px dashed var(--vip-gold);
-    background: #fffdf9;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    position: relative;
-  }
-
-  .btn-remove-bulk {
-    position: absolute; top: 5px; right: 5px; background: none; border: none; color: var(--danger); font-weight: bold; cursor: pointer;
-  }
-
-  /* PUB MODAL WATCH-TO-BOOST */
-  .pub-simulation {
-    background: #0f172a;
-    color: white;
-    height: 200px;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    margin: 15px 0;
-  }
-
-  .countdown-number { font-size: 3rem; font-weight: 800; color: var(--vip-gold); }
-
-  /* ================= ZONE FIXE EN BAS ================= */
-  .bottom-area {
-    position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--card-bg); border-top: 1px solid var(--border); box-shadow: 0 -4px 10px rgba(0,0,0,0.05); z-index: 1000; display: flex; flex-direction: column;
-  }
-  .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--border); }
+  /* BAS FIXE */
+  .bottom-area { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--card-bg); border-top: 1px solid var(--border); z-index: 1000; display: flex; flex-direction: column; }
+  .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); }
   .nav-btn { background: none; border: none; padding: 12px 5px; font-size: 0.8rem; font-weight: 600; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .nav-btn:hover { background-color: #f1f5f9; color: var(--primary); }
-  .nav-btn .icon { font-size: 1.3rem; }
   .nav-btn.vip-btn { color: var(--vip-gold); }
-  .adsense-space { background-color: #f1f5f9; height: 60px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.75rem; font-weight: bold; letter-spacing: 1px; }
+  .adsense-space { background-color: #f1f5f9; height: 50px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.75rem; font-weight: bold; }
 </style>
 </head>
 <body>
 
   <header>
     <div class="logo">NIA RDC</div>
-    <button class="settings-btn" onclick="alert('Configuration générale')">⚙️</button>
+    <button class="settings-btn" onclick="alert('Paramètres')">⚙️</button>
   </header>
 
   <main>
+    <div id="shop-header-container"></div>
+
     <div class="section-header-flex">
       <div class="section-title" id="feed-title">Annonces récentes</div>
       <button class="btn-reset-search" id="reset-btn" onclick="annulerRecherche()">Voir tout 🔄</button>
@@ -359,122 +93,58 @@
 
   <div class="modal" id="modal-publier">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2>📢 Publier une offre de location</h2>
-        <button class="close-modal" onclick="fermerModal('publier')">✕</button>
-      </div>
+      <div class="modal-header"><h2>📢 Louer un objet</h2><button class="close-modal" onclick="fermerModal('publier')">✕</button></div>
       <div class="form-grid">
-        <div class="form-group full-width">
-          <label>Nom de l'objet ou service</label>
-          <input id="titre" placeholder="Ex: Groupe électrogène 10KVA...">
-        </div>
-        <div class="form-group">
-          <label>Tarif</label>
-          <div class="price-container">
-            <input id="prix" type="number" placeholder="Ex: 40">
-            <select id="periode">
-              <option value="heure">par heure</option>
-              <option value="jour" selected>par jour</option>
-              <option value="semaine">par semaine</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Téléphone de contact</label>
-          <input id="telephone" type="tel" placeholder="+243...">
-        </div>
-        <div class="form-group full-width">
-          <label>Description</label>
-          <textarea id="description"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Ville</label>
-          <input id="ville" placeholder="Lubumbashi">
-        </div>
-        <div class="form-group">
-          <label>Commune</label>
-          <input id="commune">
-        </div>
-        <div class="form-group">
-          <label>Quartier</label>
-          <input id="quartier">
-        </div>
-        <div class="form-group">
-          <label>Photos</label>
-          <input id="image" type="file" accept="image/*" multiple>
-        </div>
-        <button class="modal-submit-btn" onclick="publier()">🚀 Mettre en ligne</button>
+        <div class="form-group full-width"><label>Nom de l'objet</label><input id="titre"></div>
+        <div class="form-group"><label>Prix</label><input id="prix" type="number"></div>
+        <div class="form-group"><label>Période</label><select id="periode"><option value="jour">par jour</option><option value="heure">par heure</option></select></div>
+        <div class="form-group full-width"><label>Téléphone</label><input id="telephone" type="tel"></div>
+        <div class="form-group full-width"><label>Description</label><textarea id="description"></textarea></div>
+        <div class="form-group"><label>Ville</label><input id="ville" value="Lubumbashi"></div>
+        <div class="form-group"><label>Commune</label><input id="commune"></div>
+        <div class="form-group"><label>Quartier</label><input id="quartier"></div>
+        <div class="form-group full-width"><label>Photos</label><input id="image" type="file" multiple></div>
+        <button class="modal-submit-btn" onclick="publier()">Mettre en ligne</button>
       </div>
     </div>
   </div>
 
   <div class="modal" id="modal-rechercher">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2>🔍 Recherche ciblée</h2>
-        <button class="close-modal" onclick="fermerModal('rechercher')">✕</button>
-      </div>
+      <div class="modal-header"><h2>🔍 Recherche</h2><button class="close-modal" onclick="fermerModal('rechercher')">✕</button></div>
       <div class="form-grid">
-        <div class="form-group full-width">
-          <label>Que cherchez-vous ?</label>
-          <input id="search-titre" placeholder="Ex: Robe de mariée, Camion...">
-        </div>
-        <div class="form-group full-width">
-          <label>Ville</label>
-          <input id="search-ville" placeholder="Lubumbashi">
-        </div>
-        <div class="form-group">
-          <label>Commune (Optionnelle)</label>
-          <input id="search-commune">
-        </div>
-        <div class="form-group">
-          <label>Quartier (Optionnel)</label>
-          <input id="search-quartier">
-        </div>
-        <button class="modal-submit-btn search-color" onclick="rechercher()">🔍 Filtrer le flux</button>
+        <div class="form-group full-width"><label>Recherche par mot-clé</label><input id="search-titre"></div>
+        <div class="form-group full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div>
+        <div class="form-group"><label>Commune</label><input id="search-commune"></div>
+        <div class="form-group"><label>Quartier</label><input id="search-quartier"></div>
+        <button class="modal-submit-btn" style="background:#0f172a;" onclick="rechercher()">Filtrer</button>
       </div>
     </div>
   </div>
 
   <div class="modal" id="modal-vip">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2>👑 Espace Boutique Professionnelle VIP</h2>
-        <button class="close-modal" onclick="fermerModal('vip')">✕</button>
-      </div>
-      
-      <p style="font-size: 0.85rem; color: var(--text-light); margin-top:0;">
-        Remplissez vos infos de boutique, puis ajoutez autant d'objets différents que vous le souhaitez. Chaque objet sera publié comme une annonce indépendante !
-      </p>
+      <div class="modal-header"><h2 id="vip-modal-title">👑 Devenir Espace Boutique VIP</h2><button class="close-modal" onclick="fermerModal('vip')">✕</button></div>
+      <div class="form-grid" id="vip-form-body">
+        </div>
+    </div>
+  </div>
 
+  <div class="modal" id="modal-modifier-annonce">
+    <div class="modal-content">
+      <div class="modal-header"><h2>📝 Modifier votre annonce</h2><button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button></div>
       <div class="form-grid">
-        <div class="form-group">
-          <label>Nom de votre Maison / Agence</label>
-          <input id="vip-shop-name" placeholder="Ex: Maison Elégance, Agence Horizon">
-        </div>
-        <div class="form-group">
-          <label>Téléphone Clientèle</label>
-          <input id="vip-phone" placeholder="+243...">
-        </div>
-        <div class="form-group">
-          <label>Ville</label>
-          <input id="vip-ville" placeholder="Lubumbashi">
-        </div>
-        <div class="form-group">
-          <label>Commune</label>
-          <input id="vip-commune">
-        </div>
-
-        <div class="form-group full-width" style="border-top: 1px solid var(--border); padding-top:15px; margin-top:5px;">
-          <label style="font-size:1rem; color:var(--vip-gold)">📦 Liste des objets à ajouter au catalogue :</label>
-          <div id="bulk-items-container" style="margin-top:10px;">
-            </div>
-          <button type="button" style="background:#fef3c7; color:var(--vip-gold); border:1px solid var(--vip-gold); padding:8px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="ajouterChampObjetUnique()">
-            ➕ Ajouter un autre objet à la liste
-          </button>
-        </div>
-
-        <button class="modal-submit-btn vip-color" onclick="publierCatalogueEnMasse()">🚀 Publier tout le catalogue en un clic</button>
+        <input type="hidden" id="edit-id">
+        <div class="form-group full-width"><label>Titre de l'objet</label><input id="edit-titre"></div>
+        <div class="form-group"><label>Prix (USD)</label><input id="edit-prix" type="number"></div>
+        <div class="form-group"><label>Période</label><select id="edit-periode"><option value="heure">heure</option><option value="jour">jour</option><option value="semaine">semaine</option></select></div>
+        <div class="form-group"><label>Disponibilité</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option><option value="vip">👑 VIP Permanent</option></select></div>
+        <div class="form-group full-width"><label>Description</label><textarea id="edit-description"></textarea></div>
+        <div class="form-group"><label>Ville</label><input id="edit-ville"></div>
+        <div class="form-group"><label>Commune</label><input id="edit-commune"></div>
+        <div class="form-group"><label>Quartier</label><input id="edit-quartier"></div>
+        <div class="form-group full-width"><label>Téléphone de contact</label><input id="edit-telephone" type="tel"></div>
+        <button class="modal-submit-btn" style="background:var(--success);" onclick="sauvegarderModificationAnnonce()">💾 Enregistrer les modifications</button>
       </div>
     </div>
   </div>
@@ -482,29 +152,36 @@
   <div class="modal" id="modal-boost-pub">
     <div class="modal-content" style="max-width:400px; text-align:center;">
       <h3>🚀 Boost Gratuit AdSense</h3>
-      <p>Regardez cette annonce publicitaire jusqu'au bout pour remonter votre offre tout en haut de la liste !</p>
-      
       <div class="pub-simulation">
-        <span style="font-size:0.8rem; color:#64748b; letter-spacing:1px;">SPONSORISÉ PAR GOOGLE</span>
+        <span style="font-size:0.75rem; color:#64748b;">PUBLICITÉ SPONSORISÉE</span>
         <div class="countdown-number" id="countdown">15</div>
-        <span style="font-size:0.9rem; padding:0 10px; text-align:center;"> NIA RDC : Louez tout en un clic !</span>
       </div>
+      <button id="btn-finaliser-boost" class="modal-submit-btn" style="background:var(--success); display:none;" onclick="executerRemonteeBdd()">✅ Propulser au top</button>
+    </div>
+  </div>
 
-      <button id="btn-finaliser-boost" style="width:100%; background:var(--success); display:none;" onclick="executerRemonteeBdd()">✅ Valider et Propulser mon Annonce</button>
+  <div class="modal" id="modal-profil">
+    <div class="modal-content">
+      <div class="modal-header"><h2>👤 Mon Espace Personnel</h2><button class="close-modal" onclick="fermerModal('profil')">✕</button></div>
+      <p><strong>Mon Compte :</strong> <span id="profil-tel">Compte de test (0000)</span></p>
+      <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
+      <h3 style="margin-bottom:10px;">📋 Gérer mes annonces mises en ligne :</h3>
+      <div id="profil-mes-annonces-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+      <button class="modal-submit-btn" style="background:#0f172a; margin-top:20px;" onclick="alert('Déconnexion réussie')">🚪 Se déconnecter</button>
     </div>
   </div>
 
   <div class="bottom-area">
     <nav class="bottom-nav">
-      <button class="nav-btn" onclick="ouvrirModal('publier')"><span class="icon">📢</span><span>Publier</span></button>
-      <button class="nav-btn" onclick="ouvrirModal('rechercher')"><span class="icon">🔍</span><span>Rechercher</span></button>
-      <button class="nav-btn vip-btn" onclick="ouvrirEspaceVip()"><span class="icon">👑</span><span>VIP</span></button>
-      <button class="nav-btn" onclick="alert('Profil disponible prochainement')"><span class="icon">👤</span><span>Profil</span></button>
+      <button class="nav-btn" onclick="ouvrirModal('publier')"><span>📢</span><span>Publier</span></button>
+      <button class="nav-btn" onclick="ouvrirModal('rechercher')"><span>🔍</span><span>Rechercher</span></button>
+      <button class="nav-btn vip-btn" onclick="gererClicBoutonVipMenu()"><span>👑</span><span>VIP</span></button>
+      <button class="nav-btn" onclick="ouvrirMonProfilStandard()"><span>👤</span><span>Mon Profil</span></button>
     </nav>
-    <div class="adsense-space">⚡ ESPACE PUBLICITAIRE ADSENSE (BANNIÈRE) ⚡</div>
+    <div class="adsense-space">⚡ BANNIÈRE PUBLICITAIRE ADSENSE INFÉRIEURE ⚡</div>
   </div>
 
   <script src="app.js"></script>
 </body>
-  </html>
-  
+                                                                           </html>
+                                                                           

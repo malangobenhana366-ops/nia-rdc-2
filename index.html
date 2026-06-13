@@ -53,7 +53,7 @@
   .footer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   
   /* BOUTONS AVEC MICRO-INTERACTIONS */
-  .btn-contact { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; cursor: pointer; }
+  .btn-contact { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; }
   .btn-contact:active { transform: scale(0.95); }
   .btn-shop { background: linear-gradient(135deg, var(--vip-gold) 0%, #d97706 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
   .btn-shop:active { transform: scale(0.95); }
@@ -83,14 +83,6 @@
   input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
   .modal-submit-btn { grid-column: span 2; background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%); color: white; border: none; padding: 14px; font-size: 1rem; font-weight: 700; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 10px rgba(37,99,235,0.2); }
 
-  /* ZONE DE SELECTION DEVISE COMBINEE */
-  .price-currency-group { display: flex; gap: 8px; width: 100%; }
-  .price-currency-group input { flex: 2; }
-  .price-currency-group select { flex: 1; min-width: 75px; }
-
-  /* ZONE ADSENSE INTERSTITIELLE SIMULÉE */
-  .interstitial-ad-box { background: #1e293b; color: white; padding: 20px; border-radius: 12px; text-align: center; margin: 15px 0; border: 2px dashed var(--vip-gold); }
-
   /* 🕶️ ZONE ADMINISTRATION - ULTRA EXCLUSIVE SOMBRE 🕶️ */
   .modal-admin-content { background-color: var(--admin-bg); color: #f8fafc; border-radius: 24px; width: 95%; max-width: 750px; max-height: 90vh; overflow-y: auto; padding: 26px; box-sizing: border-box; border: 2px solid #334155; }
   .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 20px; }
@@ -100,13 +92,20 @@
   .admin-filters { background-color: var(--admin-card); padding: 15px; border-radius: 14px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border: 1px solid #334155; }
   .admin-annonce-item { background: var(--admin-card); border: 1px solid #334155; border-radius: 12px; padding: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
 
-  /* BAS FIXE NAVIGATION */
+  /* INTERSTITIAL AD INTERFACE STYLE */
+  .interstitial-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 9999; justify-content:center; align-items:center; color:white; flex-direction:column; font-family: sans-serif; }
+  .interstitial-box { width:90%; max-width:450px; background:#1e293b; border-radius:16px; padding:24px; text-align:center; position:relative; box-sizing: border-box; }
+  .interstitial-close { position:absolute; top:12px; right:12px; background:#334155; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold; }
+  
+  /* BAS FIXE NAVIGATION & DESIGN BANNIÈRE */
   .bottom-area { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--card-bg); border-top: 1px solid var(--border); z-index: 1000; display: flex; flex-direction: column; box-shadow: 0 -4px 15px rgba(0,0,0,0.04); }
   .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); }
   .nav-btn { background: none; border: none; padding: 14px 5px; font-size: 0.8rem; font-weight: 700; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .nav-btn:active span:first-child { transform: scale(1.3); }
   .nav-btn.vip-btn { color: var(--vip-gold); }
-  .adsense-space { background-color: #f1f5f9; height: 50px; display: flex; align-items: center; justify-content: center; color: #1e293b; font-size: 0.75rem; font-weight: bold; border-top: 1px solid var(--border); text-align: center; padding: 0 10px; transition: background-color 0.5s ease; }
+  
+  .adsense-space { background-color: #f1f5f9; height: 60px; display: flex; align-items: center; justify-content: center; color: #1e293b; font-size: 0.85rem; font-weight: 700; border-top: 1px solid var(--border); text-align: center; padding: 4px 15px; box-sizing: border-box; overflow: hidden; }
+  .ad-link-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-decoration: none; color: inherit; }
 
   /* KEYFRAMES ANIMATIONS CSS */
   @keyframes pulseLogo { from { transform: scale(1); } to { transform: scale(1.04); } }
@@ -137,13 +136,9 @@
       <div class="modal-header"><h2>📢 Louer un objet</h2><button class="close-modal" onclick="fermerModal('publier')">✕</button></div>
       <div class="form-grid">
         <div class="form-group full-width"><label>Nom de l'objet</label><input id="titre"></div>
-        <div class="form-group"><label>Prix et Devise</label>
-          <div class="price-currency-group">
-            <input id="prix" type="number" placeholder="Ex: 100">
-            <select id="devise"><option value="$">$ (USD)</option><option value="FC">FC (CDF)</option></select>
-          </div>
-        </div>
-        <div class="form-group"><label>Période</label><select id="periode"><option value="jour">par jour</option><option value="heure">par heure</option></select></div>
+        <div class="form-group"><label>Prix</label><input id="prix" type="number"></div>
+        <div class="form-group"><label>Devise</label><select id="prix_devise"><option value="USD">USD ($)</option><option value="FC">FC (CDF)</option></select></div>
+        <div class="form-group"><label>Période</label><select id="periode"><option value="jour">par jour</option><option value="heure">par heure</option><option value="semaine">par semaine</option><option value="mois">par mois</option></select></div>
         <div class="form-group full-width"><label>Téléphone</label><input id="telephone" type="tel"></div>
         <div class="form-group full-width"><label>Description</label><textarea id="description"></textarea></div>
         <div class="form-group"><label>Ville</label><input id="ville" value="Lubumbashi"></div>
@@ -157,9 +152,9 @@
 
   <div class="modal" id="modal-rechercher">
     <div class="modal-content">
-      <div class="modal-header"><h2>🔍 Recherche Universelle</h2><button class="close-modal" onclick="fermerModal('rechercher')">✕</button></div>
+      <div class="modal-header"><h2>🔍 Recherche Universelle Intelligente</h2><button class="close-modal" onclick="fermerModal('rechercher')">✕</button></div>
       <div class="form-grid">
-        <div class="form-group full-width"><label>Que cherchez-vous ?</label><input id="search-titre" placeholder="Ex: Maison, Robe, Camion, VIP..."></div>
+        <div class="form-group full-width"><label>Que cherchez-vous ? (Tolère les fautes)</label><input id="search-titre" placeholder="Ex: Maison, Robe, Camion, VIP..."></div>
         <div class="form-group full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div>
         <div class="form-group"><label>Commune</label><input id="search-commune"></div>
         <div class="form-group"><label>Quartier</label><input id="search-quartier"></div>
@@ -181,14 +176,10 @@
       <div class="form-grid">
         <input type="hidden" id="edit-id">
         <div class="form-group full-width"><label>Titre de l'objet</label><input id="edit-titre"></div>
-        <div class="form-group"><label>Prix et Devise</label>
-          <div class="price-currency-group">
-            <input id="edit-prix" type="number">
-            <select id="edit-devise"><option value="$">$</option><option value="FC">FC</option></select>
-          </div>
-        </div>
-        <div class="form-group"><label>Période</label><select id="edit-periode"><option value="heure">heure</option><option value="jour">jour</option></select></div>
-        <div class="form-group"><label>Statut Direct</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option><option value="vip">👑 Conserver VIP</option></select></div>
+        <div class="form-group"><label>Prix</label><input id="edit-prix" type="number"></div>
+        <div class="form-group"><label>Devise</label><select id="edit-prix-devise"><option value="USD">USD ($)</option><option value="FC">FC (FC)</option></select></div>
+        <div class="form-group"><label>Période</label><select id="edit-periode"><option value="heure">heure</option><option value="jour">jour</option><option value="semaine">semaine</option><option value="mois">mois</option></select></div>
+        <div class="form-group full-width"><label>Statut Direct</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option><option value="vip">👑 Conserver VIP</option></select></div>
         <div class="form-group full-width"><label>Description</label><textarea id="edit-description"></textarea></div>
         <div class="form-group"><label>Ville</label><input id="edit-ville"></div>
         <div class="form-group"><label>Commune</label><input id="edit-commune"></div>
@@ -202,22 +193,11 @@
   <div class="modal" id="modal-boost-pub">
     <div class="modal-content" style="max-width:400px; text-align:center;">
       <h3>🚀 AdSense Booster Engine</h3>
-      <div class="interstitial-ad-box" id="interstitial-ad-content">
-        <strong>SPONSOR AD</strong><br>Découvrez nos offres spéciales NIA RDC !
+      <div class="pub-simulation" style="background:#1e293b; color:#38bdf8; padding:20px; border-radius:12px; margin:15px 0; font-weight:bold;">
+        <div id="interstitial-boost-banner-text">CHARGEMENT DE LA SPONSORISATION ADSENSE...</div>
+        <div class="countdown-number" id="countdown" style="font-size:2rem; margin-top:10px; color:white;">15</div>
       </div>
-      <div class="pub-simulation"><div class="countdown-number" id="countdown">15</div></div>
-      <button id="btn-finaliser-boost" class="modal-submit-btn" style="background:var(--success); display:none;" onclick="executerRemonteeBdd()">✅ Remonter en haut de liste</button>
-    </div>
-  </div>
-
-  <div class="modal" id="modal-interstitial-global">
-    <div class="modal-content" style="max-width:420px; text-align:center;">
-      <div class="modal-header"><h3>⚡ Publicité AdSense</h3><button class="close-modal" onclick="fermerModal('interstitial-global')">✕</button></div>
-      <div class="interstitial-ad-box" id="global-ad-content">
-        <h4>Annonce Partenaire</h4>
-        <p>NIA RDC l'application de confiance pour toutes vos locations.</p>
-      </div>
-      <button class="modal-submit-btn" id="btn-close-interstitial-direct" onclick="fermerModal('interstitial-global'); executerAppelApresPub();">Continuer vers l'appel 📞</button>
+      <button id="btn-finaliser-boost" class="modal-submit-btn" style="background:var(--success); display:none; width:100%;" onclick="executerRemonteeBdd()">✅ Remonter en haut de liste</button>
     </div>
   </div>
 
@@ -261,6 +241,17 @@
     </div>
   </div>
 
+  <div class="interstitial-overlay" id="adsense-interstitial">
+    <div class="interstitial-box">
+      <button class="interstitial-close" id="close-interstitial-btn" onclick="fermerPubliciteInterstitielle()" disabled>Attendre (5s)</button>
+      <h2 style="color:#f59e0b; margin-top:10px;">⚡ ANNONCE ADSENSE PRO ⚡</h2>
+      <div id="interstitial-ad-body" style="background:#0f172a; padding:30px 15px; border-radius:8px; margin:20px 0; min-height:100px; font-weight:bold; color:#cbd5e1; display:flex; align-items:center; justify-content:center;">
+        Contenu publicitaire exclusif...
+      </div>
+      <p style="font-size:0.8rem; color:#94a3b8; margin:0;">Sponsorisé par Google AdSense Network RDC</p>
+    </div>
+  </div>
+
   <div class="bottom-area">
     <nav class="bottom-nav">
       <button class="nav-btn" onclick="ouvrirModal('publier')"><span>📢</span><span>Publier</span></button>
@@ -268,7 +259,7 @@
       <button class="nav-btn vip-btn" onclick="gererClicBoutonVipMenu()"><span>👑</span><span>Espace VIP</span></button>
       <button class="nav-btn" id="main-profile-nav-btn" onclick="ouvrirMonProfilOuMaBoutique()"><span>👤</span><span>Mon Profil</span></button>
     </nav>
-    <div class="adsense-space" id="adsense-bottom-banner">⚡ CHARGEMENT PUBLICITAIRE ADSENSE... ⚡</div>
+    <div class="adsense-space" id="adsense-bottom-banner">⚡ REVENUS PUBLICITAIRES INTEGRÉS ADSENSE ⚡</div>
   </div>
 
   <script src="app.js"></script>

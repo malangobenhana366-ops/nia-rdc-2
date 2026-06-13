@@ -26,6 +26,7 @@ async function uploadImage(base64){
   } catch { return ""; }
 }
 
+// FLUX PUBLIC & ADMIN (RÉCUPÉRATION GÉNÉRALE)
 app.get("/feed", async (req,res)=>{
   try {
     const annonces = await pool.query("SELECT * FROM annonces ORDER BY created_at DESC, id DESC");
@@ -38,6 +39,23 @@ app.get("/feed", async (req,res)=>{
   } catch (e) { res.json([]); }
 });
 
+// ROUTE REQUÉRANTE POUR LE TABLEAU DE BORD ADMIN
+app.get("/admin/stats", async (req, res) => {
+  try {
+    const totalReq = await pool.query("SELECT COUNT(*) FROM annonces");
+    const vipReq = await pool.query("SELECT COUNT(*) FROM annonces WHERE statut = 'vip' OR user_id = 100");
+    
+    const total = parseInt(totalReq.rows[0].count) || 0;
+    const vip = parseInt(vipReq.rows[0].count) || 0;
+    const standard = total - vip;
+
+    res.json({ total, vip, standard });
+  } catch (e) {
+    res.status(500).json({ error: "Erreur lors du calcul des statistiques" });
+  }
+});
+
+// CREATION DIRECTE ET GRATUITE (SANS APPROBATION MANUELLE)
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, images_base64 } = req.body;
@@ -57,6 +75,7 @@ app.post("/annonces", async (req,res)=>{
   } catch(e) { res.status(500).json({error:"err"}); }
 });
 
+// ENREGISTREMENT DES MODIFICATIONS (PROPRIÉTAIRE ET ADMIN)
 app.put("/annonces/:id/update", async (req, res) => {
   const { id } = req.params;
   const { titre, prix, periode, statut, description, ville, commune, quartier, telephone } = req.body;
@@ -69,13 +88,17 @@ app.put("/annonces/:id/update", async (req, res) => {
   } catch (e) { res.status(500).json({ error: "err" }); }
 });
 
+// SUPPRESSION DIRECTE (PROPRIÉTAIRE ET MODÉRATION FORCÉE ADMIN)
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
+    // Supprime d'abord les images liées à cause des clés étrangères
+    await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
     await pool.query("DELETE FROM annonces WHERE id = $1", [req.params.id]);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: "err" }); }
 });
 
+// BOOSTER ADSENSE (REMONTER AU TOP)
 app.post("/annonces/:id/boost", async (req, res) => {
   try {
     await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [req.params.id]);
@@ -84,4 +107,4 @@ app.post("/annonces/:id/boost", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("NIA RDC SECURE ENGINE ONLINE"));
+app.listen(PORT, ()=>console.log("NIA RDC ENGINE ONLINE WITH ADMIN ROUTES"));

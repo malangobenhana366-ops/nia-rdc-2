@@ -26,11 +26,9 @@ async function uploadImage(base64){
   } catch { return ""; }
 }
 
-/* FLUX GLOBAL */
 app.get("/feed", async (req,res)=>{
   try {
-    const queryStr = "SELECT a.*, u.is_vip FROM annonces a LEFT JOIN users u ON a.user_id = u.id ORDER BY a.created_at DESC, a.id DESC";
-    const annonces = await pool.query(queryStr);
+    const annonces = await pool.query("SELECT * FROM annonces ORDER BY created_at DESC, id DESC");
     const data = [];
     for(let a of annonces.rows){
       const imgs = await pool.query("SELECT image_url FROM annonce_images WHERE annonce_id=$1", [a.id]);
@@ -40,58 +38,50 @@ app.get("/feed", async (req,res)=>{
   } catch (e) { res.json([]); }
 });
 
-/* RECEPTION PUBLICATION */
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, images_base64 } = req.body;
-    const annonce = await pool.query(
+    const fields = await pool.query(
       `INSERT INTO annonces (user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()) RETURNING id`,
       [user_id || 1, titre, description, prix || 0, periode, ville, commune, quartier, telephone, statut]
     );
-    const annonceId = annonce.rows[0].id;
-    if(images_base64 && images_base64.length > 0){
-      for(let img of images_base64){
-        const url = await uploadImage(img);
-        if(url) await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [annonceId,url]);
+    const id = fields.rows[0].id;
+    if(images_base64){
+      for(let b64 of images_base64){
+        const url = await uploadImage(b64);
+        if(url) await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [id,url]);
       }
     }
-    res.json({success: true});
-  } catch(e){ res.status(500).json({error:"error"}); }
+    res.json({success:true});
+  } catch(e) { res.status(500).json({error:"err"}); }
 });
 
-/* 🔄 ROUTE : MISE À JOUR COMPLÈTE DE TOUS LES CHAMPS */
 app.put("/annonces/:id/update", async (req, res) => {
   const { id } = req.params;
   const { titre, prix, periode, statut, description, ville, commune, quartier, telephone } = req.body;
   try {
     await pool.query(
-      `UPDATE annonces 
-       SET titre=$1, prix=$2, periode=$3, statut=$4, description=$5, ville=$6, commune=$7, quartier=$8, telephone=$9 
-       WHERE id=$10`,
+      `UPDATE annonces SET titre=$1, prix=$2, periode=$3, statut=$4, description=$5, ville=$6, commune=$7, quartier=$8, telephone=$9 WHERE id=$10`,
       [titre, prix, periode, statut, description, ville, commune, quartier, telephone, id]
     );
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "update error" }); }
+  } catch (e) { res.status(500).json({ error: "err" }); }
 });
 
-/* 🗑️ ROUTE : SUPPRESSION DÉFINITIVE */
 app.delete("/annonces/:id/delete", async (req, res) => {
-  const { id } = req.params;
   try {
-    await pool.query("DELETE FROM annonces WHERE id = $1", [id]);
+    await pool.query("DELETE FROM annonces WHERE id = $1", [req.params.id]);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "delete error" }); }
+  } catch (e) { res.status(500).json({ error: "err" }); }
 });
 
-/* ADSENSE REFRESH BOOST */
 app.post("/annonces/:id/boost", async (req, res) => {
   try {
     await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [req.params.id]);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "boost error" }); }
+  } catch (e) { res.status(500).json({ error: "err" }); }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("NIA RDC ONLINE"));
-  
+app.listen(PORT, ()=>console.log("NIA RDC SECURE ENGINE ONLINE"));

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NIA RDC - Système Publicitaire & Authentification Pro</title>
+  <title>NIA RDC - Immobilier & Boutique</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,13 +11,12 @@
   <div id="interstitial-ad" class="interstitial-container hidden">
     <div class="interstitial-box">
       <div class="interstitial-header">
-        <span class="ad-badge">Annonce AdSense</span>
-        <button class="interstitial-close-btn" id="interstitial-close-btn" onclick="fermerPubliciteInterstitielle()" disabled>Patientez (5s)...</button>
+        <span class="ad-badge">Sponsorisé</span>
+        <button class="interstitial-close-btn" id="interstitial-close-btn" onclick="fermerPubliciteInterstitielle()" disabled>Patientez...</button>
       </div>
       <div class="interstitial-body">
-        <h2 id="interstitial-title">SOCIÉTÉ COMMERCIALE CONGOLAISE</h2>
-        <p id="interstitial-text">Découvrez nos offres promotionnelles exclusives disponibles partout en RDC !</p>
-        <div class="interstitial-banner-mock">PUB SPONSORISÉE</div>
+        <h2>PARTENAIRE OFFICIEL NIA RDC</h2>
+        <div class="interstitial-banner-mock">ESPACE PUBLICITAIRE ADSENSE</div>
       </div>
     </div>
   </div>
@@ -25,54 +24,51 @@
   <div id="auth-screen" class="auth-container">
     <div class="auth-box">
       <div class="auth-logo">NIA RDC</div>
-      <p class="auth-subtitle">Louez et gérez en toute sécurité</p>
-      
       <div id="form-connexion">
-        <h3 class="auth-title">Connexion</h3>
-        <input type="tel" id="auth-login-phone" placeholder="Numéro de téléphone (Ex: 099...)">
+        <h3>Connexion</h3>
+        <input type="tel" id="auth-login-phone" placeholder="Téléphone">
         <input type="password" id="auth-login-pass" placeholder="Mot de passe">
         <button class="big-btn" onclick="executerConnexion()">Se connecter 🔐</button>
-        <p class="auth-toggle">Nouveau sur l'application ? <span onclick="basculerAuth(true)">Créer un compte</span></p>
+        <p class="auth-toggle">Nouveau ? <span onclick="basculerAuth(true)">Créer un compte</span></p>
       </div>
-
       <div id="form-inscription" class="hidden">
-        <h3 class="auth-title">Inscription</h3>
-        <input type="tel" id="auth-reg-phone" placeholder="Numéro de téléphone">
-        <input type="password" id="auth-reg-pass" placeholder="Créer un mot de passe">
-        <button class="big-btn" onclick="executerInscription()">Créer mon compte ✨</button>
-        <p class="auth-toggle">Déjà un compte ? <span onclick="basculerAuth(false)">Se connecter</span></p>
+        <h3>Inscription</h3>
+        <input type="tel" id="auth-reg-phone" placeholder="Téléphone">
+        <input type="password" id="auth-reg-pass" placeholder="Mot de passe">
+        <button class="big-btn" onclick="executerInscription()">Créer le compte ✨</button>
+        <p class="auth-toggle">Déjà inscrit ? <span onclick="basculerAuth(false)">Se connecter</span></p>
       </div>
     </div>
   </div>
 
   <div class="topbar">
     <div class="logo">NIA RDC</div>
-    <div class="admin-icon" id="gear-admin-trigger" oncontextmenu="return false;">⚙️</div>
+    <div class="admin-icon" id="gear-admin-trigger">⚙️</div>
   </div>
 
   <main style="max-width: 800px; margin: 10px auto 260px auto; padding: 0 15px;">
     <div id="shop-header-container"></div>
-    <div class="section-header-flex" style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0;">
-      <div id="feed-title" style="margin: 0; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Annonces récentes</div>
-      <button id="reset-btn" class="big-btn" style="width:auto; padding:6px 12px; margin:0; font-size: 0.8rem; display: none;" onclick="annulerRecherche()">Voir tout 🔄</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0;">
+      <div id="feed-title" style="font-weight: bold; text-transform: uppercase;">Annonces récentes</div>
+      <button id="reset-btn" class="big-btn" style="width:auto; padding:6px 12px; display:none;" onclick="annulerRecherche()">Voir tout 🔄</button>
     </div>
-    <div id="feed">Chargement des offres...</div>
+    <div id="feed">Chargement en cours...</div>
   </main>
 
   <div class="modal hidden" id="modal-publier">
     <div class="modal-content">
-      <div class="modal-header"><h2>📢 Louer un objet</h2><button class="close-modal" onclick="fermerModal('publier')">✕</button></div>
+      <div class="modal-header"><h2>📢 Publier une fiche</h2><button class="close-modal" onclick="fermerModal('publier')">✕</button></div>
       <div class="form-grid">
-        <div class="form-group full-width"><label>Nom de l'objet</label><input id="titre"></div>
+        <div class="form-group full-width"><label>Titre de l'objet</label><input id="titre" placeholder="Ex: Studio Meublé"></div>
         <div class="form-group"><label>Prix</label><input id="prix" type="number"></div>
-        <div class="form-group"><label>Devise</label><select id="devise"><option value="$">$ USD</option><option value="FC">FC (Franc Congolais)</option></select></div>
-        <div class="form-group full-width"><label>Période</label><select id="periode"><option value="heure">par heure</option><option value="jour">par jour</option><option value="semaine">par semaine</option><option value="mois">par mois</option></select></div>
-        <div class="form-group full-width"><label>Téléphone de contact</label><input id="telephone" type="tel"></div>
+        <div class="form-group"><label>Devise</label><select id="devise"><option value="$">$ USD</option><option value="FC">FC</option></select></div>
+        <div class="form-group full-width"><label>Période</label><select id="periode"><option value="heure">par heure</option><option value="jour" selected>par jour</option><option value="mois">par mois</option></select></div>
+        <div class="form-group full-width"><label>Téléphone</label><input id="telephone" type="tel"></div>
         <div class="form-group full-width"><label>Description</label><textarea id="description"></textarea></div>
         <div class="form-group"><label>Ville</label><input id="ville" value="Lubumbashi"></div>
         <div class="form-group"><label>Commune</label><input id="commune"></div>
         <div class="form-group"><label>Quartier</label><input id="quartier"></div>
-        <div class="form-group full-width"><label>Photos</label><input id="image" type="file" multiple></div>
+        <div class="form-group full-width"><label>Photos</label><input id="image" type="file" multiple accept="image/*"></div>
         <button class="modal-submit-btn" onclick="publier()">Mettre en ligne</button>
       </div>
     </div>
@@ -80,20 +76,20 @@
 
   <div class="modal hidden" id="modal-rechercher">
     <div class="modal-content">
-      <div class="modal-header"><h2>🔍 Recherche Intelligente (Floue & Synonymes)</h2><button class="close-modal" onclick="fermerModal('rechercher')">✕</button></div>
+      <div class="modal-header"><h2>🔍 Recherche Intelligente</h2><button class="close-modal" onclick="fermerModal('rechercher')">✕</button></div>
       <div class="form-grid">
-        <div class="form-group full-width"><label>Que cherchez-vous ? (Erreurs tolérées)</label><input id="search-titre" placeholder="Ex: maizn, habit, auto..."></div>
+        <div class="form-group full-width"><label>Recherche</label><input id="search-titre" placeholder="Maison, habit, auto..."></div>
         <div class="form-group full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div>
         <div class="form-group"><label>Commune</label><input id="search-commune"></div>
         <div class="form-group"><label>Quartier</label><input id="search-quartier"></div>
-        <button class="modal-submit-btn" style="background:#0f172a;" onclick="rechercher()">Lancer le filtrage intelligent</button>
+        <button class="modal-submit-btn" onclick="rechercher()">Rechercher</button>
       </div>
     </div>
   </div>
 
   <div class="modal hidden" id="modal-vip">
     <div class="modal-content">
-      <div class="modal-header"><h2 id="vip-modal-title">👑 Espace Pro Boutique VIP</h2><button class="close-modal" onclick="fermerModal('vip')">✕</button></div>
+      <div class="modal-header"><h2 id="vip-modal-title">👑 Boutique VIP</h2><button class="close-modal" onclick="fermerModal('vip')">✕</button></div>
       <div class="form-grid" id="vip-form-body"></div>
     </div>
   </div>
@@ -103,55 +99,37 @@
       <div class="modal-header"><h2>📝 Modifier l'annonce</h2><button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button></div>
       <div class="form-grid">
         <input type="hidden" id="edit-id">
-        <div class="form-group full-width"><label>Titre de l'objet</label><input id="edit-titre"></div>
+        <div class="form-group full-width"><label>Titre</label><input id="edit-titre"></div>
         <div class="form-group"><label>Prix</label><input id="edit-prix" type="number"></div>
         <div class="form-group"><label>Devise</label><select id="edit-devise"><option value="$">$ USD</option><option value="FC">FC</option></select></div>
-        <div class="form-group full-width"><label>Période</label><select id="edit-periode"><option value="heure">heure</option><option value="jour">jour</option><option value="semaine">semaine</option><option value="mois">mois</option></select></div>
-        <div class="form-group full-width"><label>Statut Direct</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option><option value="vip">👑 Conserver VIP</option></select></div>
+        <div class="form-group full-width"><label>Période</label><select id="edit-periode"><option value="heure">heure</option><option value="jour">jour</option><option value="mois">mois</option></select></div>
+        <div class="form-group full-width"><label>Statut</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option><option value="vip">👑 VIP</option></select></div>
         <div class="form-group full-width"><label>Description</label><textarea id="edit-description"></textarea></div>
         <div class="form-group"><label>Ville</label><input id="edit-ville"></div>
         <div class="form-group"><label>Commune</label><input id="edit-commune"></div>
         <div class="form-group"><label>Quartier</label><input id="edit-quartier"></div>
         <div class="form-group full-width"><label>Téléphone</label><input id="edit-telephone" type="tel"></div>
-        <button class="modal-submit-btn" style="background:#10b981;" onclick="sauvegarderModificationAnnonce()">💾 Valider et Enregistrer</button>
+        <button class="modal-submit-btn" style="background:#10b981;" onclick="sauvegarderModificationAnnonce()">💾 Enregistrer</button>
       </div>
     </div>
   </div>
 
   <div class="modal hidden" id="modal-profil">
     <div class="modal-content">
-      <div class="modal-header"><h2 id="profil-modal-title">👤 Espace Personnel</h2><button class="close-modal" onclick="fermerModal('profil')">✕</button></div>
+      <div class="modal-header"><h2 id="profil-modal-title">👤 Mon Compte</h2><button class="close-modal" onclick="fermerModal('profil')">✕</button></div>
       <div id="profil-view-content"></div>
     </div>
   </div>
 
   <div class="modal hidden" id="modal-admin-panel">
     <div class="modal-admin-content">
-      <div class="admin-header">
-        <h2>🕶️ CONSOLE GÉNÉRALE ADMIN</h2>
-        <button class="close-modal" style="background:#334155; color:white;" onclick="fermerModal('admin-panel')">✕</button>
-      </div>
+      <h2>🕶️ Console Administration</h2>
       <div class="admin-stats-row">
-        <div class="stat-box"><div>Total Annonces</div><div class="stat-number" id="adm-stat-total">0</div></div>
-        <div class="stat-box"><div>Annonces VIP</div><div class="stat-number" id="adm-stat-vip" style="color:#d97706">0</div></div>
-        <div class="stat-box"><div>Annonces Stand.</div><div class="stat-number" id="adm-stat-stand" style="color:#10b981">0</div></div>
+        <div class="stat-box">Total <div class="stat-number" id="adm-stat-total">0</div></div>
+        <div class="stat-box">VIP <div class="stat-number" id="adm-stat-vip">0</div></div>
+        <div class="stat-box">Standard <div class="stat-number" id="adm-stat-stand">0</div></div>
       </div>
-      <div class="admin-filters">
-        <div style="display:flex; flex-direction:column; gap:4px;">
-          <label style="font-size:0.8rem; font-weight:bold; color:#94a3b8;">Filtrer par Ville :</label>
-          <select id="adm-filter-ville" onchange="filtrerIndexationAnnoncesAdmin()" style="background:#1e293b; color:white; padding:8px; border-radius:6px;"></select>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:4px;">
-          <label style="font-size:0.8rem; font-weight:bold; color:#94a3b8;">Type de Compte :</label>
-          <select id="adm-filter-type" onchange="filtrerIndexationAnnoncesAdmin()" style="background:#1e293b; color:white; padding:8px; border-radius:6px;">
-            <option value="all">Afficher tout</option>
-            <option value="vip">Uniquement les VIP 👑</option>
-            <option value="standard">Uniquement les Standards 👤</option>
-          </select>
-        </div>
-      </div>
-      <h4 style="color:#94a3b8; margin:15px 0 10px 0;">📋 Toutes les publications actives :</h4>
-      <div id="admin-liste-moderat-annonces" style="display:flex; flex-direction:column; gap:10px; max-height:300px; overflow-y:auto;"></div>
+      <button class="big-btn secondary" onclick="fermerModal('admin-panel')">Fermer</button>
     </div>
   </div>
 
@@ -160,13 +138,12 @@
       <button class="nav-btn" onclick="ouvrirModal('publier')"><span>📢</span><span>Publier</span></button>
       <button class="nav-btn" onclick="ouvrirModal('rechercher')"><span>🔍</span><span>Rechercher</span></button>
       <button class="nav-btn vip-btn" onclick="gererClicBoutonVipMenu()"><span>👑</span><span>Espace VIP</span></button>
-      <button class="nav-btn" id="main-profile-nav-btn" onclick="ouvrirMonProfilOuMaBoutique()"><span>👤</span><span>Mon Profil</span></button>
+      <button class="nav-btn" id="main-profile-nav-btn" onclick="ouvrirMonProfilOuMaBoutique()"><span>👤</span><span>Profil</span></button>
     </nav>
-    
-    <div id="adsense-banner-container" class="adsense-banner-space">
+    <div class="adsense-banner-space">
       <div class="adsense-inside-wrapper">
         <span class="ads-flag">AdSense</span>
-        <div id="adsense-text-rotation">Chargement des meilleures offres partenaires...</div>
+        <div id="adsense-text-rotation">Chargement des campagnes...</div>
       </div>
     </div>
   </div>

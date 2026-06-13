@@ -26,7 +26,7 @@ async function uploadImage(base64){
   } catch { return ""; }
 }
 
-// STATS COMPTEURS POUR LE GRAPH PANEL ADMIN
+// API STATS ADMIN
 app.get("/admin/stats", async (req, res) => {
   try {
     const totalReq = await pool.query("SELECT COUNT(*) FROM annonces");
@@ -37,7 +37,7 @@ app.get("/admin/stats", async (req, res) => {
   } catch { res.status(500).json({ error: "Err" }); }
 });
 
-// COMPTES CLIENTS & SESSIONS
+// AUTHENTIFICATION
 app.post("/auth/inscription", async (req, res) => {
   const { telephone, password } = req.body;
   try {
@@ -65,37 +65,38 @@ app.post("/users/:id/upgrade-vip", async (req, res) => {
   } catch { res.status(500).json({ error: "Err" }); }
 });
 
-// FLUX PRINCIPAL GÉNÉRAL
-app.get("/feed", async (req,res)=>{
+// GET FEED - RETOURNE TOUTES LES ANNONCES COUPLÉES À LEURS IMAGES
+app.get("/feed", async (req, res) => {
   try {
     const annonces = await pool.query("SELECT * FROM annonces ORDER BY created_at DESC, id DESC");
     const data = [];
     for(let a of annonces.rows){
-      const imgs = await pool.query("SELECT image_url FROM annonce_images WHERE annonce_id=$1", [a.id]);
-      data.push({ ...a, images: imgs.rows.map(i=>i.image_url) });
+      const imgs = await pool.query("SELECT image_url FROM annonce_images WHERE annonce_id = $1", [a.id]);
+      data.push({ ...a, images: imgs.rows.map(i => i.image_url) });
     }
     res.json(data);
   } catch { res.json([]); }
 });
 
-// INSERTION AVEC COUPLAGE VRAIE DEVISE ($ OU FC)
-app.post("/annonces", async (req,res)=>{
+// POST ANNONCE
+app.post("/annonces", async (req, res) => {
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut } = req.body;
     const r = await pool.query(
       `INSERT INTO annonces (user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
-      [user_id, titre, description, prix || 0, devise || '$', periode, ville, commune, quartier, telephone, statut]
+      [user_id, titre, description, prix || 0, devise || '$', periode || 'jour', ville, commune, quartier, telephone, statut]
     );
     const id = r.rows[0].id;
-    if(req.body.images_base64){
+    
+    if(req.body.images_base64 && req.body.images_base64.length > 0){
       for(let b64 of req.body.images_base64){
         const url = await uploadImage(b64);
-        if(url) await pool.query("INSERT INTO annonce_images (annonce_id, image_url) VALUES ($1,$2)", [id,url]);
+        if(url) await pool.query("INSERT INTO annonce_images (annonce_id, image_url) VALUES ($1,$2)", [id, url]);
       }
     }
-    res.json({success:true});
-  } catch { res.status(500).json({error:"err"}); }
+    res.json({ success: true });
+  } catch { res.status(500).json({ error: "err" }); }
 });
 
 app.put("/annonces/:id/update", async (req, res) => {
@@ -125,4 +126,4 @@ app.post("/annonces/:id/boost", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("NIA RDC ENGINE LIVE WITH ADVANCED ADSENSE SYSTEM"));
+app.listen(PORT, () => console.log("NIA RDC ENGINE LIVE WITH FIXES"));

@@ -2,71 +2,29 @@ const API = "";
 let toutesLesAnnonces = [];
 let idAnnonceEnCoursDeBoost = null;
 let maBoutiqueVipInfos = null; 
-let lienAppelEnAttente = "";
-let typeProfilActuel = "standard"; // Possibilité d'avoir 2 profils : VIP et standard
 
-// CONFIGURATION VARIABLES CAPTEURS ACTION ADMIN PRIVÉ
-let adminTimer = null;
-let aVibreEtValideTemps = false;
-let touchStartY = 0;
+// CONFIGURATION VARIABLES DU PROFIL CLIENT ACTUEL
+let profilUtilisateurActuel = { id: 1, type: "standard" }; // Peut être 'standard' ou 'vip'
 
-// DICTIONNAIRE DE SYNONYMES POUR LA RECHERCHE INTELLIGENTE
-const SYNONYMES = {
-  "maison": ["villa", "residence", "appartement", "studio", "logement", "immeuble", "chambre"],
-  "robe": ["vetement", "habit", "jupe", "pagne"],
-  "camion": ["vehicule", "remorque", "benne", "transport"],
-  "voiture": ["auto", "automobile", "vehicule", "char"],
-  "bureau": ["local", "espace", "workspace"]
-};
-
-// ADSENSE : TABLEAU DE BANNIÈRES TOURNANTES (CHAQUE 30 SECONDES)
-const BANNIERES_ADSENSE = [
-  "💎 BANNIÈRE ADSENSE : Louez vos appartements certifiés au meilleur prix sur NIA RDC !",
-  "🚗 BANNIÈRE ADSENSE : Besoin d'un véhicule de luxe à Lubumbashi ? Cliquez ici.",
-  "📱 BANNIÈRE ADSENSE : Boostez la visibilité de vos annonces professionnelles en devenant membre VIP !",
-  "⚡ BANNIÈRE ADSENSE : Matériels événementiels et chaises de fêtes disponibles à la location !",
-  "👑 BANNIÈRE ADSENSE : Créez votre boutique Pro locale et gérez vos stocks en masse."
+// BASE DE DONNÉES PUBLICITAIRE ADSENSE (DÉCLENCHEMENT DE BANNIÈRES TOUTES LES 30 SECONDES)
+const BANNER_ADS_POOL = [
+  { text: "🌟 Airtel Money RDC : Transférez vos fonds instantanément partout en RDC ! 🌟", link: "#" },
+  { text: "👑 Orange RDC VIP : Restez connectés avec des forfaits internet illimités. 👑", link: "#" },
+  { text: "🚗 Vodacom M-Pesa : Achetez, vendez et louez vos véhicules en toute sérénité. 🚗", link: "#" },
+  { text: "🏢 PropConnect Immobilier : Des appartements de luxe disponibles à Lubumbashi ! 🏢", link: "#" }
 ];
-let indexAdActuel = 0;
+
+const INTERSTITIAL_ADS_POOL = [
+  "🔥 Investissez en RDC : Terrains et concessions certifiés disponibles à Kolwezi. Contactez l'agence !",
+  "⚡ Énergie Solaire RDC : Kits complets pour alimenter votre maison 24h/24 sans coupure.",
+  "🚀 Maison Express : Simplifiez vos déménagements avec notre flotte de camions sécurisés.",
+  "💼 Rawbank Pro : Des crédits adaptés aux entrepreneurs et boutiques VIP."
+];
+
+let fonctionRetourAppelInterstitiel = null;
 
 function ouvrirModal(id) { document.getElementById(`modal-${id}`).style.display = "flex"; }
 function fermerModal(id) { document.getElementById(`modal-${id}`).style.display = "none"; }
-
-// CYCLAGE AUTOMATIQUE DES BANNIÈRES ADSENSE (30 SECONDES)
-function initialiserBanniereTournanteAdSense() {
-  const conteneurBanner = document.getElementById("adsense-bottom-banner");
-  if (!conteneurBanner) return;
-  
-  const changerBanniere = () => {
-    conteneurBanner.style.backgroundColor = "#fee2e2";
-    conteneurBanner.innerText = BANNIERES_ADSENSE[indexAdActuel];
-    indexAdActuel = (indexAdActuel + 1) % BANNIERES_ADSENSE.length;
-    setTimeout(() => {
-      conteneurBanner.style.backgroundColor = "#f1f5f9";
-    }, 500);
-  };
-  
-  changerBanniere();
-  setInterval(changerBanniere, 30000);
-}
-
-// DECLENCHEMENT DE LA PUB INTERSTITIELLE AU CLIC APPELER
-function declencherPubInterstitielleAppel(lienTel) {
-  lienAppelEnAttente = lienTel;
-  document.getElementById("global-ad-content").innerHTML = `
-    <h4>🔥 PUBLICITÉ ADSENSE INTERSTITIELLE</h4>
-    <p>Annonce Sponsorisée : Bénéficiez des meilleurs tarifs de location de la province.</p>
-    <span style="font-size:0.75rem; color:var(--text-light);">La redirection s'effectuera après fermeture.</span>
-  `;
-  ouvrirModal('interstitial-global');
-}
-
-function executerAppelApresPub() {
-  if(lienAppelEnAttente) {
-    window.location.href = lienAppelEnAttente;
-    lienAppelEnAttente = "";
-  }
-}
 
 async function loadFeed(){
   try {
@@ -76,7 +34,7 @@ async function loadFeed(){
   } catch (e) { console.error(e); }
 }
 
-/* RENDU DES ANNONCES AVEC RESTRICTION DES BOUTONS DE GESTION AU SEUL PROPRIETAIRE */
+/* LE BOUTON BOOSTER EST EXCLUSIF A L'INTERFACE PROPRIETAIRE (MON PROFIL OU MA BOUTIQUE) */
 function afficherAnnonces(liste, executionContextId = null) {
   const feed = document.getElementById("feed");
   if (!feed) return;
@@ -92,14 +50,14 @@ function afficherAnnonces(liste, executionContextId = null) {
     if(a.quartier) localisation += ` (Q/ ${a.quartier})`;
 
     const estVip = (a.statut === 'vip' || a.user_id === 100);
-    // Affichage des prix propre avec Devise stockée
-    const symboleDevise = a.devise || "$";
+    const deviseAffichage = a.prix_devise || 'USD';
+    const symboleDevise = deviseAffichage === 'USD' ? '$' : ' FC';
 
     feed.innerHTML += `
       <div class="annonce-card ${estVip ? 'vip-premium' : ''}">
         ${estVip ? `<span class="vip-badge-tag">👑 Boutique VIP</span>` : ''}
         <h3>${a.titre}</h3>
-        <div class="annonce-price">${a.prix ? `${a.prix} ${symboleDevise} / par ${a.periode}` : 'À négocier'}</div>
+        <div class="annonce-price">${a.prix ? `${a.prix}${symboleDevise} / par ${a.periode}` : 'À négocier'}</div>
         <div class="annonce-meta">${localisation}</div>
 
         <div class="gallery">
@@ -116,11 +74,12 @@ function afficherAnnonces(liste, executionContextId = null) {
             ${estVip && executionContextId !== 'OWNER_VIP' ? `<button class="btn-shop" onclick="actionVisiterBoutiqueTierce(${a.user_id}, '${a.description}')">🏢 Visiter la boutique</button>` : ''}
             
             ${executionContextId === 'OWNER_STANDARD' || executionContextId === 'OWNER_VIP' ? `
+              <button class="btn-boost" onclick="lancerLancementPubBoost(${a.id})">🚀 Booster</button>
               <button class="btn-edit" onclick="ouvrirFormulaireModificationAnnonce(${a.id})">📝 Modifier</button>
               <button class="btn-delete" onclick="supprimerAnnonce(${a.id})">🗑️ Supprimer</button>
             ` : ''}
             
-            ${a.telephone ? `<button class="btn-contact" onclick="declencherPubInterstitielleAppel('tel:${a.telephone}')">📞 Appeler</button>` : ''}
+            ${a.telephone ? `<button class="btn-contact" onclick="intercepterAppelTelephonique('${a.telephone}')" style="cursor:pointer; border:none;">📞 Appeler</button>` : ''}
           </div>
         </div>
       </div>
@@ -128,71 +87,33 @@ function afficherAnnonces(liste, executionContextId = null) {
   });
 }
 
-// RECHERCHE INTELLIGENTE : DISTANCE DE LEVENSHTEIN (ORTHOGRAPHE APPROXIMATIVE)
-function distanceLevenshtein(str1, str2) {
-  const track = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
-  for (let i = 0; i <= str1.length; i += 1) track[0][i] = i;
-  for (let j = 0; j <= str2.length; j += 1) track[j][0] = j;
-  for (let j = 1; j <= str2.length; j += 1) {
-    for (let i = 1; i <= str1.length; i += 1) {
-      const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
-      track[j][i] = Math.min(
-        track[j][i - 1] + 1,
-        track[j - 1][i] + 1,
-        track[j - 1][i - 1] + indicator
-      );
-    }
-  }
-  return track[str2.length][str1.length];
-}
-
-function verifierCorrespondanceIntelligente(texteSaisi, texteReference) {
-  if (!texteSaisi) return true;
-  if (!texteReference) return false;
-  
-  const motsSaisis = texteSaisi.toLowerCase().split(/\s+/);
-  const motsRef = texteReference.toLowerCase().split(/\s+/);
-
-  return motsSaisis.every(motSaisi => {
-    // 1. Match direct ou inclusion
-    if (texteReference.toLowerCase().includes(motSaisi)) return true;
-
-    // 2. Vérification des synonymes
-    for (let cle in SYNONYMES) {
-      if (motSaisi === cle || SYNONYMES[cle].includes(motSaisi)) {
-        if (motsRef.some(mr => mr === cle || SYNONYMES[cle].includes(mr))) return true;
-      }
-    }
-
-    // 3. Tolérance aux fautes de frappe (Distance de Levenshtein)
-    // Permet une erreur si le mot fait plus de 4 lettres
-    return motsRef.some(mr => {
-      if (Math.abs(mr.length - motSaisi.length) > 2) return false;
-      const dist = distanceLevenshtein(motSaisi, mr);
-      return dist <= (motSaisi.length > 5 ? 2 : 1);
-    });
-  });
-}
-
-/* BARRE DE RECHERCHE INTELLIGENTE TRANSVERSALE */
-function rechercher() {
+/* RECHERCHE INTELLIGENTE VIA TRIGRAMMES POSTGRESQL NATIVE */
+async function rechercher() {
   const sTitre = document.getElementById("search-titre").value.trim();
-  const sVille = document.getElementById("search-ville").value.toLowerCase().trim();
-  const sCommune = document.getElementById("search-commune").value.toLowerCase().trim();
-  const sQuartier = document.getElementById("search-quartier").value.toLowerCase().trim();
+  const sVille = document.getElementById("search-ville").value.trim();
+  const sCommune = document.getElementById("search-commune").value.trim();
+  const sQuartier = document.getElementById("search-quartier").value.trim();
 
-  const filtre = toutesLesAnnonces.filter(a => {
-    const matchTitre = !sTitre || verifierCorrespondanceIntelligente(sTitre, a.titre) || verifierCorrespondanceIntelligente(sTitre, a.description);
-    const matchVille = !sVille || (a.ville && a.ville.toLowerCase().includes(sVille));
-    const matchCommune = !sCommune || (a.commune && a.commune.toLowerCase().includes(sCommune));
-    const matchQuartier = !sQuartier || (a.quartier && a.quartier.toLowerCase().includes(sQuartier));
-    return matchTitre && matchVille && matchCommune && matchQuartier;
-  });
+  if(!sTitre && !sVille && !sCommune && !sQuartier) {
+    annulerRecherche();
+    fermerModal('rechercher');
+    return;
+  }
 
-  document.getElementById("shop-header-container").innerHTML = "";
-  document.getElementById("feed-title").innerText = "Résultats intelligents 🔍";
-  document.getElementById("reset-btn").style.display = "inline-block";
-  afficherAnnonces(filtre, 'PUBLIC_SEARCH_EXEC');
+  try {
+    const urlParams = new URLSearchParams({
+      q: sTitre, ville: sVille, commune: sCommune, quartier: sQuartier
+    });
+    const res = await fetch(`${API}/annonces/search?${urlParams.toString()}`);
+    const résultatsRecherche = await res.json();
+
+    document.getElementById("shop-header-container").innerHTML = "";
+    document.getElementById("feed-title").innerText = "Résultats du filtre unique intelligent 🔍";
+    document.getElementById("reset-btn").style.display = "inline-block";
+    afficherAnnonces(résultatsRecherche, 'PUBLIC_SEARCH_EXEC');
+  } catch (err) {
+    console.error("Erreur recherche intelligente", err);
+  }
   fermerModal('rechercher');
 }
 
@@ -217,18 +138,28 @@ function actionVisiterBoutiqueTierce(boutiqueUserId, descriptionAnnonce) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* CONSOLE DE LECTURE INTERNE DE PROFIL PROPRIETAIRE AVEC BOUTON BOOSTER EXCLUSIF */
+/* ZONE INTERNE DE GESTION DU PROFIL VIP / STANDARD */
 function ouvrirMonProfilOuMaBoutique() {
   const title = document.getElementById("profil-modal-title");
   const content = document.getElementById("profil-view-content");
 
-  if(!maBoutiqueVipInfos) {
-    typeProfilActuel = "standard";
+  let selecteurTypeCompteHtml = `
+    <div style="margin-bottom:15px; padding:10px; background:#f1f5f9; border-radius:8px;">
+      <label style="font-weight:bold; font-size:0.8rem; display:block; margin-bottom:4px;">Changer le type de mon compte :</label>
+      <select onchange="basculerTypeProfilActuel(this.value)" style="padding:6px; font-weight:bold; border-radius:6px; width:100%;">
+        <option value="standard" ${profilUtilisateurActuel.type === 'standard' ? 'selected' : ''}>Compte Standard (Normal)</option>
+        <option value="vip" ${profilUtilisateurActuel.type === 'vip' ? 'selected' : ''}>Compte VIP (Professionnel)</option>
+      </select>
+    </div>
+  `;
+
+  if(profilUtilisateurActuel.type === 'standard') {
     title.innerText = "👤 Mon Profil Personnel (Standard)";
     const mesAnnonces = toutesLesAnnonces.filter(a => a.user_id === 1 && a.statut !== 'vip');
     content.innerHTML = `
+      ${selecteurTypeCompteHtml}
       <p><strong>Type de compte :</strong> Standard (Publication Directe Gratuite)</p>
-      <h4 style="margin:15px 0 10px 0;">📋 Piloter mes fiches de location actives :</h4>
+      <h4 style="margin:15px 0 10px 0;">📋 Piloter mes fiches de location actives (${mesAnnonces.length}) :</h4>
       <div id="sub-list" style="display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto;"></div>
     `;
     const subList = content.querySelector("#sub-list");
@@ -237,22 +168,23 @@ function ouvrirMonProfilOuMaBoutique() {
     } else {
       mesAnnonces.forEach(o => {
         subList.innerHTML += `
-          <div style="background:#f1f5f9; padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:6px;">
+          <div style="background:#f1f5f9; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
             <span style="font-size:0.85rem; font-weight:700;">${o.titre}</span>
-            <div style="display:flex; gap:6px; justify-content:flex-end;">
-              <button class="btn-boost" style="padding:4px 8px; font-size:0.75rem;" onclick="fermerModal('profil'); lancerLancementPubBoost(${o.id})">🚀 Booster</button>
-              <button class="btn-edit" style="padding:4px 8px; font-size:0.75rem;" onclick="fermerModal('profil'); ouvrirFormulaireModificationAnnonce(${o.id})">Gérer</button>
-            </div>
+            <button class="btn-edit" style="padding:4px 8px; font-size:0.75rem;" onclick="fermerModal('profil'); ouvrirFormulaireModificationAnnonce(${o.id})">Gérer la fiche</button>
           </div>`;
       });
     }
   } else {
-    typeProfilActuel = "vip";
-    title.innerText = `🏢 Ma Boutique VIP : ${maBoutiqueVipInfos.shopName}`;
+    // Profil VIP actif
+    const nomBoutiqueAffiche = maBoutiqueVipInfos ? maBoutiqueVipInfos.shopName : "Ma Vitrine Professionnelle";
+    const contactAffiche = maBoutiqueVipInfos ? maBoutiqueVipInfos.phone : "Non configuré";
+    title.innerText = `🏢 Ma Boutique : ${nomBoutiqueAffiche}`;
     const mesAnnoncesVip = toutesLesAnnonces.filter(a => a.user_id === 100 || a.statut === 'vip');
+    
     content.innerHTML = `
-      <p style="color:var(--vip-gold); margin:0; font-weight:bold;">✨ Tableau de Bord Entrepreneur VIP</p>
-      <p style="margin:5px 0 15px 0; font-size:0.85rem; color:var(--text-light)">Ligne directe : ${maBoutiqueVipInfos.phone}</p>
+      ${selecteurTypeCompteHtml}
+      <p style="color:var(--vip-gold); margin:0; font-weight:bold;">✨ Tableau de Bord Entrepreneur VIP actif</p>
+      <p style="margin:5px 0 15px 0; font-size:0.85rem; color:var(--text-light)">Ligne directe : ${contactAffiche}</p>
       <h4 style="margin:10px 0;">📦 Administrer mes pièces exclusives (${mesAnnoncesVip.length}) :</h4>
       <div id="sub-list-vip" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;"></div>
     `;
@@ -262,17 +194,24 @@ function ouvrirMonProfilOuMaBoutique() {
     } else {
       mesAnnoncesVip.forEach(o => {
         subListVip.innerHTML += `
-          <div style="background:#fffdf5; border:1px solid #fde68a; padding:10px; border-radius:8px; display:flex; flex-direction:column; gap:6px;">
+          <div style="background:#fffdf5; border:1px solid #fde68a; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
             <span style="font-size:0.85rem; font-weight:700; color:var(--vip-gold);">${o.titre}</span>
-            <div style="display:flex; gap:6px; justify-content:flex-end;">
-              <button class="btn-boost" style="padding:4px 8px; font-size:0.75rem; background:#2563eb;" onclick="fermerModal('profil'); lancerLancementPubBoost(${o.id})">🚀 Booster</button>
-              <button class="btn-edit" style="padding:4px 8px; font-size:0.75rem; background:var(--vip-gold);" onclick="fermerModal('profil'); ouvrirFormulaireModificationAnnonce(${o.id})">Gérer</button>
-            </div>
+            <button class="btn-edit" style="padding:4px 8px; font-size:0.75rem; background:var(--vip-gold);" onclick="fermerModal('profil'); ouvrirFormulaireModificationAnnonce(${o.id})">Gérer la fiche</button>
           </div>`;
       });
     }
   }
   ouvrirModal('profil');
+}
+
+function basculerTypeProfilActuel(nouveauType) {
+  profilUtilisateurActuel.type = nouveauType;
+  if(nouveauType === 'vip' && !maBoutiqueVipInfos) {
+    fermerModal('profil');
+    gererClicBoutonVipMenu();
+  } else {
+    ouvrirMonProfilOuMaBoutique();
+  }
 }
 
 function gererClicBoutonVipMenu() {
@@ -307,7 +246,7 @@ function validerInscriptionBoutiqueLocale() {
   if(!shopName || !phone) { alert("Veuillez remplir les informations de contact !"); return; }
   
   maBoutiqueVipInfos = { shopName, phone, ville, commune };
-  typeProfilActuel = "vip";
+  profilUtilisateurActuel.type = "vip";
   const navBtnLabel = document.getElementById("main-profile-nav-btn");
   if(navBtnLabel) navBtnLabel.innerHTML = `<span>🏢</span><span>Ma Boutique</span>`;
 
@@ -316,7 +255,68 @@ function validerInscriptionBoutiqueLocale() {
   ouvrirMonProfilOuMaBoutique();
 }
 
-/* ⚙️ INTELLIGENCE COFFRE-FORT ADMIN PRIVÉ */
+/* INTERCEPTION ET DÉCLENCHEMENT DE LA BANNIÈRE INTERSTITIELLE SUR APPEL */
+function intercepterAppelTelephonique(numeroTelephone) {
+  declencherPubliciteInterstitielle(() => {
+    window.location.href = `tel:${numeroTelephone}`;
+  });
+}
+
+function declencherPubliciteInterstitielle(actionDeFinCallback) {
+  fonctionRetourAppelInterstitiel = actionDeFinCallback;
+  const overlay = document.getElementById("adsense-interstitial");
+  const closeBtn = document.getElementById("close-interstitial-btn");
+  const adBody = document.getElementById("interstitial-ad-body");
+
+  // Rendu aléatoire d'une publicité AdSense interstitielle
+  const randomAdIndex = Math.floor(Math.random() * INTERSTITIAL_ADS_POOL.length);
+  adBody.innerText = INTERSTITIAL_ADS_POOL[randomAdIndex];
+
+  closeBtn.disabled = true;
+  closeBtn.innerText = "Attendre (5s)";
+  overlay.style.display = "flex";
+
+  let tempsRestant = 5;
+  const chronoPublicitaire = setInterval(() => {
+    tempsRestant--;
+    if(tempsRestant > 0) {
+      closeBtn.innerText = `Attendre (${tempsRestant}s)`;
+    } else {
+      clearInterval(chronoPublicitaire);
+      closeBtn.disabled = false;
+      closeBtn.innerText = "Fermer l'annonce ✕";
+    }
+  }, 1000);
+}
+
+function fermerPubliciteInterstitielle() {
+  document.getElementById("adsense-interstitial").style.display = "none";
+  if(typeof fonctionRetourAppelInterstitiel === "function") {
+    const callbackActuel = fonctionRetourAppelInterstitiel;
+    fonctionRetourAppelInterstitiel = null;
+    callbackActuel();
+  }
+}
+
+/* CYCLE DE ROTATION AUTOMATIQUE TOUTES LES 30 SECONDES DE LA BANNIÈRE ADSENSE EN BAS */
+function démarrerChangementBannièreAdSenseFonds() {
+  const conteneurBannière = document.getElementById("adsense-bottom-banner");
+  if(!conteneurBannière) return;
+
+  let indexAd = 0;
+  setInterval(() => {
+    indexAd = (indexAd + 1) % BANNER_ADS_POOL.length;
+    const adData = BANNER_ADS_POOL[indexAd];
+    conteneurBannière.innerHTML = `<a href="${adData.link}" class="ad-link-wrapper" onclick="event.preventDefault(); alert('Redirection vers le sponsor AdSense : ' + this.innerText)">${adData.text}</a>`;
+  }, 30000);
+}
+
+/* CONFIGURATION VARIABLES CAPTEURS ACTION ADMIN PRIVÉ */
+let adminTimer = null;
+let aVibreEtValideTemps = false;
+let touchStartY = 0;
+
+/* ⚙️ INTELLIGENCE ET CINÉMATIQUE COFFRE-FORT : CAPTURE DE L'ADMINISTRATION SECRÈTE ⚙️ */
 const gearBtn = document.getElementById("gear-admin-trigger");
 
 gearBtn.addEventListener("mousedown", demarrerCompteAReboursAdmin);
@@ -326,12 +326,12 @@ gearBtn.addEventListener("touchend", abandonnerCompteAReboursAdmin);
 
 function demarrerCompteAReboursAdmin(e) {
   aVibreEtValideTemps = false;
-  if(e.touches) touchStartY = e.touches[0].clientY;
+  if(e.touches) touchStartY = e.touches[0].clientY; 
   
   adminTimer = setTimeout(() => {
     aVibreEtValideTemps = true;
-    if (navigator.vibrate) { navigator.vibrate(150); }
-    console.log("NIA RDC SECURE ENGINE: Lock 15 secondes validé. Swipe down requis.");
+    if (navigator.vibrate) { navigator.vibrate(150); } 
+    console.log("NIA RDC SECURE ENGINE: Lock 15 secondes validé. En attente du swipe vers le bas.");
   }, 15000); 
 }
 
@@ -340,6 +340,7 @@ function abandonnerCompteAReboursAdmin() { clearTimeout(adminTimer); }
 gearBtn.addEventListener("touchmove", (e) => {
   if(!aVibreEtValideTemps) return;
   let currentY = e.touches[0].clientY;
+  
   if(currentY - touchStartY > 40) {
     aVibreEtValideTemps = false;
     clearTimeout(adminTimer);
@@ -395,7 +396,7 @@ function filtrerIndexationAnnoncesAdmin() {
 
   listConteneur.innerHTML = "";
   if(annoncesFiltrees.length === 0) {
-    listConteneur.innerHTML = `<p style="color:#64748b; font-size:0.9rem; text-align:center; padding:15px;">Aucune annonce ne correspond.</p>`;
+    listConteneur.innerHTML = `<p style="color:#64748b; font-size:0.9rem; text-align:center; padding:15px;">Aucune annonce ne correspond à ces critères d'administration.</p>`;
     return;
   }
 
@@ -406,26 +407,26 @@ function filtrerIndexationAnnoncesAdmin() {
         <div style="max-width:70%;">
           <strong style="color:white; font-size:0.9rem;">${a.titre}</strong> 
           <span style="font-size:0.75rem; background:#334155; padding:2px 6px; border-radius:4px; margin-left:5px; color:#fde68a;">${typeLabel}</span>
-          <div style="font-size:0.75rem; color:#94a3b8; margin-top:3px;">📍 ${a.ville || 'Lubumbashi'} | Prix: ${a.prix} ${a.devise || '$'}</div>
+          <div style="font-size:0.75rem; color:#94a3b8; margin-top:3px;">📍 Ville: ${a.ville || 'Lubumbashi'} | Prix: ${a.prix} ${a.prix_devise || 'USD'}</div>
         </div>
-        <button class="btn-delete" style="padding:6px 12px; font-size:0.8rem;" onclick="supprimerForceParAdmin(${a.id})">🗑️ Purger</button>
+        <button class="btn-delete" style="padding:6px 12px; font-size:0.8rem;" onclick="supprimerForceParAdmin(${a.id})">🗑️ Supprimer de force</button>
       </div>
     `;
   });
 }
 
 async function supprimerForceParAdmin(id) {
-  if(!confirm("🕵️‍♂️ MODÉRATION ACTION : Confirmez-vous le retrait de cette annonce ?")) return;
+  if(!confirm("🕵️‍♂️ MODÉRATION ACTION : Confirmez-vous le retrait forcé et immédiat de cette annonce sur NIA RDC ?")) return;
   try {
     const res = await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" });
     if(res.ok) {
-      alert("L'annonce abusive a été purgée.");
+      alert("L'annonce abusive a été purgée de la base de données avec succès.");
       const resFeed = await fetch(`${API}/feed`);
       toutesLesAnnonces = await resFeed.json();
       initialiserEtOuvrirEspaceAdmin();
       afficherAnnonces(toutesLesAnnonces);
     }
-  } catch(e) { console.error(e); }
+  } catch(e) { console.error("Erreur de suppression administrative", e); }
 }
 
 function ouvrirFormulaireModificationAnnonce(id) {
@@ -434,7 +435,7 @@ function ouvrirFormulaireModificationAnnonce(id) {
   document.getElementById("edit-id").value = a.id;
   document.getElementById("edit-titre").value = a.titre;
   document.getElementById("edit-prix").value = a.prix;
-  document.getElementById("edit-devise").value = a.devise || "$";
+  document.getElementById("edit-prix-devise").value = a.prix_devise || "USD";
   document.getElementById("edit-periode").value = a.periode;
   document.getElementById("edit-statut").value = a.statut;
   document.getElementById("edit-description").value = a.description;
@@ -450,7 +451,7 @@ async function sauvegarderModificationAnnonce() {
   const payload = {
     titre: document.getElementById("edit-titre").value,
     prix: document.getElementById("edit-prix").value,
-    devise: document.getElementById("edit-devise").value,
+    prix_devise: document.getElementById("edit-prix-devise").value,
     periode: document.getElementById("edit-periode").value,
     statut: document.getElementById("edit-statut").value,
     description: document.getElementById("edit-description").value,
@@ -498,15 +499,11 @@ function ajouterChampObjetUnique() {
   htmlBox.className = "bulk-item-box"; htmlBox.id = `bulk-box-${countObjetsBulk}`;
   htmlBox.innerHTML = `
     <button type="button" class="btn-remove-bulk" onclick="document.getElementById('bulk-box-${countObjetsBulk}').remove()">✕</button>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; border:1px solid var(--border); padding:10px; border-radius:10px;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; border:1px solid var(--border); padding:10px; border-radius:8px;">
       <div class="form-group" style="grid-column:span 2"><label>Nom de l'objet unique</label><input class="bulk-titre" placeholder="Ex: Véhicule de luxe"></div>
-      <div class="form-group"><label>Prix et Devise</label>
-        <div class="price-currency-group">
-          <input type="number" class="bulk-prix" placeholder="50">
-          <select class="bulk-devise"><option value="$">$</option><option value="FC">FC</option></select>
-        </div>
-      </div>
-      <div class="form-group"><label>Photos</label><input type="file" class="bulk-image" accept="image/*" multiple></div>
+      <div class="form-group"><label>Prix</label><input type="number" class="bulk-prix" placeholder="50"></div>
+      <div class="form-group"><label>Devise</label><select class="bulk-devise"><option value="USD">USD ($)</option><option value="FC">FC (FC)</option></select></div>
+      <div class="form-group" style="grid-column:span 2"><label>Photos</label><input type="file" class="bulk-image" accept="image/*" multiple></div>
     </div>
   `;
   container.appendChild(htmlBox);
@@ -517,7 +514,7 @@ async function publierCatalogueEnMasse() {
   for(let box of boxes) {
     const titre = box.querySelector(".bulk-titre").value.trim();
     const prix = box.querySelector(".bulk-prix").value.trim();
-    const devise = box.querySelector(".bulk-devise").value;
+    const prix_devise = box.querySelector(".bulk-devise").value;
     const inputFiles = box.querySelector(".bulk-image").files;
     if(!titre) continue;
     let images_base64 = [];
@@ -529,7 +526,7 @@ async function publierCatalogueEnMasse() {
       body: JSON.stringify({
         user_id: 100, titre: titre,
         description: `VIP : ${maBoutiqueVipInfos.shopName}`,
-        prix: prix || 0, devise: devise, periode: "jour", ville: maBoutiqueVipInfos.ville, commune: maBoutiqueVipInfos.commune,
+        prix: prix || 0, prix_devise: prix_devise, periode: "jour", ville: maBoutiqueVipInfos.ville, commune: maBoutiqueVipInfos.commune,
         quartier: "", telephone: maBoutiqueVipInfos.phone, statut: "vip", images_base64
       })
     });
@@ -543,27 +540,32 @@ async function publier(){
     let images_base64 = [];
     for(let f of files){ images_base64.push(await compressAndToBase64(f)); }
     const bodyData = {
-      user_id: 1, titre: document.getElementById("titre").value,
+      user_id: profilUtilisateurActuel.type === 'vip' ? 100 : 1, 
+      titre: document.getElementById("titre").value,
       prix: document.getElementById("prix").value, 
-      devise: document.getElementById("devise").value,
+      prix_devise: document.getElementById("prix_devise").value,
       periode: document.getElementById("periode").value,
-      telephone: document.getElementById("telephone").value, description: document.getElementById("description").value,
-      ville: document.getElementById("ville").value, commune: document.getElementById("commune").value,
-      quartier: document.getElementById("quartier").value, statut: "disponible", images_base64
+      telephone: document.getElementById("telephone").value, 
+      description: document.getElementById("description").value,
+      ville: document.getElementById("ville").value, 
+      commune: document.getElementById("commune").value,
+      quartier: document.getElementById("quartier").value, 
+      statut: profilUtilisateurActuel.type === 'vip' ? "vip" : "disponible", 
+      images_base64
     };
     await fetch(`${API}/annonces`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(bodyData) });
     fermerModal('publier'); loadFeed();
   } catch (e) { alert("Erreur lors du dépôt de l'annonce"); }
 }
 
-// DECLENCHEMENT PUBLICITÉ INTERSTITIELLE ET COMPTE À REBOURS AVANT LE BOOST
 function lancerLancementPubBoost(idAnnonce) {
   idAnnonceEnCoursDeBoost = idAnnonce;
   document.getElementById("btn-finaliser-boost").style.display = "none";
-  document.getElementById("interstitial-ad-content").innerHTML = `
-    <strong>🔥 PUBLICITÉ INTERSTITIELLE ADSENSE (BOOSTER ENGINE)</strong><br>
-    <p>Découvrez les résidences et vitrines immobilières de la région au meilleur prix du marché.</p>
-  `;
+  
+  // Rendu aléatoire du texte AdSense interstitiel pendant l'attente du boost
+  const randomAdText = INTERSTITIAL_ADS_POOL[Math.floor(Math.random() * INTERSTITIAL_ADS_POOL.length)];
+  document.getElementById("interstitial-boost-banner-text").innerText = `📢 SPONSOR ADSENSE :\n"${randomAdText}"`;
+  
   document.getElementById("countdown").innerText = "15"; 
   ouvrirModal('boost-pub');
   let t = 15;
@@ -575,9 +577,9 @@ function lancerLancementPubBoost(idAnnonce) {
 
 async function executerRemonteeBdd() {
   const res = await fetch(`${API}/annonces/${idAnnonceEnCoursDeBoost}/boost`, { method: "POST" });
-  if(res.ok) { alert("Boost positionnel validé ! L'annonce est remontée."); fermerModal('boost-pub'); loadFeed(); }
+  if(res.ok) { alert("Boost positionnel validé !"); fermerModal('boost-pub'); loadFeed(); }
 }
 
-// INITIALISATION DU FLUX ET DE LA PUBLICITE TOURNANTE BANNIERE
+// INITIALISATIONS AU DÉMARRAGE DE L'APPLICATION
 loadFeed();
-initialiserBanniereTournanteAdSense();
+démarrerChangementBannièreAdSenseFonds();

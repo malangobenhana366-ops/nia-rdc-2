@@ -1,8 +1,7 @@
-const API = ""; 
+const API = ""; // METTRE ICI L'URL DE TON SERVEUR RENDER
 let toutesLesAnnonces = [];
 let utilisateurConnecte = null; 
 
-// CONFIGURATION DES ADS INTERSTITIELLES ET BANNIÈRES
 let actionAExecuterApresAd = null;
 const BANNER_ADS = [
   "Vodacom Congo : Restez connectés au réseau 4G le plus rapide de la RDC ! 🌐",
@@ -13,7 +12,6 @@ const BANNER_ADS = [
 ];
 let currentAdIndex = 0;
 
-// RECHERCHE INTELLIGENTE : SYNONYNES LOCAUX ET DISTANCE FLANDRE/LEVENSHTEIN
 const DICTIONNAIRE_SYNONYMES = {
   "maison": ["villa", "parcelle", "flat", "appartement", "chambre", "studio", "maizn"],
   "flat": ["appartement", "maison", "chambre", "studio", "logement"],
@@ -45,7 +43,6 @@ function verifierCorrespondanceIntelligente(motSaisi, motBase) {
   const b = motBase.toLowerCase().trim();
   if (b.includes(s) || s.includes(b)) return true;
 
-  // Test des synonymes connus
   for (let cle in DICTIONNAIRE_SYNONYMES) {
     if (s === cle || DICTIONNAIRE_SYNONYMES[cle].includes(s)) {
       if (b.includes(cle) || DICTIONNAIRE_SYNONYMES[cle].some(syn => b.includes(syn))) {
@@ -54,7 +51,6 @@ function verifierCorrespondanceIntelligente(motSaisi, motBase) {
     }
   }
 
-  // Erreurs de frappe (Tolérance de distance Levenshtein relative à la taille)
   const distance = calculerDistanceLevenshtein(s, b);
   if (s.length > 4 && distance <= 2) return true;
   if (s.length <= 4 && distance <= 1) return true;
@@ -62,7 +58,6 @@ function verifierCorrespondanceIntelligente(motSaisi, motBase) {
   return false;
 }
 
-// DECLENCHEUR DE SÉCURITÉ PUBLICITAIRE INTERSTITIELLE INTERNE
 function declencherPubliciteInterstitielle(actionSuivante) {
   actionAExecuterApresAd = actionSuivante;
   const modalAd = document.getElementById("interstitial-ad");
@@ -93,23 +88,18 @@ function fermerPubliciteInterstitielle() {
   }
 }
 
-// ACTIVATION DE LA ROTATION ADSENSE BASSE (30 SECONDES STRICTES)
 function initialiserBanniereAdSenseRotative() {
   const adText = document.getElementById("adsense-text-rotation");
   if (!adText) return;
   setInterval(() => {
     currentAdIndex = (currentAdIndex + 1) % BANNER_ADS.length;
-    adText.style.animation = 'none';
-    adText.offsetHeight; // Reset animation DOM
-    adText.style.animation = 'fadeInAd 0.5s ease';
     adText.innerText = BANNER_ADS[currentAdIndex];
-  }, 30000); // 30 secondes
+  }, 30000);
 }
 
 function ouvrirModal(id) { document.getElementById(`modal-${id}`).classList.remove("hidden"); }
 function fermerModal(id) { document.getElementById(`modal-${id}`).classList.add("hidden"); }
 
-// SESSION & VÉRIFICATION
 function verifierSession() {
   const session = localStorage.getItem("nia_user_session");
   if (session) {
@@ -179,8 +169,8 @@ async function loadFeed(){
 function afficherAnnonces(liste, context = null) {
   const feed = document.getElementById("feed");
   if (!feed) return;
-  if (liste.length === 0) {
-    feed.innerHTML = '<p style="color:#64748b; text-align:center; padding:30px; font-weight:600;">Aucun résultat trouvé.</p>';
+  if (!liste || liste.length === 0) {
+    feed.innerHTML = '<p style="color:#64748b; text-align:center; padding:30px; font-weight:600;">Aucun résultat disponible.</p>';
     return;
   }
   
@@ -196,7 +186,7 @@ function afficherAnnonces(liste, context = null) {
       <div class="annonce-card ${estVip ? 'vip-premium' : ''}">
         ${estVip ? `<span class="vip-badge-tag">👑 Boutique Pro</span>` : ''}
         <h3 style="margin:0 0 5px 0;">${a.titre}</h3>
-        <div class="annonce-price">${a.prix} ${a.devise || '$'} / par ${a.periode}</div>
+        <div class="annonce-price">${a.prix} ${a.devise || '$'} / par ${a.periode || 'jour'}</div>
         <div class="annonce-meta">${loc}</div>
 
         <div class="gallery">
@@ -210,9 +200,9 @@ function afficherAnnonces(liste, context = null) {
             ${a.statut === 'occupe' ? '🔴 Occupé' : '🟢 Disponible'}
           </span>
           <div class="footer-actions">
-            ${estVip && context !== 'OWNER_VIEW' ? `<button class="btn-shop" onclick="visiterBoutique(${a.user_id}, '${a.description}')">🏢 Vitrine</button>` : ''}
+            ${estVip && context !== 'OWNER_VIEW' ? `<button class="btn-shop" onclick="visiterBoutique(${a.user_id}, \`${a.description || ''}\`)">🏢 Vitrine</button>` : ''}
             
-            ${context === 'OWNER_VIEW' ? `
+            ${utilisateurConnecte && a.user_id === utilisateurConnecte.id ? `
               <button class="btn-boost" onclick="declencherPubliciteInterstitielle(() => executerRemonteeBdd(${a.id}))">🚀 Booster</button>
               <button class="btn-edit" onclick="ouvrirFormulaireModificationAnnonce(${a.id})">📝 Éditer</button>
               <button class="btn-delete" onclick="supprimerAnnonce(${a.id})">🗑️ Retirer</button>
@@ -226,7 +216,6 @@ function afficherAnnonces(liste, context = null) {
   });
 }
 
-// FONCTION RECHERCHE INTELLIGENTE FUSIONNÉE
 function rechercher() {
   const sTitre = document.getElementById("search-titre").value.toLowerCase().trim();
   const sVille = document.getElementById("search-ville").value.toLowerCase().trim();
@@ -261,7 +250,7 @@ function annulerRecherche() {
 
 function visiterBoutique(boutiqueUserId, desc) {
   let nom = "Boutique Exclusive";
-  if(desc.includes("VIP :")) { nom = desc.split("VIP :")[1].trim(); }
+  if(desc && desc.includes("VIP :")) { nom = desc.split("VIP :")[1].trim(); }
   const net = toutesLesAnnonces.filter(a => a.user_id === boutiqueUserId);
   document.getElementById("shop-header-container").innerHTML = `
     <div class="shop-banner"><h2>👑 Boutique ${nom}</h2><p style="margin:4px 0 0 0; font-size:0.85rem; color:#78350f;">Partenaire Pro NIA RDC</p></div>
@@ -280,9 +269,9 @@ function ouvrirFormulaireModificationAnnonce(id) {
   document.getElementById("edit-titre").value = a.titre;
   document.getElementById("edit-prix").value = a.prix;
   document.getElementById("edit-devise").value = a.devise || "$";
-  document.getElementById("edit-periode").value = a.periode;
+  document.getElementById("edit-periode").value = a.periode || "jour";
   document.getElementById("edit-statut").value = a.statut;
-  document.getElementById("edit-description").value = a.description;
+  document.getElementById("edit-description").value = a.description || "";
   document.getElementById("edit-ville").value = a.ville || "Lubumbashi";
   document.getElementById("edit-commune").value = a.commune || "";
   document.getElementById("edit-quartier").value = a.quartier || "";
@@ -290,7 +279,6 @@ function ouvrirFormulaireModificationAnnonce(id) {
   ouvrirModal('modifier-annonce');
 }
 
-// PROFIL VIP ET STANDARD BIEN DISTINGUÉS AVEC ACTION DE BOOST PRIVÉE
 function ouvrirMonProfilOuMaBoutique() {
   const title = document.getElementById("profil-modal-title");
   const content = document.getElementById("profil-view-content");
@@ -303,16 +291,16 @@ function ouvrirMonProfilOuMaBoutique() {
     content.innerHTML = `
       <p><strong>Statut :</strong> Utilisateur Standard</p>
       <p><strong>Téléphone :</strong> ${utilisateurConnecte.telephone}</p>
-      <h4 style="margin-top:15px;">📋 Mes publications (${mesAnnonces.length}) :</h4>
+      <h4 style="margin-top:15px;">📋 Mes fiches (${mesAnnonces.length}) :</h4>
       <div id="sub-list" style="display:flex; flex-direction:column; gap:8px;"></div>
     `;
     const subList = content.querySelector("#sub-list");
-    if(mesAnnonces.length === 0) { subList.innerHTML = "<p style='color:#64748b; font-size:0.85rem;'>Aucune annonce active.</p>"; }
+    if(mesAnnonces.length === 0) { subList.innerHTML = "<p style='color:#64748b; font-size:0.85rem;'>Aucune annonce en ligne.</p>"; }
     else {
       mesAnnonces.forEach(o => {
         subList.innerHTML += `
           <div style="background:#f1f5f9; padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div><strong>${o.titre}</strong><br><span style="font-size:0.75rem; color:#64748b;">${o.prix} ${o.devise || '$'}</span></div>
+            <div><strong>${o.titre}</strong><br><span style="font-size:0.75rem; color:#64748b;">${o.prix} ${o.devise || '$'} / par ${o.periode || 'jour'}</span></div>
             <div style="display:flex; gap:4px;">
               <button class="btn-boost" style="padding:4px 8px; font-size:0.75rem;" onclick="declencherPubliciteInterstitielle(() => executerRemonteeBdd(${o.id}))">🚀 Booster</button>
               <button class="btn-edit" style="padding:4px 8px; font-size:0.75rem;" onclick="ouvrirFormulaireModificationAnnonce(${o.id})">Gérer</button>
@@ -334,7 +322,7 @@ function ouvrirMonProfilOuMaBoutique() {
       mesAnnonces.forEach(o => {
         subListVip.innerHTML += `
           <div style="background:#fffdf5; border:1px solid #fde68a; padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div><strong style="color:#d97706;">${o.titre}</strong><br><span style="font-size:0.75rem;">${o.prix} ${o.devise || '$'}</span></div>
+            <div><strong style="color:#d97706;">${o.titre}</strong><br><span style="font-size:0.75rem;">${o.prix} ${o.devise || '$'} / par ${o.periode || 'jour'}</span></div>
             <div style="display:flex; gap:4px;">
               <button class="btn-boost" style="padding:4px 8px; font-size:0.75rem;" onclick="declencherPubliciteInterstitielle(() => executerRemonteeBdd(${o.id}))">🚀 Booster</button>
               <button class="btn-edit" style="padding:4px 8px; font-size:0.75rem; background:#d97706;" onclick="ouvrirFormulaireModificationAnnonce(${o.id})">Gérer</button>
@@ -345,6 +333,32 @@ function ouvrirMonProfilOuMaBoutique() {
   }
   content.innerHTML += `<button class="big-btn secondary" style="margin-top:20px; padding:10px;" onclick="localStorage.clear(); location.reload();">Me déconnecter 🚪</button>`;
   ouvrirModal('profil');
+}
+
+let countObjetsBulk = 0;
+function ajouterChampObjetUnique() {
+  countObjetsBulk++; 
+  const container = document.getElementById("bulk-items-container");
+  const d = document.createElement('div'); 
+  d.id = `bulk-box-${countObjetsBulk}`;
+  d.style = "background:#f8fafc; padding:12px; border-radius:10px; margin-bottom:12px; position:relative; border:1px solid #e2e8f0;";
+  d.innerHTML = `
+    <span style="position:absolute; right:10px; top:5px; cursor:pointer; font-weight:bold; color:red;" onclick="document.getElementById('bulk-box-${countObjetsBulk}').remove()">✕</span>
+    <input class="bulk-titre" placeholder="Nom de l'objet (Ex: Villa Moderne)" style="padding:8px; margin:4px 0;">
+    <div style="display:flex; gap:5px; margin:4px 0;">
+      <input type="number" class="bulk-prix" placeholder="Prix" style="padding:8px; margin:0;">
+      <select class="bulk-devise" style="width:70px; margin:0;"><option value="$">$</option><option value="FC">FC</option></select>
+      <select class="bulk-periode" style="margin:0;">
+        <option value="heure">par heure</option>
+        <option value="jour" selected>par jour</option>
+        <option value="semaine">par semaine</option>
+        <option value="mois">par mois</option>
+      </select>
+    </div>
+    <textarea class="bulk-description" placeholder="Description de l'annonce..." style="padding:8px; margin:4px 0; height:60px; font-size:0.85rem;"></textarea>
+    <input type="file" class="bulk-image" accept="image/*" multiple style="padding:5px;">
+  `;
+  container.appendChild(d);
 }
 
 function gererClicBoutonVipMenu() {
@@ -359,12 +373,15 @@ function gererClicBoutonVipMenu() {
   } else {
     document.getElementById("vip-modal-title").innerText = `📦 Dépôt Multi-Fiches VIP`;
     container.innerHTML = `
-      <div class="form-group full-width"><div id="bulk-items-container"></div>
-        <button type="button" style="background:#fffdf5; color:#d97706; border:1px dashed #d97706; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="ajouterChampObjetUnique()">➕ Insérer un produit</button>
+      <div class="form-group full-width">
+        <div id="bulk-items-container"></div>
+        <button type="button" style="background:#fffdf5; color:#d97706; border:1px dashed #d97706; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="ajouterChampObjetUnique()">➕ Insérer une ligne d'objet</button>
       </div>
       <button class="modal-submit-btn" style="background:#d97706;" onclick="publierCatalogueEnMasse()">Lancer la publication groupée</button>
     `;
-    document.getElementById("bulk-items-container").innerHTML = ""; countObjetsBulk = 0; ajouterChampObjetUnique();
+    document.getElementById("bulk-items-container").innerHTML = ""; 
+    countObjetsBulk = 0; 
+    ajouterChampObjetUnique();
   }
   ouvrirModal('vip');
 }
@@ -384,47 +401,70 @@ async function validerInscriptionBoutiqueLocale() {
   }
 }
 
-// SECTEUR TIMER ADMIN SECRETE GESTE
-let adminTimer = null; let aVibreEtValideTemps = false; let touchStartY = 0;
+// 🔐 CONSOLE ADMIN PARÉ ET COMPATIBLE SMARTPHONE
+let adminTimer = null; 
+let aVibreEtValideTemps = false; 
+let touchStartY = 0;
 const gearBtn = document.getElementById("gear-admin-trigger");
-gearBtn.addEventListener("mousedown", startAdminTimer); gearBtn.addEventListener("touchstart", startAdminTimer);
-gearBtn.addEventListener("mouseup", stopAdminTimer); gearBtn.addEventListener("touchend", stopAdminTimer);
+
+gearBtn.addEventListener("mousedown", startAdminTimer); 
+gearBtn.addEventListener("touchstart", startAdminTimer);
+gearBtn.addEventListener("mouseup", stopAdminTimer); 
+gearBtn.addEventListener("touchend", stopAdminTimer);
 
 function startAdminTimer(e) {
-  aVibreEtValideTemps = false; if(e.touches) touchStartY = e.touches[0].clientY;
+  aVibreEtValideTemps = false; 
+  if(e.touches) touchStartY = e.touches[0].clientY;
   adminTimer = setTimeout(() => { aVibreEtValideTemps = true; if (navigator.vibrate) navigator.vibrate(150); }, 10000);
 }
 function stopAdminTimer() { clearTimeout(adminTimer); }
+
 gearBtn.addEventListener("touchmove", (e) => {
   if(!aVibreEtValideTemps) return;
   if(e.touches[0].clientY - touchStartY > 45) {
-    aVibreEtValideTemps = false; clearTimeout(adminTimer);
-    const code = prompt("🔒 COMPTE MAÎTRE : CODE SECRET :");
+    aVibreEtValideTemps = false; 
+    clearTimeout(adminTimer);
+    const code = prompt("🔒 ACCÈS ADMINE : CODE SECRET DE SÉCURITÉ :");
     if(code === "BEN4002ET4200") initialiserEtOuvrirEspaceAdmin();
   }
 });
 
+// Forcer l'accès sur PC via clic droit caché au cas où
+gearBtn.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
+  const code = prompt("🔒 ACCÈS ADMINE (PC) : CODE SECRET :");
+  if(code === "BEN4002ET4200") initialiserEtOuvrirEspaceAdmin();
+});
+
 async function initialiserEtOuvrirEspaceAdmin() {
-  const res = await fetch(`${API}/admin/stats`); const stats = await res.json();
+  const res = await fetch(`${API}/admin/stats`); 
+  const stats = await res.json();
   document.getElementById("adm-stat-total").innerText = stats.total;
   document.getElementById("adm-stat-vip").innerText = stats.vip;
   document.getElementById("adm-stat-stand").innerText = stats.standard;
+  
   const selectVille = document.getElementById("adm-filter-ville");
   const villes = [...new Set(toutesLesAnnonces.map(a => a.ville || "Lubumbashi"))];
   selectVille.innerHTML = `<option value="all">Toutes les villes</option>`;
   villes.forEach(v => { selectVille.innerHTML += `<option value="${v.toLowerCase()}">${v}</option>`; });
-  filtrerIndexationAnnoncesAdmin(); ouvrirModal('admin-panel');
+  
+  filtrerIndexationAnnoncesAdmin(); 
+  ouvrirModal('admin-panel');
 }
 
 function filtrerIndexationAnnoncesAdmin() {
   const fVille = document.getElementById("adm-filter-ville").value;
   const fType = document.getElementById("adm-filter-type").value;
   const list = document.getElementById("admin-liste-moderat-annonces");
+  
   const filtres = toutesLesAnnonces.filter(a => {
     const matchV = (fVille === "all" || (a.ville && a.ville.toLowerCase() === fVille));
-    let matchT = true; if (fType === "vip") matchT = (a.statut === 'vip'); if (fType === "standard") matchT = (a.statut !== 'vip');
+    let matchT = true; 
+    if (fType === "vip") matchT = (a.statut === 'vip'); 
+    if (fType === "standard") matchT = (a.statut !== 'vip');
     return matchV && matchT;
   });
+  
   list.innerHTML = "";
   if(filtres.length === 0) { list.innerHTML = `<p style="color:#64748b; text-align:center; padding:10px;">Aucun élément.</p>`; return; }
   filtres.forEach(a => {
@@ -437,7 +477,7 @@ function filtrerIndexationAnnoncesAdmin() {
 }
 
 async function supprimerForceParAdmin(id) {
-  if(!confirm("Supprimer définitivement ?")) return;
+  if(!confirm("Supprimer définitivement cette annonce ?")) return;
   const res = await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" });
   if(res.ok) { alert("Annonce purgée."); loadFeed().then(() => initialiserEtOuvrirEspaceAdmin()); }
 }
@@ -459,7 +499,7 @@ async function sauvegarderModificationAnnonce() {
   const res = await fetch(`${API}/annonces/${id}/update`, {
     method: "PUT", headers: {"Content-Type":"application/json"}, body: JSON.stringify(payload)
   });
-  if(res.ok) { alert("Enregistré !"); fermerModal('modifier-annonce'); loadFeed(); }
+  if(res.ok) { alert("Modifications enregistrées !"); fermerModal('modifier-annonce'); loadFeed(); }
 }
 
 async function supprimerAnnonce(id) {
@@ -482,64 +522,84 @@ function compressAndToBase64(file) {
   });
 }
 
-let countObjetsBulk = 0;
-function ajouterChampObjetUnique() {
-  countObjetsBulk++; const container = document.getElementById("bulk-items-container");
-  const d = document.createElement('div'); d.id = `bulk-box-${countObjetsBulk}`;
-  d.style = "background:#f8fafc; padding:10px; border-radius:10px; margin-bottom:10px; position:relative; border:1px solid #e2e8f0;";
-  d.innerHTML = `
-    <span style="position:absolute; right:10px; top:5px; cursor:pointer; font-weight:bold; color:red;" onclick="document.getElementById('bulk-box-${countObjetsBulk}').remove()">✕</span>
-    <input class="bulk-titre" placeholder="Nom de l'objet" style="padding:8px; margin:4px 0;">
-    <div style="display:flex; gap:5px;"><input type="number" class="bulk-prix" placeholder="Prix" style="padding:8px;"><select class="bulk-devise" style="width:70px;"><option value="$">$</option><option value="FC">FC</option></select></div>
-    <input type="file" class="bulk-image" accept="image/*" multiple style="padding:5px;">
-  `;
-  container.appendChild(d);
-}
-
 async function publierCatalogueEnMasse() {
-  const boxes = document.querySelectorAll("#bulk-items-container > div"); if(boxes.length === 0) return;
+  const boxes = document.querySelectorAll("#bulk-items-container > div"); 
+  if(boxes.length === 0) return;
+  
   for(let box of boxes) {
     const titre = box.querySelector(".bulk-titre").value.trim();
     const prix = box.querySelector(".bulk-prix").value.trim();
     const dev = box.querySelector(".bulk-devise").value;
+    const per = box.querySelector(".bulk-periode").value;
+    const desc = box.querySelector(".bulk-description").value.trim();
     const files = box.querySelector(".bulk-image").files;
+    
     if(!titre) continue;
-    let images_base64 = []; if(files) { for(let f of files) { images_base64.push(await compressAndToBase64(f)); } }
+    let images_base64 = []; 
+    if(files) { for(let f of files) { images_base64.push(await compressAndToBase64(f)); } }
+    
     await fetch(`${API}/annonces`, {
       method: "POST", headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
-        user_id: utilisateurConnecte.id, titre: titre, description: `VIP : ${utilisateurConnecte.shop_name}`,
-        prix: prix || 0, devise: dev, periode: "jour", ville: utilisateurConnecte.ville || "Lubumbashi",
+        user_id: utilisateurConnecte.id, 
+        titre: titre, 
+        description: desc ? `VIP : ${utilisateurConnecte.shop_name}\n${desc}` : `VIP : ${utilisateurConnecte.shop_name}`,
+        prix: prix || 0, 
+        devise: dev, 
+        periode: per, 
+        ville: utilisateurConnecte.ville || "Lubumbashi",
         commune: "", quartier: "", telephone: utilisateurConnecte.telephone, statut: "vip", images_base64
       })
     });
   }
-  alert("Catalogue en ligne !"); fermerModal('vip'); loadFeed();
+  alert("Catalogue enregistré avec succès !"); 
+  fermerModal('vip'); 
+  loadFeed();
 }
 
 async function publier(){
   try {
-    const files = document.getElementById("image").files; let images_base64 = [];
+    const files = document.getElementById("image").files; 
+    let images_base64 = [];
     for(let f of files){ images_base64.push(await compressAndToBase64(f)); }
+    
     const bodyData = {
-      user_id: utilisateurConnecte.id, titre: document.getElementById("titre").value,
-      prix: document.getElementById("prix").value, devise: document.getElementById("devise").value,
-      periode: document.getElementById("periode").value, telephone: document.getElementById("telephone").value,
-      description: document.getElementById("description").value, ville: document.getElementById("ville").value,
-      commune: document.getElementById("commune").value, quartier: document.getElementById("quartier").value,
+      user_id: utilisateurConnecte.id, 
+      titre: document.getElementById("titre").value,
+      prix: document.getElementById("prix").value, 
+      devise: document.getElementById("devise").value,
+      periode: document.getElementById("periode").value, 
+      telephone: document.getElementById("telephone").value,
+      description: document.getElementById("description").value, 
+      ville: document.getElementById("ville").value,
+      commune: document.getElementById("commune").value, 
+      quartier: document.getElementById("quartier").value,
       statut: "disponible", images_base64
     };
-    await fetch(`${API}/annonces`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(bodyData) });
-    fermerModal('publier'); loadFeed();
-  } catch (e) { alert("Erreur de dépôt"); }
+    
+    const res = await fetch(`${API}/annonces`, { 
+      method:"POST", 
+      headers:{"Content-Type":"application/json"}, 
+      body:JSON.stringify(bodyData) 
+    });
+    
+    if(res.ok) {
+      alert("Votre annonce a été publiée !");
+      fermerModal('publier'); 
+      loadFeed();
+    }
+  } catch (e) { alert("Erreur lors du dépôt de l'annonce"); }
 }
 
-// ACTION RÉELLE DU BOOSTER EXÉCUTÉE APRÈS INTERSTITIEL
 async function executerRemonteeBdd(idAnnonce) {
   const res = await fetch(`${API}/annonces/${idAnnonce}/boost`, { method: "POST" });
-  if(res.ok) { alert("Fiche remontée avec succès au sommet du flux !"); loadFeed(); if(!document.getElementById("modal-profil").classList.contains("hidden")) ouvrirMonProfilOuMaBoutique(); }
+  if(res.ok) { 
+    alert("Fiche remontée au sommet du flux !"); 
+    loadFeed(); 
+    if(!document.getElementById("modal-profil").classList.contains("hidden")) ouvrirMonProfilOuMaBoutique(); 
+  }
 }
 
-// BOOTSTRAP AUTOMATIQUE
+// DÉMARRAGE AUTOMATIQUE DES ÉCOUTEURS
 verifierSession();
 initialiserBanniereAdSenseRotative();

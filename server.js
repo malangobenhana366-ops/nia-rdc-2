@@ -26,65 +26,72 @@ async function uploadImage(base64){
   } catch { return ""; }
 }
 
-/* ENREGISTREMENT DE L'OFFRE COMPLÈTE */
+/* FLUX GLOBAL */
+app.get("/feed", async (req,res)=>{
+  try {
+    const queryStr = "SELECT a.*, u.is_vip FROM annonces a LEFT JOIN users u ON a.user_id = u.id ORDER BY a.created_at DESC, a.id DESC";
+    const annonces = await pool.query(queryStr);
+    const data = [];
+    for(let a of annonces.rows){
+      const imgs = await pool.query("SELECT image_url FROM annonce_images WHERE annonce_id=$1", [a.id]);
+      data.push({ ...a, images: imgs.rows.map(i=>i.image_url) });
+    }
+    res.json(data);
+  } catch (e) { res.json([]); }
+});
+
+/* RECEPTION PUBLICATION */
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, images_base64 } = req.body;
-    if(!user_id) user_id = 1;
-
     const annonce = await pool.query(
       `INSERT INTO annonces (user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()) RETURNING id`,
-      [user_id, titre, description, prix ? prix : 0, periode, ville, commune, quartier, telephone, statut]
+      [user_id || 1, titre, description, prix || 0, periode, ville, commune, quartier, telephone, statut]
     );
     const annonceId = annonce.rows[0].id;
-
     if(images_base64 && images_base64.length > 0){
       for(let img of images_base64){
         const url = await uploadImage(img);
         if(url) await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [annonceId,url]);
       }
     }
-    res.json({success: true, id: annonceId});
-  } catch(e){ 
-    console.error(e);
-    res.status(500).json({error:"create error"}); 
-  }
+    res.json({success: true});
+  } catch(e){ res.status(500).json({error:"error"}); }
 });
 
-/* FLUX GLOBAL AVEC VÉRIFICATION DU STATUT VIP */
-app.get("/feed", async (req,res)=>{
+/* 🔄 ROUTE : MISE À JOUR COMPLÈTE DE TOUS LES CHAMPS */
+app.put("/annonces/:id/update", async (req, res) => {
+  const { id } = req.params;
+  const { titre, prix, periode, statut, description, ville, commune, quartier, telephone } = req.body;
   try {
-    const queryStr = `
-      SELECT a.*, u.is_vip 
-      FROM annonces a
-      LEFT JOIN users u ON a.user_id = u.id
-      ORDER BY a.created_at DESC, a.id DESC
-    `;
-    const annonces = await pool.query(queryStr);
-    const data = [];
-
-    for(let a of annonces.rows){
-      const imgs = await pool.query("SELECT image_url FROM annonce_images WHERE annonce_id=$1", [a.id]);
-      data.push({
-        ...a,
-        images: imgs.rows.map(i=>i.image_url)
-      });
-    }
-    res.json(data);
-  } catch (e) { res.json([]); }
+    await pool.query(
+      `UPDATE annonces 
+       SET titre=$1, prix=$2, periode=$3, statut=$4, description=$5, ville=$6, commune=$7, quartier=$8, telephone=$9 
+       WHERE id=$10`,
+      [titre, prix, periode, statut, description, ville, commune, quartier, telephone, id]
+    );
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: "update error" }); }
 });
 
-/* BANQUE ROUTE DE PROPULSION AUTOMATIQUE (BOOST) */
-app.post("/annonces/:id/boost", async (req, res) => {
+/* 🗑️ ROUTE : SUPPRESSION DÉFINITIVE */
+app.delete("/annonces/:id/delete", async (req, res) => {
   const { id } = req.params;
   try {
-    await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [id]);
+    await pool.query("DELETE FROM annonces WHERE id = $1", [id]);
     res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ error: "boost error" });
-  }
+  } catch (e) { res.status(500).json({ error: "delete error" }); }
+});
+
+/* ADSENSE REFRESH BOOST */
+app.post("/annonces/:id/boost", async (req, res) => {
+  try {
+    await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: "boost error" }); }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("SERVER RUNNING ON PORT " + PORT));
+app.listen(PORT, ()=>console.log("NIA RDC ONLINE"));
+  

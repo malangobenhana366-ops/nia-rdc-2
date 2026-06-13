@@ -55,14 +55,14 @@ app.get("/admin/stats", async (req, res) => {
   }
 });
 
-// CREATION DIRECTE ET GRATUITE (SANS APPROBATION MANUELLE)
+// CREATION AVEC ENREGISTREMENT DE LA DEVISE ($ / FC)
 app.post("/annonces", async (req,res)=>{
   try {
-    let { user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, images_base64 } = req.body;
+    let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, images_base64 } = req.body;
     const fields = await pool.query(
-      `INSERT INTO annonces (user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()) RETURNING id`,
-      [user_id || 1, titre, description, prix || 0, periode, ville, commune, quartier, telephone, statut]
+      `INSERT INTO annonces (user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW()) RETURNING id`,
+      [user_id || 1, titre, description, prix || 0, devise || "$", periode, ville, commune, quartier, telephone, statut]
     );
     const id = fields.rows[0].id;
     if(images_base64){
@@ -75,30 +75,29 @@ app.post("/annonces", async (req,res)=>{
   } catch(e) { res.status(500).json({error:"err"}); }
 });
 
-// ENREGISTREMENT DES MODIFICATIONS (PROPRIÉTAIRE ET ADMIN)
+// ENREGISTREMENT DES MODIFICATIONS AVEC DEVISE COMPLÈTE
 app.put("/annonces/:id/update", async (req, res) => {
   const { id } = req.params;
-  const { titre, prix, periode, statut, description, ville, commune, quartier, telephone } = req.body;
+  const { titre, prix, devise, periode, statut, description, ville, commune, quartier, telephone } = req.body;
   try {
     await pool.query(
-      `UPDATE annonces SET titre=$1, prix=$2, periode=$3, statut=$4, description=$5, ville=$6, commune=$7, quartier=$8, telephone=$9 WHERE id=$10`,
-      [titre, prix, periode, statut, description, ville, commune, quartier, telephone, id]
+      `UPDATE annonces SET titre=$1, prix=$2, devise=$3, periode=$4, statut=$5, description=$6, ville=$7, commune=$8, quartier=$9, telephone=$10 WHERE id=$11`,
+      [titre, prix, devise, periode, statut, description, ville, commune, quartier, telephone, id]
     );
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: "err" }); }
 });
 
-// SUPPRESSION DIRECTE (PROPRIÉTAIRE ET MODÉRATION FORCÉE ADMIN)
+// SUPPRESSION DIRECTE
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
-    // Supprime d'abord les images liées à cause des clés étrangères
     await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
     await pool.query("DELETE FROM annonces WHERE id = $1", [req.params.id]);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: "err" }); }
 });
 
-// BOOSTER ADSENSE (REMONTER AU TOP)
+// BOOSTER (REMONTER AU TOP EN METTANT À JOUR LE TIMESTAMPS)
 app.post("/annonces/:id/boost", async (req, res) => {
   try {
     await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [req.params.id]);
@@ -107,4 +106,4 @@ app.post("/annonces/:id/boost", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("NIA RDC ENGINE ONLINE WITH ADMIN ROUTES"));
+app.listen(PORT, ()=>console.log("NIA RDC ENGINE ONLINE WITH ADSENSE AND INTELLIGENT SEARCH"));

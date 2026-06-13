@@ -26,7 +26,7 @@ async function uploadImage(base64){
   } catch { return ""; }
 }
 
-/* CRÉATION ANNONCE */
+/* ENREGISTREMENT DE L'OFFRE COMPLÈTE */
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, images_base64 } = req.body;
@@ -46,10 +46,13 @@ app.post("/annonces", async (req,res)=>{
       }
     }
     res.json({success: true, id: annonceId});
-  } catch(e){ res.status(500).json({error:"create error"}); }
+  } catch(e){ 
+    console.error(e);
+    res.status(500).json({error:"create error"}); 
+  }
 });
 
-/* TOUT LE FLUX TRIÉ PAR INSCRIPTION / CRÉATION FRAICHE AVEC LIEN STATUT COMPTE VIP */
+/* FLUX GLOBAL AVEC VÉRIFICATION DU STATUT VIP */
 app.get("/feed", async (req,res)=>{
   try {
     const queryStr = `
@@ -72,11 +75,10 @@ app.get("/feed", async (req,res)=>{
   } catch (e) { res.json([]); }
 });
 
-/* ACTION ROUTE DE PROPULSION (BOOST) PAR LE TEMPS PUBLICITAIRE */
+/* BANQUE ROUTE DE PROPULSION AUTOMATIQUE (BOOST) */
 app.post("/annonces/:id/boost", async (req, res) => {
   const { id } = req.params;
   try {
-    // Mettre à jour created_at fait remonter mécaniquement l'annonce en haut du feed
     await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [id]);
     res.json({ success: true });
   } catch (e) {
@@ -85,5 +87,4 @@ app.post("/annonces/:id/boost", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("NIA RDC SERVER ONLINE"));
-  
+app.listen(PORT, ()=>console.log("SERVER RUNNING ON PORT " + PORT));

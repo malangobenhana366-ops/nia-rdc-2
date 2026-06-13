@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NIA RDC - Immobilier & Boutique</title>
+  <title>NIA RDC - Annonces Immobilières & Catalogues Commercial</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,12 +11,16 @@
   <div id="interstitial-ad" class="interstitial-container hidden">
     <div class="interstitial-box">
       <div class="interstitial-header">
-        <span class="ad-badge">Sponsorisé</span>
+        <span class="ad-badge">Sponsorisé par Google AdSense</span>
         <button class="interstitial-close-btn" id="interstitial-close-btn" onclick="fermerPubliciteInterstitielle()" disabled>Patientez...</button>
       </div>
       <div class="interstitial-body">
-        <h2>PARTENAIRE OFFICIEL NIA RDC</h2>
-        <div class="interstitial-banner-mock">ESPACE PUBLICITAIRE ADSENSE</div>
+        <h2 style="font-size:1.3rem; color:var(--dark); margin-bottom:5px;">PARTENAIRE OFFICIEL NIA RDC</h2>
+        <p style="font-size:0.8rem; color:#64748b; margin-top:0;">Votre action s'ouvrira immédiatement après cette annonce.</p>
+        <div class="interstitial-banner-mock">
+          <div style="font-size:1.1rem; color:#94a3b8;">ESPACE PUBLICITAIRE PREMIUM</div>
+          <div style="font-size:0.75rem; color:#cbd5e1; margin-top:5px;">www.adsense.google.com</div>
+        </div>
       </div>
     </div>
   </div>
@@ -24,19 +28,34 @@
   <div id="auth-screen" class="auth-container">
     <div class="auth-box">
       <div class="auth-logo">NIA RDC</div>
+      <p style="text-align:center; font-size:0.85rem; color:#64748b; margin-top:-10px; margin-bottom:20px;">Plateforme d'annonces directes à Lubumbashi</p>
+      
       <div id="form-connexion">
-        <h3>Connexion</h3>
-        <input type="tel" id="auth-login-phone" placeholder="Téléphone">
-        <input type="password" id="auth-login-pass" placeholder="Mot de passe">
-        <button class="big-btn" onclick="executerConnexion()">Se connecter 🔐</button>
-        <p class="auth-toggle">Nouveau ? <span onclick="basculerAuth(true)">Créer un compte</span></p>
+        <h3 style="margin: 0 0 15px 0; font-size:1.2rem;">S'authentifier</h3>
+        <div class="form-group full-width" style="margin-bottom:10px;">
+          <label style="margin-bottom:3px;">Numéro de téléphone</label>
+          <input type="tel" id="auth-login-phone" placeholder="Ex: +243...">
+        </div>
+        <div class="form-group full-width" style="margin-bottom:15px;">
+          <label style="margin-bottom:3px;">Mot de passe</label>
+          <input type="password" id="auth-login-pass" placeholder="••••••••">
+        </div>
+        <button class="big-btn" onclick="executerConnexion()">Se connecter au réseau 🔐</button>
+        <p class="auth-toggle">Vous n'avez pas de compte ? <span onclick="basculerAuth(true)">Créer un profil</span></p>
       </div>
+      
       <div id="form-inscription" class="hidden">
-        <h3>Inscription</h3>
-        <input type="tel" id="auth-reg-phone" placeholder="Téléphone">
-        <input type="password" id="auth-reg-pass" placeholder="Mot de passe">
-        <button class="big-btn" onclick="executerInscription()">Créer le compte ✨</button>
-        <p class="auth-toggle">Déjà inscrit ? <span onclick="basculerAuth(false)">Se connecter</span></p>
+        <h3 style="margin: 0 0 15px 0; font-size:1.2rem;">Créer un compte client</h3>
+        <div class="form-group full-width" style="margin-bottom:10px;">
+          <label style="margin-bottom:3px;">Numéro de téléphone portable</label>
+          <input type="tel" id="auth-reg-phone" placeholder="Ex: 099...">
+        </div>
+        <div class="form-group full-width" style="margin-bottom:15px;">
+          <label style="margin-bottom:3px;">Définir un mot de passe</label>
+          <input type="password" id="auth-reg-pass" placeholder="••••••••">
+        </div>
+        <button class="big-btn" style="background:#10b981;" onclick="executerInscription()">Créer mon compte d'accès ✨</button>
+        <p class="auth-toggle">Déjà un utilisateur ? <span onclick="basculerAuth(false)">Se connecter</span></p>
       </div>
     </div>
   </div>
@@ -46,90 +65,113 @@
     <div class="admin-icon" id="gear-admin-trigger">⚙️</div>
   </div>
 
-  <main style="max-width: 800px; margin: 10px auto 260px auto; padding: 0 15px;">
+  <main style="max-width: 800px; margin: 15px auto 260px auto; padding: 0 15px;">
     <div id="shop-header-container"></div>
+    
     <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0;">
-      <div id="feed-title" style="font-weight: bold; text-transform: uppercase;">Annonces récentes</div>
-      <button id="reset-btn" class="big-btn" style="width:auto; padding:6px 12px; display:none;" onclick="annulerRecherche()">Voir tout 🔄</button>
+      <div id="feed-title" style="font-weight: 800; text-transform: uppercase; font-size:0.95rem; letter-spacing:0.5px; color:#475569;">Annonces récentes</div>
+      <button id="reset-btn" class="big-btn" style="width:auto; padding:6px 14px; margin:0; font-size:0.8rem; display:none; background:#64748b;" onclick="annulerRecherche()">Voir tout le flux 🔄</button>
     </div>
-    <div id="feed">Chargement en cours...</div>
+    
+    <div id="feed">Chargement des fiches du serveur NIA ENGINE...</div>
   </main>
 
   <div class="modal hidden" id="modal-publier">
     <div class="modal-content">
-      <div class="modal-header"><h2>📢 Publier une fiche</h2><button class="close-modal" onclick="fermerModal('publier')">✕</button></div>
+      <div class="modal-header">
+        <h2 style="margin:0; font-size:1.3rem;">📢 Déposer une fiche</h2>
+        <button class="close-modal" onclick="fermerModal('publier')">✕</button>
+      </div>
       <div class="form-grid">
-        <div class="form-group full-width"><label>Titre de l'objet</label><input id="titre" placeholder="Ex: Studio Meublé"></div>
-        <div class="form-group"><label>Prix</label><input id="prix" type="number"></div>
-        <div class="form-group"><label>Devise</label><select id="devise"><option value="$">$ USD</option><option value="FC">FC</option></select></div>
-        <div class="form-group full-width"><label>Période</label><select id="periode"><option value="heure">par heure</option><option value="jour" selected>par jour</option><option value="mois">par mois</option></select></div>
-        <div class="form-group full-width"><label>Téléphone</label><input id="telephone" type="tel"></div>
-        <div class="form-group full-width"><label>Description</label><textarea id="description"></textarea></div>
+        <div class="form-group full-width"><label>Désignation / Titre court</label><input id="titre" placeholder="Ex: Maison de 3 pièces, Flat meublé"></div>
+        <div class="form-group"><label>Prix demandé</label><input id="prix" type="number" placeholder="Chiffre uniquement"></div>
+        <div class="form-group"><label>Devise monétaire</label><select id="devise"><option value="$">$ USD (Dollar)</option><option value="FC">FC (Franc Congolais)</option></select></div>
+        <div class="form-group full-width"><label>Facturation par période</label><select id="periode"><option value="heure">par heure</option><option value="jour" selected>par jour</option><option value="mois">par mois (Loyer)</option></select></div>
+        <div class="form-group full-width"><label>Téléphone de contact direct</label><input id="telephone" type="tel" placeholder="Ex: 082000000"></div>
+        <div class="form-group full-width"><label>Description complète du bien</label><textarea id="description" placeholder="Écrire les détails ici (nombre de chambres, eau, électricité, etc.)..."></textarea></div>
         <div class="form-group"><label>Ville</label><input id="ville" value="Lubumbashi"></div>
-        <div class="form-group"><label>Commune</label><input id="commune"></div>
-        <div class="form-group"><label>Quartier</label><input id="quartier"></div>
-        <div class="form-group full-width"><label>Photos</label><input id="image" type="file" multiple accept="image/*"></div>
-        <button class="modal-submit-btn" onclick="publier()">Mettre en ligne</button>
+        <div class="form-group"><label>Commune</label><input id="commune" placeholder="Ex: Lubumbashi, Kampemba"></div>
+        <div class="form-group"><label>Quartier</label><input id="quartier" placeholder="Ex: Golf, Carrefour"></div>
+        <div class="form-group full-width"><label>Sélectionner des images (Une ou plusieurs)</label><input id="image" type="file" multiple accept="image/*"></div>
+        <button class="modal-submit-btn" onclick="publier()">Mettre en ligne la publication</button>
       </div>
     </div>
   </div>
 
   <div class="modal hidden" id="modal-rechercher">
     <div class="modal-content">
-      <div class="modal-header"><h2>🔍 Recherche Intelligente</h2><button class="close-modal" onclick="fermerModal('rechercher')">✕</button></div>
+      <div class="modal-header">
+        <h2 style="margin:0; font-size:1.3rem;">🔍 Filtres de Recherche</h2>
+        <button class="close-modal" onclick="fermerModal('rechercher')">✕</button>
+      </div>
       <div class="form-grid">
-        <div class="form-group full-width"><label>Recherche</label><input id="search-titre" placeholder="Maison, habit, auto..."></div>
-        <div class="form-group full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div>
-        <div class="form-group"><label>Commune</label><input id="search-commune"></div>
-        <div class="form-group"><label>Quartier</label><input id="search-quartier"></div>
-        <button class="modal-submit-btn" onclick="rechercher()">Rechercher</button>
+        <div class="form-group full-width"><label>Que cherchez-vous ?</label><input id="search-titre" placeholder="Ex: Maison, Flat, Robe, Auto..."></div>
+        <div class="form-group full-width"><label>Ville ciblée</label><input id="search-ville" value="Lubumbashi"></div>
+        <div class="form-group"><label>Commune</label><input id="search-commune" placeholder="Filtrer par commune"></div>
+        <div class="form-group"><label>Quartier</label><input id="search-quartier" placeholder="Filtrer par quartier"></div>
+        <button class="modal-submit-btn" style="background:var(--primary);" onclick="rechercher()">Lancer la recherche intelligente</button>
       </div>
     </div>
   </div>
 
   <div class="modal hidden" id="modal-vip">
     <div class="modal-content">
-      <div class="modal-header"><h2 id="vip-modal-title">👑 Boutique VIP</h2><button class="close-modal" onclick="fermerModal('vip')">✕</button></div>
-      <div class="form-grid" id="vip-form-body"></div>
+      <div class="modal-header">
+        <h2 id="vip-modal-title" style="margin:0; font-size:1.25rem; color:var(--vip-gold);">👑 Espace VIP</h2>
+        <button class="close-modal" onclick="fermerModal('vip')">✕</button>
+      </div>
+      <div class="form-grid" id="vip-form-body">
+        </div>
     </div>
   </div>
 
   <div class="modal hidden" id="modal-modifier-annonce">
     <div class="modal-content">
-      <div class="modal-header"><h2>📝 Modifier l'annonce</h2><button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button></div>
+      <div class="modal-header">
+        <h2 style="margin:0; font-size:1.25rem;">📝 Éditer la publication</h2>
+        <button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button>
+      </div>
       <div class="form-grid">
         <input type="hidden" id="edit-id">
-        <div class="form-group full-width"><label>Titre</label><input id="edit-titre"></div>
+        <div class="form-group full-width"><label>Titre de l'objet</label><input id="edit-titre"></div>
         <div class="form-group"><label>Prix</label><input id="edit-prix" type="number"></div>
         <div class="form-group"><label>Devise</label><select id="edit-devise"><option value="$">$ USD</option><option value="FC">FC</option></select></div>
         <div class="form-group full-width"><label>Période</label><select id="edit-periode"><option value="heure">heure</option><option value="jour">jour</option><option value="mois">mois</option></select></div>
-        <div class="form-group full-width"><label>Statut</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option><option value="vip">👑 VIP</option></select></div>
-        <div class="form-group full-width"><label>Description</label><textarea id="edit-description"></textarea></div>
+        <div class="form-group full-width"><label>Disponibilité actuelle du bien</label><select id="edit-statut"><option value="disponible">🟢 Disponible / Libre</option><option value="occupe">🔴 Occupé / Loué / Vendu</option><option value="vip">👑 VIP Pro Card</option></select></div>
+        <div class="form-group full-width"><label>Description textuelle</label><textarea id="edit-description"></textarea></div>
         <div class="form-group"><label>Ville</label><input id="edit-ville"></div>
         <div class="form-group"><label>Commune</label><input id="edit-commune"></div>
         <div class="form-group"><label>Quartier</label><input id="edit-quartier"></div>
-        <div class="form-group full-width"><label>Téléphone</label><input id="edit-telephone" type="tel"></div>
-        <button class="modal-submit-btn" style="background:#10b981;" onclick="sauvegarderModificationAnnonce()">💾 Enregistrer</button>
+        <div class="form-group full-width"><label>Numéro de téléphone lié</label><input id="edit-telephone" type="tel"></div>
+        <button class="modal-submit-btn" style="background:#10b981;" onclick="sauvegarderModificationAnnonce()">💾 Enregistrer les modifications</button>
       </div>
     </div>
   </div>
 
   <div class="modal hidden" id="modal-profil">
     <div class="modal-content">
-      <div class="modal-header"><h2 id="profil-modal-title">👤 Mon Compte</h2><button class="close-modal" onclick="fermerModal('profil')">✕</button></div>
-      <div id="profil-view-content"></div>
+      <div class="modal-header">
+        <h2 id="profil-modal-title" style="margin:0; font-size:1.25rem;">👤 Mon Profil</h2>
+        <button class="close-modal" onclick="fermerModal('profil')">✕</button>
+      </div>
+      <div id="profil-view-content">
+        </div>
     </div>
   </div>
 
   <div class="modal hidden" id="modal-admin-panel">
-    <div class="modal-admin-content">
-      <h2>🕶️ Console Administration</h2>
-      <div class="admin-stats-row">
-        <div class="stat-box">Total <div class="stat-number" id="adm-stat-total">0</div></div>
-        <div class="stat-box">VIP <div class="stat-number" id="adm-stat-vip">0</div></div>
-        <div class="stat-box">Standard <div class="stat-number" id="adm-stat-stand">0</div></div>
+    <div class="modal-content" style="background:#0f172a; color:white;">
+      <div class="modal-header">
+        <h2 style="margin:0; font-size:1.2rem; color:#38bdf8;">🕶️ Console d'Administration NIA</h2>
+        <button class="close-modal" style="background:#1e293b; color:white; border:none;" onclick="fermerModal('admin-panel')">✕</button>
       </div>
-      <button class="big-btn secondary" onclick="fermerModal('admin-panel')">Fermer</button>
+      <p style="font-size:0.8rem; color:#94a3b8; margin:0 0 15px 0;">Données métriques réelles extraites du cluster de base de données.</p>
+      <div class="admin-stats-row">
+        <div class="stat-box">Total Fiches<div class="stat-number" id="adm-stat-total">0</div></div>
+        <div class="stat-box" style="border: 1px solid var(--vip-gold);">Fiches VIP<div class="stat-number" id="adm-stat-vip" style="color:var(--vip-gold);">0</div></div>
+        <div class="stat-box">Standards<div class="stat-number" id="adm-stat-stand">0</div></div>
+      </div>
+      <button class="big-btn" style="background:#475569; margin-top:10px;" onclick="fermerModal('admin-panel')">Quitter le panneau</button>
     </div>
   </div>
 
@@ -140,10 +182,11 @@
       <button class="nav-btn vip-btn" onclick="gererClicBoutonVipMenu()"><span>👑</span><span>Espace VIP</span></button>
       <button class="nav-btn" id="main-profile-nav-btn" onclick="ouvrirMonProfilOuMaBoutique()"><span>👤</span><span>Profil</span></button>
     </nav>
+    
     <div class="adsense-banner-space">
       <div class="adsense-inside-wrapper">
         <span class="ads-flag">AdSense</span>
-        <div id="adsense-text-rotation">Chargement des campagnes...</div>
+        <div id="adsense-text-rotation">Vérification des opportunités commerciales de la régie...</div>
       </div>
     </div>
   </div>

@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(cors());
-app.use(express.json({ limit: "25mb" }));
+app.use(express.json({ limit: "35mb" }));
 app.use(express.static(__dirname));
 
 cloudinary.config({
@@ -26,7 +26,46 @@ async function uploadImage(base64){
   } catch { return ""; }
 }
 
-// FLUX PUBLIC & ADMIN (RÉCUPÉRATION GÉNÉRALE)
+// STATS COMPTEURS POUR LE GRAPH PANEL ADMIN
+app.get("/admin/stats", async (req, res) => {
+  try {
+    const totalReq = await pool.query("SELECT COUNT(*) FROM annonces");
+    const vipReq = await pool.query("SELECT COUNT(*) FROM annonces WHERE statut = 'vip'");
+    const total = parseInt(totalReq.rows[0].count) || 0;
+    const vip = parseInt(vipReq.rows[0].count) || 0;
+    res.json({ total, vip, standard: (total - vip) });
+  } catch { res.status(500).json({ error: "Err" }); }
+});
+
+// COMPTES CLIENTS & SESSIONS
+app.post("/auth/inscription", async (req, res) => {
+  const { telephone, password } = req.body;
+  try {
+    const exist = await pool.query("SELECT * FROM users WHERE telephone = $1", [telephone]);
+    if(exist.rows.length > 0) return res.status(400).json({ error: "Ce numéro détient déjà un compte." });
+    await pool.query("INSERT INTO users (telephone, password) VALUES ($1, $2)", [telephone, password]);
+    res.json({ success: true });
+  } catch { res.status(500).json({ error: "Err" }); }
+});
+
+app.post("/auth/connexion", async (req, res) => {
+  const { telephone, password } = req.body;
+  try {
+    const userReq = await pool.query("SELECT * FROM users WHERE telephone = $1 AND password = $2", [telephone, password]);
+    if(userReq.rows.length === 0) return res.status(401).json({ error: "Identifiants invalides." });
+    const u = userReq.rows[0];
+    res.json({ success: true, user: { id: u.id, telephone: u.telephone, is_vip: u.is_vip, shop_name: u.shop_name } });
+  } catch { res.status(500).json({ error: "Err" }); }
+});
+
+app.post("/users/:id/upgrade-vip", async (req, res) => {
+  try {
+    await pool.query("UPDATE users SET is_vip = TRUE, shop_name = $1 WHERE id = $2", [req.body.shop_name, req.params.id]);
+    res.json({ success: true });
+  } catch { res.status(500).json({ error: "Err" }); }
+});
+
+// FLUX PRINCIPAL GÉNÉRAL
 app.get("/feed", async (req,res)=>{
   try {
     const annonces = await pool.query("SELECT * FROM annonces ORDER BY created_at DESC, id DESC");
@@ -36,75 +75,54 @@ app.get("/feed", async (req,res)=>{
       data.push({ ...a, images: imgs.rows.map(i=>i.image_url) });
     }
     res.json(data);
-  } catch (e) { res.json([]); }
+  } catch { res.json([]); }
 });
 
-// ROUTE REQUÉRANTE POUR LE TABLEAU DE BORD ADMIN
-app.get("/admin/stats", async (req, res) => {
-  try {
-    const totalReq = await pool.query("SELECT COUNT(*) FROM annonces");
-    const vipReq = await pool.query("SELECT COUNT(*) FROM annonces WHERE statut = 'vip' OR user_id = 100");
-    
-    const total = parseInt(totalReq.rows[0].count) || 0;
-    const vip = parseInt(vipReq.rows[0].count) || 0;
-    const standard = total - vip;
-
-    res.json({ total, vip, standard });
-  } catch (e) {
-    res.status(500).json({ error: "Erreur lors du calcul des statistiques" });
-  }
-});
-
-// CREATION DIRECTE ET GRATUITE (SANS APPROBATION MANUELLE)
+// INSERTION AVEC COUPLAGE VRAIE DEVISE ($ OU FC)
 app.post("/annonces", async (req,res)=>{
   try {
-    let { user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, images_base64 } = req.body;
-    const fields = await pool.query(
-      `INSERT INTO annonces (user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()) RETURNING id`,
-      [user_id || 1, titre, description, prix || 0, periode, ville, commune, quartier, telephone, statut]
+    let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut } = req.body;
+    const r = await pool.query(
+      `INSERT INTO annonces (user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+      [user_id, titre, description, prix || 0, devise || '$', periode, ville, commune, quartier, telephone, statut]
     );
-    const id = fields.rows[0].id;
-    if(images_base64){
-      for(let b64 of images_base64){
+    const id = r.rows[0].id;
+    if(req.body.images_base64){
+      for(let b64 of req.body.images_base64){
         const url = await uploadImage(b64);
-        if(url) await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [id,url]);
+        if(url) await pool.query("INSERT INTO annonce_images (annonce_id, image_url) VALUES ($1,$2)", [id,url]);
       }
     }
     res.json({success:true});
-  } catch(e) { res.status(500).json({error:"err"}); }
+  } catch { res.status(500).json({error:"err"}); }
 });
 
-// ENREGISTREMENT DES MODIFICATIONS (PROPRIÉTAIRE ET ADMIN)
 app.put("/annonces/:id/update", async (req, res) => {
-  const { id } = req.params;
-  const { titre, prix, periode, statut, description, ville, commune, quartier, telephone } = req.body;
+  const { titre, prix, devise, periode, statut, description, ville, commune, quartier, telephone } = req.body;
   try {
     await pool.query(
-      `UPDATE annonces SET titre=$1, prix=$2, periode=$3, statut=$4, description=$5, ville=$6, commune=$7, quartier=$8, telephone=$9 WHERE id=$10`,
-      [titre, prix, periode, statut, description, ville, commune, quartier, telephone, id]
+      `UPDATE annonces SET titre=$1, prix=$2, devise=$3, periode=$4, statut=$5, description=$6, ville=$7, commune=$8, quartier=$9, telephone=$10 WHERE id=$11`,
+      [titre, prix, devise, periode, statut, description, ville, commune, quartier, telephone, req.params.id]
     );
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "err" }); }
+  } catch { res.status(500).json({ error: "err" }); }
 });
 
-// SUPPRESSION DIRECTE (PROPRIÉTAIRE ET MODÉRATION FORCÉE ADMIN)
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
-    // Supprime d'abord les images liées à cause des clés étrangères
     await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
     await pool.query("DELETE FROM annonces WHERE id = $1", [req.params.id]);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "err" }); }
+  } catch { res.status(500).json({ error: "err" }); }
 });
 
-// BOOSTER ADSENSE (REMONTER AU TOP)
 app.post("/annonces/:id/boost", async (req, res) => {
   try {
     await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [req.params.id]);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "err" }); }
+  } catch { res.status(500).json({ error: "err" }); }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("NIA RDC ENGINE ONLINE WITH ADMIN ROUTES"));
+app.listen(PORT, ()=>console.log("NIA RDC ENGINE LIVE WITH ADVANCED ADSENSE SYSTEM"));

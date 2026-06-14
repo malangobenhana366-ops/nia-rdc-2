@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Backend pour NIA RDC avec PostgreSQL et Cloudinary",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js"
   },

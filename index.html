@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NIA RDC - Premium & Animé</title>
+<title>NIA RDC - Premium & Sécurisé</title>
 <style>
   :root {
     --primary: #2563eb; --primary-hover: #1d4ed8; --bg: #f8fafc; --card-bg: #ffffff;
@@ -12,14 +12,12 @@
     --admin-bg: #0f172a; --admin-card: #1e293b;
   }
   
-  /* ANIMATIONS ET TRANSITIONS GLOBALES */
   * { transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; }
   body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; overflow-x: hidden; }
   
   header { background-color: var(--card-bg); border-bottom: 1px solid var(--border); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
   header .logo { margin: 0; color: var(--primary); font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; animation: pulseLogo 3s infinite alternate; }
   
-  /* L'ENGRENAGE ADAPTÉ POUR L'APPUI LONG TACTILE */
   header .settings-btn { background: #f1f5f9; border: none; font-size: 1.5rem; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; }
   header .settings-btn:active { transform: scale(0.9) rotate(45deg); background: var(--border); }
   
@@ -31,32 +29,24 @@
   
   #feed { display: flex; flex-direction: column; gap: 20px; }
   
-  /* CARTES ANNONCES ET LEUR EFFET VIVANT */
   .annonce-card { border: 1px solid var(--border); border-radius: 16px; padding: 18px; background: var(--card-bg); position: relative; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); animation: slideUpIn 0.5s ease-out; }
   .annonce-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(0,0,0,0.08); }
   
   .annonce-card.vip-premium { border: 2px solid var(--vip-gold); background: linear-gradient(180deg, #fffdf7 0%, #ffffff 100%); box-shadow: 0 6px 15px rgba(217, 119, 6, 0.08); }
-  .annonce-card.vip-premium:hover { box-shadow: 0 15px 25px rgba(217, 119, 6, 0.15); }
   
   .vip-badge-tag { position: absolute; top: 15px; right: 15px; background: linear-gradient(135deg, var(--vip-gold) 0%, #b45309 100%); color: white; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 8px; text-transform: uppercase; animation: shineBadge 2s infinite; }
   .annonce-price { font-size: 1.3rem; font-weight: 800; color: var(--primary); margin: 6px 0; }
   .annonce-meta { font-size: 0.85rem; color: var(--text-light); margin-bottom: 12px; font-weight: 500; }
   .annonce-description { background: #f8fafc; padding: 12px 16px; border-radius: 10px; font-size: 0.9rem; margin: 14px 0; white-space: pre-line; border-left: 4px solid var(--primary); color: #334155; }
-  .annonce-card.vip-premium .annonce-description { background: #fefaf0; border-left-color: var(--vip-gold); }
   
   .gallery { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 10px; scroll-behavior: smooth; }
-  .gallery::-webkit-scrollbar { height: 5px; }
-  .gallery::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
   .gallery-item { width: 290px; height: 210px; object-fit: contain; background-color: #0f172a; border-radius: 12px; flex-shrink: 0; }
   
   .annonce-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
   .footer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   
-  /* BOUTONS AVEC MICRO-INTERACTIONS */
-  .btn-contact { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; }
-  .btn-contact:active { transform: scale(0.95); }
+  .btn-contact { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; border:none; }
   .btn-shop { background: linear-gradient(135deg, var(--vip-gold) 0%, #d97706 100%); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
-  .btn-shop:active { transform: scale(0.95); }
   .btn-boost { background-color: #3b82f6; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
   .btn-edit { background-color: #64748b; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
   .btn-delete { background-color: var(--danger); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
@@ -65,53 +55,46 @@
   .status-disponible { background-color: #d1fae5; color: #065f46; }
   .status-occupe { background-color: #fee2e2; color: #991b1b; }
 
-  /* EFFET VITRINE BANNER */
-  .shop-banner { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid var(--vip-gold); border-radius: 16px; padding: 25px; margin-bottom: 25px; text-align: center; animation: slideDownIn 0.4s ease-out; }
-  .shop-banner h2 { margin: 0 0 6px 0; color: #92400e; font-size: 1.7rem; font-weight: 800; }
-  .shop-banner p { margin: 0; color: #78350f; font-weight: 500; }
+  .shop-banner { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid var(--vip-gold); border-radius: 16px; padding: 25px; margin-bottom: 25px; text-align: center; }
 
-  /* MODALS STYLE CLASSIQUE */
-  .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); z-index: 2000; justify-content: center; align-items: center; padding: 15px; animation: fadeIn 0.3s ease; }
-  .modal-content { background-color: var(--card-bg); border-radius: 20px; width: 100%; max-width: 550px; max-height: 85vh; overflow-y: auto; padding: 26px; box-sizing: border-box; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+  .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
+  .modal-content { background-color: var(--card-bg); border-radius: 20px; width: 100%; max-width: 550px; max-height: 85vh; overflow-y: auto; padding: 26px; box-sizing: border-box; }
   .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-  .close-modal { background: #f1f5f9; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .close-modal { background: #f1f5f9; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-weight: bold; }
   
   .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .form-group { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 0.85rem; color: #475569; }
   .form-group.full-width { grid-column: span 2; }
   input, select, textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem; box-sizing: border-box; outline: none; }
-  input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
-  .modal-submit-btn { grid-column: span 2; background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%); color: white; border: none; padding: 14px; font-size: 1rem; font-weight: 700; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 10px rgba(37,99,235,0.2); }
 
-  /* 🕶️ ZONE ADMINISTRATION - ULTRA EXCLUSIVE SOMBRE 🕶️ */
+  .modal-submit-btn { grid-column: span 2; background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%); color: white; border: none; padding: 14px; font-size: 1rem; font-weight: 700; border-radius: 10px; cursor: pointer; }
+
+  /* GESTION DES ANNONCES EN MASSE VIP */
+  .bulk-item-box { border: 1px dashed var(--vip-gold); background: #fffdf9; padding: 15px; border-radius: 12px; margin-bottom: 15px; position: relative; }
+  .btn-remove-bulk { position: absolute; top: 8px; right: 8px; background: var(--danger); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 0.8rem; }
+
+  /* COFFRE SECRETS & MODÉRATION SOMBRE */
   .modal-admin-content { background-color: var(--admin-bg); color: #f8fafc; border-radius: 24px; width: 95%; max-width: 750px; max-height: 90vh; overflow-y: auto; padding: 26px; box-sizing: border-box; border: 2px solid #334155; }
-  .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 20px; }
   .admin-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
   .stat-box { background-color: var(--admin-card); border: 1px solid #334155; padding: 15px; border-radius: 14px; text-align: center; }
   .stat-number { font-size: 1.8rem; font-weight: 800; color: #38bdf8; margin-top: 5px; }
-  .admin-filters { background-color: var(--admin-card); padding: 15px; border-radius: 14px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border: 1px solid #334155; }
   .admin-annonce-item { background: var(--admin-card); border: 1px solid #334155; border-radius: 12px; padding: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
 
-  /* INTERSTITIAL AD INTERFACE STYLE */
-  .interstitial-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 9999; justify-content:center; align-items:center; color:white; flex-direction:column; font-family: sans-serif; }
-  .interstitial-box { width:90%; max-width:450px; background:#1e293b; border-radius:16px; padding:24px; text-align:center; position:relative; box-sizing: border-box; }
+  /* OVERLAY SÉCURISÉ ADSENSE INTERSTITIEL */
+  .interstitial-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.9); z-index: 9999; justify-content:center; align-items:center; color:white; flex-direction:column; }
+  .interstitial-box { width:90%; max-width:450px; background:#1e293b; border-radius:16px; padding:24px; text-align:center; position:relative; }
   .interstitial-close { position:absolute; top:12px; right:12px; background:#334155; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold; }
   
-  /* BAS FIXE NAVIGATION & DESIGN BANNIÈRE */
-  .bottom-area { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--card-bg); border-top: 1px solid var(--border); z-index: 1000; display: flex; flex-direction: column; box-shadow: 0 -4px 15px rgba(0,0,0,0.04); }
+  .bottom-area { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--card-bg); border-top: 1px solid var(--border); z-index: 1000; display: flex; flex-direction: column; }
   .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); }
   .nav-btn { background: none; border: none; padding: 14px 5px; font-size: 0.8rem; font-weight: 700; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .nav-btn:active span:first-child { transform: scale(1.3); }
   .nav-btn.vip-btn { color: var(--vip-gold); }
   
-  .adsense-space { background-color: #f1f5f9; height: 60px; display: flex; align-items: center; justify-content: center; color: #1e293b; font-size: 0.85rem; font-weight: 700; border-top: 1px solid var(--border); text-align: center; padding: 4px 15px; box-sizing: border-box; overflow: hidden; }
+  .adsense-space { background-color: #f1f5f9; height: 60px; display: flex; align-items: center; justify-content: center; color: #1e293b; font-size: 0.85rem; font-weight: 700; border-top: 1px solid var(--border); text-align: center; }
   .ad-link-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-decoration: none; color: inherit; }
 
-  /* KEYFRAMES ANIMATIONS CSS */
   @keyframes pulseLogo { from { transform: scale(1); } to { transform: scale(1.04); } }
   @keyframes slideUpIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes slideDownIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes shineBadge { 0% { box-shadow: 0 0 0 0 rgba(219, 119, 6, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(219, 119, 6, 0); } 100% { box-shadow: 0 0 0 0 rgba(219, 119, 6, 0); } }
 </style>
 </head>
@@ -131,6 +114,20 @@
     <div id="feed">Chargement des offres...</div>
   </main>
 
+  <!-- MODAL COMPTE : INSCRIPTION ET CONNEXION SÉCURISÉE -->
+  <div class="modal" id="modal-authentification">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header"><h2 id="auth-title">Créer un compte</h2><button class="close-modal" onclick="fermerModal('authentification')">✕</button></div>
+      <div class="form-grid" id="auth-form-body">
+        <div class="form-group full-width"><label>Nom d'utilisateur</label><input id="auth-username" placeholder="Ex: Gédéon"></div>
+        <div class="form-group full-width"><label>Numéro de téléphone</label><input id="auth-phone" type="tel" placeholder="Ex: 082..."></div>
+        <div class="form-group full-width"><label>Mot de passe</label><input id="auth-password" type="password" placeholder="••••••••"></div>
+        <button class="modal-submit-btn" id="auth-submit-btn" onclick="soumettreAuthentification()">Créer mon compte sécurisé</button>
+        <p style="grid-column: span 2; text-align: center; margin: 10px 0 0 0; font-size: 0.85rem; font-weight: bold; color: var(--primary); cursor: pointer;" id="auth-toggle" onclick="basculerModeAuth()">Déjà membre ? Connectez-vous ici</p>
+      </div>
+    </div>
+  </div>
+
   <div class="modal" id="modal-publier">
     <div class="modal-content">
       <div class="modal-header"><h2>📢 Louer un objet</h2><button class="close-modal" onclick="fermerModal('publier')">✕</button></div>
@@ -138,21 +135,21 @@
         <div class="form-group full-width"><label>Nom de l'objet</label><input id="titre"></div>
         <div class="form-group"><label>Prix</label><input id="prix" type="number"></div>
         <div class="form-group"><label>Devise</label><select id="prix_devise"><option value="USD">USD ($)</option><option value="FC">FC (CDF)</option></select></div>
-        <div class="form-group"><label>Période</label><select id="periode"><option value="jour">par jour</option><option value="heure">par heure</option><option value="semaine">par semaine</option><option value="mois">par mois</option></select></div>
-        <div class="form-group full-width"><label>Téléphone</label><input id="telephone" type="tel"></div>
+        <div class="form-group"><label>Période</label><select id="periode"><option value="heure">par heure</option><option value="jour" selected>par jour</option><option value="semaine">par semaine</option><option value="mois">par mois</option></select></div>
+        <div class="form-group full-width"><label>Téléphone de contact</label><input id="telephone" type="tel"></div>
         <div class="form-group full-width"><label>Description</label><textarea id="description"></textarea></div>
         <div class="form-group"><label>Ville</label><input id="ville" value="Lubumbashi"></div>
         <div class="form-group"><label>Commune</label><input id="commune"></div>
         <div class="form-group"><label>Quartier</label><input id="quartier"></div>
         <div class="form-group full-width"><label>Photos</label><input id="image" type="file" multiple></div>
-        <button class="modal-submit-btn" onclick="publier()">Mettre en ligne</button>
+        <button class="modal-submit-btn" onclick="publierAnnonceStandard()">Mettre en ligne</button>
       </div>
     </div>
   </div>
 
   <div class="modal" id="modal-rechercher">
     <div class="modal-content">
-      <div class="modal-header"><h2>🔍 Recherche Universelle Intelligente</h2><button class="close-modal" onclick="fermerModal('rechercher')">✕</button></div>
+      <div class="modal-header"><h2>🔍 Recherche Floue Intelligente</h2><button class="close-modal" onclick="fermerModal('rechercher')">✕</button></div>
       <div class="form-grid">
         <div class="form-group full-width"><label>Que cherchez-vous ? (Tolère les fautes)</label><input id="search-titre" placeholder="Ex: Maison, Robe, Camion, VIP..."></div>
         <div class="form-group full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div>
@@ -165,31 +162,32 @@
 
   <div class="modal" id="modal-vip">
     <div class="modal-content">
-      <div class="modal-header"><h2 id="vip-modal-title">👑 Espace Pro Boutique VIP</h2><button class="close-modal" onclick="fermerModal('vip')">✕</button></div>
+      <div class="modal-header"><h2 id="vip-modal-title">👑 Espace Boutique VIP Pro</h2><button class="close-modal" onclick="fermerModal('vip')">✕</button></div>
       <div class="form-grid" id="vip-form-body"></div>
     </div>
   </div>
 
   <div class="modal" id="modal-modifier-annonce">
     <div class="modal-content">
-      <div class="modal-header"><h2>📝 Modifier l'annonce</h2><button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button></div>
+      <div class="modal-header"><h2>📝 Modifier la publication</h2><button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button></div>
       <div class="form-grid">
         <input type="hidden" id="edit-id">
         <div class="form-group full-width"><label>Titre de l'objet</label><input id="edit-titre"></div>
         <div class="form-group"><label>Prix</label><input id="edit-prix" type="number"></div>
         <div class="form-group"><label>Devise</label><select id="edit-prix-devise"><option value="USD">USD ($)</option><option value="FC">FC (FC)</option></select></div>
         <div class="form-group"><label>Période</label><select id="edit-periode"><option value="heure">heure</option><option value="jour">jour</option><option value="semaine">semaine</option><option value="mois">mois</option></select></div>
-        <div class="form-group full-width"><label>Statut Direct</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option><option value="vip">👑 Conserver VIP</option></select></div>
+        <div class="form-group full-width"><label>Statut direct</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option><option value="vip">👑 Conserver VIP</option></select></div>
         <div class="form-group full-width"><label>Description</label><textarea id="edit-description"></textarea></div>
         <div class="form-group"><label>Ville</label><input id="edit-ville"></div>
         <div class="form-group"><label>Commune</label><input id="edit-commune"></div>
         <div class="form-group"><label>Quartier</label><input id="edit-quartier"></div>
         <div class="form-group full-width"><label>Téléphone</label><input id="edit-telephone" type="tel"></div>
-        <button class="modal-submit-btn" style="background:var(--success);" onclick="sauvegarderModificationAnnonce()">💾 Valider et Enregistrer</button>
+        <button class="modal-submit-btn" style="background:var(--success);" onclick="sauvegarderModificationAnnonce()">💾 Valider les changements</button>
       </div>
     </div>
   </div>
 
+  <!-- INTERSTITIEL ASSOCIE DIRECTEMENT AU BOOST ET AUX APPELS -->
   <div class="modal" id="modal-boost-pub">
     <div class="modal-content" style="max-width:400px; text-align:center;">
       <h3>🚀 AdSense Booster Engine</h3>
@@ -203,7 +201,7 @@
 
   <div class="modal" id="modal-profil">
     <div class="modal-content">
-      <div class="modal-header"><h2 id="profil-modal-title">👤 Espace Personnel</h2><button class="close-modal" onclick="fermerModal('profil')">✕</button></div>
+      <div class="modal-header"><h2 id="profil-modal-title">👤 Mon Compte Personnel</h2><button class="close-modal" onclick="fermerModal('profil')">✕</button></div>
       <div id="profil-view-content"></div>
     </div>
   </div>
@@ -214,30 +212,20 @@
         <h2>🕶️ CONSOLE GÉNÉRALE ADMIN</h2>
         <button class="close-modal" style="background:#334155; color:white;" onclick="fermerModal('admin-panel')">✕</button>
       </div>
-      
       <div class="admin-stats-row">
         <div class="stat-box"><div>Total Annonces</div><div class="stat-number" id="adm-stat-total">0</div></div>
         <div class="stat-box"><div>Annonces VIP</div><div class="stat-number" id="adm-stat-vip" style="color:var(--vip-gold)">0</div></div>
         <div class="stat-box"><div>Annonces Stand.</div><div class="stat-number" id="adm-stat-stand" style="color:var(--success)">0</div></div>
       </div>
-
       <div class="admin-filters">
-        <div style="display:flex; flex-direction:column; gap:4px;">
-          <label style="font-size:0.8rem; font-weight:bold; color:#94a3b8;">Filtrer par Ville :</label>
-          <select id="adm-filter-ville" onchange="filtrerIndexationAnnoncesAdmin()" style="background:#1e293b; color:white; border:1px solid #334155;"></select>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:4px;">
-          <label style="font-size:0.8rem; font-weight:bold; color:#94a3b8;">Type de Compte :</label>
-          <select id="adm-filter-type" onchange="filtrerIndexationAnnoncesAdmin()" style="background:#1e293b; color:white; border:1px solid #334155;">
-            <option value="all">Afficher tout (VIP + Standard)</option>
-            <option value="vip">Uniquement les VIP 👑</option>
-            <option value="standard">Uniquement les Standards 👤</option>
-          </select>
-        </div>
+        <select id="adm-filter-ville" onchange="filtrerIndexationAnnoncesAdmin()" style="background:#1e293b; color:white; border:1px solid #334155;"></select>
+        <select id="adm-filter-type" onchange="filtrerIndexationAnnoncesAdmin()" style="background:#1e293b; color:white; border:1px solid #334155;">
+          <option value="all">Afficher tout (VIP + Standard)</option>
+          <option value="vip">Uniquement les VIP 👑</option>
+          <option value="standard">Uniquement les Standards 👤</option>
+        </select>
       </div>
-
-      <h4 style="color:#94a3b8; margin:15px 0 10px 0;">📋 Toutes les publications actives sur NIA RDC (Modération Directe) :</h4>
-      <div id="admin-liste-moderat-annonces" style="display:flex; flex-direction:column; gap:10px; max-height:300px; overflow-y:auto; padding-right:5px;"></div>
+      <div id="admin-liste-moderat-annonces" style="display:flex; flex-direction:column; gap:10px; max-height:300px; overflow-y:auto; margin-top:15px;"></div>
     </div>
   </div>
 
@@ -254,10 +242,10 @@
 
   <div class="bottom-area">
     <nav class="bottom-nav">
-      <button class="nav-btn" onclick="ouvrirModal('publier')"><span>📢</span><span>Publier</span></button>
+      <button class="nav-btn" onclick="declencherOuverturePublication()"><span>📢</span><span>Publier</span></button>
       <button class="nav-btn" onclick="ouvrirModal('rechercher')"><span>🔍</span><span>Rechercher</span></button>
       <button class="nav-btn vip-btn" onclick="gererClicBoutonVipMenu()"><span>👑</span><span>Espace VIP</span></button>
-      <button class="nav-btn" id="main-profile-nav-btn" onclick="ouvrirMonProfilOuMaBoutique()"><span>👤</span><span>Mon Profil</span></button>
+      <button class="nav-btn" id="main-profile-nav-btn" onclick="ouvrirEspaceCompteUtilisateur()"><span>👤</span><span>Mon Profil</span></button>
     </nav>
     <div class="adsense-space" id="adsense-bottom-banner">⚡ REVENUS PUBLICITAIRES INTEGRÉS ADSENSE ⚡</div>
   </div>

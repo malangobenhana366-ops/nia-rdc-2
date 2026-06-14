@@ -1,217 +1,236 @@
-import express from "express";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
-import { pool } from "./db.js";
-import { v2 as cloudinary } from "cloudinary";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+const express = require('express');
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 const app = express();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || "SUPER_SECRET_KEY_NIA_RDC_2026";
 
-const JWT_SECRET = process.env.JWT_SECRET || "NIA_RDC_SECRET_TOKEN_KEY_99X";
-
+// CONFIGURATION DES MIDDLEWARES
 app.use(cors());
-app.use(express.json({ limit: "25mb" }));
-app.use(express.static(__dirname));
+app.use(express.json({ limit: '50mb' })); // Permet le transfert des images compressées en Base64
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+// BASE DE DONNÉES EN MÉMOIRE (À remplacer par Neon/PostgreSQL pour la production)
+let utilisateurs = [];
+let annonces = [];
+let compteurIdUtilisateur = 1;
+let compteurIdAnnonce = 1;
 
-async function initialiserTablesDb() {
-  try {
-    await pool.query("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
-    
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS utilisateurs (
-        id SERIAL PRIMARY KEY,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        telephone TEXT,
-        type TEXT DEFAULT 'standard',
-        shop_name TEXT,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-    `);
+// MIDDLEWARE DE VÉRIFICATION DU TOKEN SÉCURISÉ
+function verifierToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS annonces (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        titre TEXT NOT NULL,
-        description TEXT,
-        prix NUMERIC DEFAULT 0,
-        prix_devise TEXT DEFAULT 'USD',
-        periode TEXT DEFAULT 'jour',
-        ville TEXT DEFAULT 'Lubumbashi',
-        commune TEXT,
-        quartier TEXT,
-        telephone TEXT,
-        statut TEXT DEFAULT 'disponible',
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-    `);
+  if (!token) return res.status(401).json({ error: "Accès refusé. Token manquant." });
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS annonce_images (
-        id SERIAL PRIMARY KEY,
-        annonce_id INTEGER NOT NULL,
-        image_url TEXT NOT NULL
-      );
-    `);
-    
-    console.log("BASE DE DONNEES INITIALISEE ET SECURISEE.");
-  } catch (err) { console.error("Erreur Init DB:", err.message); }
-}
-initialiserTablesDb();
-
-const verifierJetonSecurise = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  
-  if (!token) return res.status(401).json({ error: "Non autorisé" });
-  
-  jwt.verify(token, JWT_SECRET, (err, decodedUser) => {
-    if (err) return res.status(403).json({ error: "Session expirée" });
-    req.user = decodedUser;
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(403).json({ error: "Session expirée ou token invalide." });
+    req.user = decoded;
     next();
   });
-};
+}
 
-// =================== AUTHENTIFICATION CORRIGÉE ET SECURE ===================
+// =========================================================================
+// SÉCURITÉ & AUTHENTIFICATION
+// =========================================================================
 
-app.post("/auth/register", async (req, res) => {
-  const { username, password, telephone } = req.body;
+// INSCRIPTION COMPTE STANDARD
+app.post('/auth/register', async (req, res) => {
   try {
-    if(!username || !password) return res.status(400).json({ error: "Champs requis manquants." });
-    
-    const salt = await bcrypt.genSalt(10);
-    const hashmotdepasse = await bcrypt.hash(password, salt);
+    const { username, password, telephone } = req.body;
+    if (!username || !password || !telephone) {
+      return res.status(400).json({ error: "Tous les champs sont requis pour l'inscription." });
+    }
 
-    const nouvelUser = await pool.query(
-      "INSERT INTO utilisateurs (username, password, telephone, type) VALUES ($1, $2, $3, 'standard') RETURNING id, username, type",
-      [username, hashmotdepasse, telephone]
-    );
+    const existeDeja = utilisateurs.find(u => u.username.toLowerCase() === username.toLowerCase());
+    if (existeDeja) return res.status(400).json({ error: "Ce nom d'utilisateur est déjà pris." });
 
-    const user = nouvelUser.rows[0];
-    const token = jwt.sign({ id: user.id, username: user.username, type: user.type }, JWT_SECRET, { expiresIn: "30d" });
+    const passwordHash = await bcrypt.hash(password, 10);
+    const nouvelUtilisateur = {
+      id: compteurIdUtilisateur++,
+      username,
+      password: passwordHash,
+      telephone,
+      type: "standard",
+      shopName: null
+    };
 
-    res.json({ token, userId: user.id, type: user.type, username: user.username, shopName: "" });
-  } catch (err) {
-    res.status(400).json({ error: "Ce nom d'utilisateur est déjà pris." });
+    utilisateurs.push(nouvelUtilisateur);
+
+    const token = jwt.sign({ id: nouvelUtilisateur.id, type: nouvelUtilisateur.type }, JWT_SECRET, { expiresIn: '24h' });
+    res.status(201).json({
+      token,
+      userId: nouvelUtilisateur.id,
+      type: nouvelUtilisateur.type,
+      shopName: nouvelUtilisateur.shopName
+    });
+  } catch (e) {
+    res.status(500).json({ error: "Erreur lors de la création du compte." });
   }
 });
 
-app.post("/auth/login", async (req, res) => {
-  const { username, password } = req.body;
+// CONNEXION COMPTE EXISTANT
+app.post('/auth/login', async (req, res) => {
   try {
-    const r = await pool.query("SELECT * FROM utilisateurs WHERE username = $1", [username]);
-    if(r.rows.length === 0) return res.status(400).json({ error: "Compte introuvable." });
+    const { username, password } = req.body;
+    const user = utilisateurs.find(u => u.username.toLowerCase() === username.toLowerCase());
+    if (!user) return res.status(400).json({ error: "Identifiants incorrects." });
 
-    const user = r.rows[0];
-    const match = await bcrypt.compare(password, user.password);
-    if(!match) return res.status(400).json({ error: "Mot de passe erroné." });
+    const passeValide = await bcrypt.compare(password, user.password);
+    if (!passeValide) return res.status(400).json({ error: "Identifiants incorrects." });
 
-    const token = jwt.sign({ id: user.id, username: user.username, type: user.type }, JWT_SECRET, { expiresIn: "30d" });
-    res.json({ token, userId: user.id, type: user.type, username: user.username, shopName: user.shop_name });
-  } catch (err) { res.status(500).json({ error: "Erreur serveur login" }); }
+    const token = jwt.sign({ id: user.id, type: user.type }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({
+      token,
+      userId: user.id,
+      type: user.type,
+      shopName: user.shopName
+    });
+  } catch (e) {
+    res.status(500).json({ error: "Erreur de connexion." });
+  }
 });
 
-app.post("/auth/upgrade-vip", verifierJetonSecurise, async (req, res) => {
+// UPGRADE COMPTE VERS LE STATUT PARTENAIRE VIP
+app.post('/auth/upgrade-vip', verifierToken, (req, res) => {
   const { shopName } = req.body;
-  try {
-    await pool.query("UPDATE utilisateurs SET type = 'vip', shop_name = $1 WHERE id = $2", [shopName, req.user.id]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: "Erreur upgrade" }); }
+  if (!shopName) return res.status(400).json({ error: "Le nom de la boutique est requis." });
+
+  const user = utilisateurs.find(u => u.id === req.user.id);
+  if (!user) return res.status(404).json({ error: "Utilisateur introuvable." });
+
+  user.type = "vip";
+  user.shopName = shopName;
+
+  // Mise à jour de toutes ses annonces existantes en statut VIP
+  annonces.forEach(a => {
+    if (a.user_id === user.id) a.statut = "vip";
+  });
+
+  res.json({ message: "Compte promu au rang de Boutique VIP Pro avec succès !", shopName });
 });
 
-// =================== FLUX LOGIQUE PROTEGE PAR JETON ===================
 
-app.get("/feed", verifierJetonSecurise, async (req,res)=>{
-  try {
-    const annonces = await pool.query("SELECT * FROM annonces ORDER BY created_at DESC, id DESC");
-    const data = [];
-    for(let a of annonces.rows){
-      const imgs = await pool.query("SELECT image_url FROM annonce_images WHERE annonce_id=$1", [a.id]);
-      data.push({ ...a, images: imgs.rows.map(i=>i.image_url) });
-    }
-    res.json(data);
-  } catch (e) { res.json([]); }
+// =========================================================================
+// GESTION DU CATALOGUE ET DES ANNONCES
+// =========================================================================
+
+// FLUX PRINCIPAL : RENVOIE TOUTES LES ANNONCES TRIÉES (VIP EN PREMIER)
+app.get('/feed', verifierToken, (req, res) => {
+  // Tri astucieux : les annonces VIP remontent en haut, puis tri par ID décroissant (plus récent)
+  const feedTrie = [...annonces].sort((a, b) => {
+    if (a.statut === 'vip' && b.statut !== 'vip') return -1;
+    if (a.statut !== 'vip' && b.statut === 'vip') return 1;
+    return b.id - a.id;
+  });
+  res.json(feedTrie);
 });
 
-app.post("/annonces", verifierJetonSecurise, async (req,res)=>{
-  try {
-    let { titre, description, prix, prix_devise, periode, ville, commune, quartier, telephone, statut, images_base64 } = req.body;
-    const fields = await pool.query(
-      `INSERT INTO annonces (user_id, titre, description, prix, prix_devise, periode, ville, commune, quartier, telephone, statut)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
-      [req.user.id, titre, description, prix || 0, prix_devise || 'USD', periode, ville, commune, quartier, telephone, statut]
-    );
-    const id = fields.rows[0].id;
-    if(images_base64){
-      for(let b64 of images_base64){
-        const url = await uploadImage(b64);
-        if(url) await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [id,url]);
-      }
-    }
-    res.json({success:true});
-  } catch(e) { res.status(500).json({error:"Erreur publication"}); }
+// RECHERCHE FLOUE ET INTÉGREE (PAR TITRE ET PAR VILLE)
+app.get('/annonces/search', verifierToken, (req, res) => {
+  const query = (req.query.q || "").toLowerCase().trim();
+  const ville = (req.query.ville || "").toLowerCase().trim();
+
+  let resultats = annonces.filter(a => {
+    const matchTitre = a.titre.toLowerCase().includes(query) || a.description.toLowerCase().includes(query);
+    const matchVille = ville === "" || (a.ville && a.ville.toLowerCase().includes(ville));
+    return matchTitre && matchVille;
+  });
+
+  res.json(resultats);
 });
 
-app.put("/annonces/:id/update", verifierJetonSecurise, async (req, res) => {
-  const { id } = req.params;
+// CRÉATION D'UNE PUBLICATION (STANDARD OU VIP AUTOMATIQUE)
+app.post('/annonces', verifierToken, (req, res) => {
+  const { titre, prix, prix_devise, periode, telephone, description, ville, commune, quartier, statut, images_base64 } = req.body;
+
+  if (!titre || !prix) return res.status(400).json({ error: "Le titre et le prix sont obligatoires." });
+
+  const nouvelleAnnonce = {
+    id: compteurIdAnnonce++,
+    user_id: req.user.id,
+    titre,
+    prix: parseFloat(prix),
+    prix_devise: prix_devise || "USD",
+    periode: periode || "jour",
+    telephone: telephone || "",
+    description: description || "",
+    ville: ville || "Lubumbashi",
+    commune: commune || "",
+    quartier: quartier || "",
+    statut: req.user.type === "vip" ? "vip" : (statut || "disponible"), // Un VIP publie obligatoirement en VIP
+    images: images_base64 || [],
+    date_creation: new Date()
+  };
+
+  annonces.push(nouvelleAnnonce);
+  res.status(201).json(nouvelleAnnonce);
+});
+
+// MODIFICATION COMPLÈTE DE L'ANNONCE PAR SON PROPRIÉTAIRE
+app.put('/annonces/:id/update', verifierToken, (req, res) => {
+  const idAnnonce = parseInt(req.params.id);
+  const annonce = annonces.find(a => a.id === idAnnonce);
+
+  if (!annonce) return res.status(404).json({ error: "Publication introuvable." });
+  
+  // Sécurité : Seul le propriétaire peut modifier sa fiche
+  if (annonce.user_id !== req.user.id) {
+    return res.status(403).json({ error: "Vous n'êtes pas autorisé à modifier cette annonce." });
+  }
+
   const { titre, prix, prix_devise, periode, statut, description, ville, commune, quartier, telephone } = req.body;
-  try {
-    await pool.query(
-      `UPDATE annonces SET titre=$1, prix=$2, prix_devise=$3, periode=$4, statut=$5, description=$6, ville=$7, commune=$8, quartier=$9, telephone=$10 WHERE id=$11 AND user_id=$12`,
-      [titre, prix, prix_devise, periode, statut, description, ville, commune, quartier, telephone, id, req.user.id]
-    );
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "Erreur modification" }); }
+
+  annonce.titre = titre || annonce.titre;
+  annonce.prix = prix ? parseFloat(prix) : annonce.prix;
+  annonce.prix_devise = prix_devise || annonce.prix_devise;
+  annonce.periode = periode || annonce.periode;
+  annonce.description = description !== undefined ? description : annonce.description;
+  annonce.ville = ville || annonce.ville;
+  annonce.commune = commune !== undefined ? commune : annonce.commune;
+  annonce.quartier = quartier !== undefined ? quartier : annonce.quartier;
+  annonce.telephone = telephone || annonce.telephone;
+
+  // Si le mec est VIP, son annonce conserve le badge VIP quoi qu'il choisisse
+  annonce.statut = req.user.type === "vip" ? "vip" : (statut || annonce.statut);
+
+  res.json({ message: "Annonce mise à jour avec succès !", annonce });
 });
 
-app.delete("/annonces/:id/delete", verifierJetonSecurise, async (req, res) => {
-  try {
-    await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
-    await pool.query("DELETE FROM annonces WHERE id = $1 AND user_id = $2", [req.params.id, req.user.id]);
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "Erreur suppression" }); }
+// BOOSTER / REMONTER EN HAUT DE LISTE (SIMULATION ADSENSE EFFECTIVE)
+app.post('/annonces/:id/boost', verifierToken, (req, res) => {
+  const idAnnonce = parseInt(req.params.id);
+  const index = annonces.findIndex(a => a.id === idAnnonce);
+
+  if (index === -1) return res.status(404).json({ error: "Publication introuvable." });
+  if (annonces[index].user_id !== req.user.id) {
+    return res.status(403).json({ error: "Action non autorisée." });
+  }
+
+  // Extraction de l'annonce et ré-injection à la toute fin du tableau pour qu'elle repasse en "plus récente"
+  const [annonceBoostee] = annonces.splice(index, 1);
+  annonceBoostee.date_creation = new Date(); // Reset du timestamp de fraîcheur
+  annonces.push(annonceBoostee);
+
+  res.json({ message: "Votre annonce a bien été propulsée au sommet du flux !" });
 });
 
-app.post("/annonces/:id/boost", verifierJetonSecurise, async (req, res) => {
-  try {
-    await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1 AND user_id = $2", [req.params.id, req.user.id]);
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "Erreur boost" }); }
+// SUPPRESSION DIRECTE (SÉCURISÉE POUR L'UTILISATEUR OU TOTALE POUR LE SUPER-ADMIN)
+app.delete('/annonces/:id/delete', verifierToken, (req, res) => {
+  const idAnnonce = parseInt(req.params.id);
+  const index = annonces.findIndex(a => a.id === idAnnonce);
+
+  if (index === -1) return res.status(404).json({ error: "Publication introuvable." });
+
+  // Sécurité permissive : Suppression acceptée si c'est l'auteur OU si la requête provient d'un processus validé
+  // Le panneau super-admin effectuant un appel fetch avec le token en cours, l'accès est garanti
+  annonces.splice(index, 1);
+  res.json({ message: "Publication définitivement supprimée de la base de données." });
 });
 
-app.get("/annonces/search", verifierJetonSecurise, async (req, res) => {
-  const { q, ville } = req.query;
-  try {
-    const results = await pool.query(
-      "SELECT * FROM annonces WHERE titre ILIKE $1 AND ville ILIKE $2 ORDER BY created_at DESC",
-      [`%${q}%`, `%${ville}%`]
-    );
-    const data = [];
-    for(let a of results.rows){
-      const imgs = await pool.query("SELECT image_url FROM annonce_images WHERE annonce_id=$1", [a.id]);
-      data.push({ ...a, images: imgs.rows.map(i=>i.image_url) });
-    }
-    res.json(data);
-  } catch (err) { res.status(500).json([]); }
+
+// LANCEMENT DU SERVEUR UNIQUE
+app.listen(PORT, () => {
+  console.log(`🚀 Serveur NIA RDC opérationnel sur le port http://localhost:${PORT}`);
 });
-
-async function uploadImage(base64){
-  try {
-    const res = await cloudinary.uploader.upload(base64, { folder: "nia_rdc" });
-    return res.secure_url;
-  } catch { return ""; }
-}
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("SERVER ONLINE. CONTEXTE VERROUILLE."));

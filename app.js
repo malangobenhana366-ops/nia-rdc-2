@@ -26,7 +26,7 @@ let fonctionRetourAppelInterstitiel = null;
 function ouvrirModal(id) { document.getElementById(`modal-${id}`).style.display = "flex"; }
 function fermerModal(id) { document.getElementById(`modal-${id}`).style.display = "none"; }
 
-// CHARGEMENT INTÉGRAL SÉCURISÉ REQUIS APRÈS VALIDATION DU COMPTE
+// CHARGEMENT INTÉGRAL DU FLUX
 async function loadFeed(){
   if (!sessionToken) {
     document.getElementById("gateway-screen").style.display = "flex";
@@ -50,6 +50,7 @@ function mettreAJourLibelleBoutonProfil() {
   btn.innerHTML = monUserTypeActuel === "vip" ? `<span>🏢</span><span>Ma Boutique</span>` : `<span>👤</span><span>Mon Profil</span>`;
 }
 
+// RENDU NETTOYÉ : AUCUN BOUTON DE SUPPRESSION/MODIF SUR LE FLUX PUBLIC
 function afficherAnnonces(liste, contextViewId = null) {
   const feed = document.getElementById("feed");
   if (!feed) return;
@@ -66,7 +67,6 @@ function afficherAnnonces(liste, contextViewId = null) {
 
     const estVip = (a.statut === 'vip');
     const symboleDevise = a.prix_devise === 'USD' ? '$' : ' FC';
-    const mAppartient = (monUserIdActuel && a.user_id === monUserIdActuel);
 
     feed.innerHTML += `
       <div class="annonce-card ${estVip ? 'vip-premium' : ''}">
@@ -87,13 +87,6 @@ function afficherAnnonces(liste, contextViewId = null) {
           </span>
           <div class="footer-actions">
             ${estVip && contextViewId !== 'OWNER_VITRINE' ? `<button class="btn-shop" onclick="actionVisiterBoutiqueTierce(${a.user_id})">🏢 Visiter la boutique</button>` : ''}
-            
-            ${mAppartient || contextViewId === 'OWNER_VITRINE' ? `
-              <button class="btn-boost" onclick="lancerLancementPubBoost(${a.id})">🚀 Booster</button>
-              <button class="btn-edit" onclick="ouvrirFormulaireModificationAnnonce(${a.id})">📝 Modifier</button>
-              <button class="btn-delete" onclick="supprimerAnnonce(${a.id})">🗑️ Supprimer</button>
-            ` : ''}
-            
             ${a.telephone ? `<button class="btn-contact" onclick="intercepterAppelTelephonique('${a.telephone}')">📞 Appeler</button>` : ''}
           </div>
         </div>
@@ -102,6 +95,45 @@ function afficherAnnonces(liste, contextViewId = null) {
   });
 }
 
+// CONSOLE ADMIN SECRÈTE (APPELÉE PAR CLIC DROIT / LONG TOUCH SUR L'ENGRENAGE)
+function ouvrirConsoleAdminSecrète(e) {
+  if(e) e.preventDefault();
+  
+  const total = toutesLesAnnonces.length;
+  const vips = toutesLesAnnonces.filter(a => a.statut === 'vip').length;
+  const stands = total - vips;
+
+  document.getElementById("adm-stat-total").innerText = total;
+  document.getElementById("adm-stat-vip").innerText = vips;
+  document.getElementById("adm-stat-stand").innerText = stands;
+
+  const container = document.getElementById("admin-liste-moderat-annonces");
+  container.innerHTML = "";
+
+  toutesLesAnnonces.forEach(a => {
+    const sDevise = a.prix_devise === 'USD' ? '$' : ' FC';
+    const row = document.createElement("div");
+    row.className = "admin-annonce-item";
+    row.innerHTML = `
+      <div><strong>${a.titre}</strong> (${a.prix}${sDevise})</div>
+      <button class="btn-delete" style="padding:5px 10px; font-size:0.8rem;" onclick="adminSupprimerAnnonceDirecte(${a.id})">🗑️ Ban</button>
+    `;
+    container.appendChild(row);
+  });
+
+  ouvrirModal('admin-panel');
+}
+
+async function adminSupprimerAnnonceDirecte(id) {
+  if(!confirm("Êtes-vous sûr de vouloir supprimer définitivement cette annonce en tant qu'admin ?")) return;
+  const res = await fetch(`${API}/annonces/${id}/delete`, { 
+    method: "DELETE",
+    headers: { "Authorization": `Bearer ${sessionToken}` }
+  });
+  if(res.ok) { fermerModal('admin-panel'); loadFeed(); }
+}
+
+// GESTION DU PORTAIL AUTH
 function basculerModeAuth() {
   modeAuthInscription = !modeAuthInscription;
   document.getElementById("auth-subtitle").innerText = modeAuthInscription ? "Inscrivez-vous pour accéder au réseau de location" : "Connectez-vous à votre compte sécurisé";
@@ -156,6 +188,7 @@ function deconnexionEspaceSecurise() {
   fermerModal('profil');
 }
 
+// L'UNIQUE ENDROIT OÙ L'ON PEUT BOOSTER, MODIFIER, SUPPRIMER SON COMPTE
 function ouvrirEspaceCompteUtilisateur() {
   const title = document.getElementById("profil-modal-title");
   const content = document.getElementById("profil-view-content");
@@ -163,36 +196,36 @@ function ouvrirEspaceCompteUtilisateur() {
 
   let enteteHtml = `
     <div style="background:#e2e8f0; padding:15px; border-radius:12px; margin-bottom:15px;">
-      <p style="margin:0;"><strong>Statut du Compte :</strong> ${monUserTypeActuel === 'vip' ? '👑 Boutique Professionnelle VIP' : '👤 Membre Standard'}</p>
+      <p style="margin:0;"><strong>Statut :</strong> ${monUserTypeActuel === 'vip' ? '👑 Boutique VIP Pro' : '👤 Compte Standard'}</p>
       ${monShopNameActuel ? `<p style="margin:5px 0 0 0;"><strong>Enseigne :</strong> ${monShopNameActuel}</p>` : ''}
       <button onclick="deconnexionEspaceSecurise()" style="background:var(--danger); color:white; border:none; padding:6px 12px; border-radius:6px; margin-top:10px; cursor:pointer; font-weight:bold;">Se déconnecter</button>
     </div>
   `;
 
-  title.innerText = "👤 Mon Espace Privé";
+  title.innerText = monUserTypeActuel === 'vip' ? "🏢 Gestion de ma Vitrine VIP" : "👤 Mon Espace Privé";
   content.innerHTML = `
     ${enteteHtml}
-    <h4 style="margin:10px 0;">📋 Vos annonces personnelles (${mesAnnoncesPersonnelles.length}) :</h4>
-    <div id="private-user-items" style="display:flex; flex-direction:column; gap:12px; max-height:250px; overflow-y:auto;"></div>
+    <h4 style="margin:10px 0;">📋 Vos annonces modifiables (${mesAnnoncesPersonnelles.length}) :</h4>
+    <div id="private-user-items" style="display:flex; flex-direction:column; gap:12px; max-height:300px; overflow-y:auto;"></div>
   `;
 
   ouvrirModal('profil');
   const container = document.getElementById("private-user-items");
   if(mesAnnoncesPersonnelles.length === 0) {
-    container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>Aucune annonce mise en ligne.</p>";
+    container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>Aucune annonce en ligne pour le moment.</p>";
     return;
   }
   
   mesAnnoncesPersonnelles.forEach(a => {
     const sDevise = a.prix_devise === 'USD' ? '$' : ' FC';
     const div = document.createElement("div");
-    div.style = "background:#f8fafc; border:1px solid var(--border); padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;";
+    div.style = "background:#f8fafc; border:1px solid var(--border); padding:12px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; gap:10px;";
     div.innerHTML = `
-      <div><strong>${a.titre}</strong> (${a.prix}${sDevise})</div>
-      <div style="display:flex; gap:4px;">
-        <button class="btn-boost" style="padding:4px 8px; font-size:0.75rem;" onclick="fermerModal('profil'); lancerLancementPubBoost(${a.id})">🚀 Booster</button>
-        <button class="btn-edit" style="padding:4px 8px; font-size:0.75rem;" onclick="fermerModal('profil'); ouvrirFormulaireModificationAnnonce(${a.id})">📝</button>
-        <button class="btn-delete" style="padding:4px 8px; font-size:0.75rem;" onclick="fermerModal('profil'); supprimerAnnonce(${a.id})">🗑️</button>
+      <div style="font-size:0.9rem;"><strong>${a.titre}</strong><br><span style="color:var(--primary); font-weight:bold;">${a.prix}${sDevise}</span></div>
+      <div style="display:flex; gap:6px; flex-shrink:0;">
+        <button class="btn-boost" style="padding:6px 10px; font-size:0.75rem;" onclick="fermerModal('profil'); lancerLancementPubBoost(${a.id})">🚀 Booster</button>
+        <button class="btn-edit" style="padding:6px 10px; font-size:0.75rem;" onclick="fermerModal('profil'); ouvrirFormulaireModificationAnnonce(${a.id})">📝</button>
+        <button class="btn-delete" style="padding:6px 10px; font-size:0.75rem;" onclick="fermerModal('profil'); supprimerAnnonce(${a.id})">🗑️</button>
       </div>
     `;
     container.appendChild(div);
@@ -310,6 +343,25 @@ async function publierAnnonceStandard(){
   if(res.ok) { fermerModal('publier'); loadFeed(); }
 }
 
+function ouvrirFormulaireModificationAnnonce(id) {
+  const a = toutesLesAnnonces.find(item => item.id === id);
+  if(!a) return;
+
+  document.getElementById("edit-id").value = a.id;
+  document.getElementById("edit-titre").value = a.titre;
+  document.getElementById("edit-prix").value = a.prix;
+  document.getElementById("edit-prix-devise").value = a.prix_devise;
+  document.getElementById("edit-periode").value = a.periode;
+  document.getElementById("edit-statut").value = a.statut;
+  document.getElementById("edit-description").value = a.description || "";
+  document.getElementById("edit-ville").value = a.ville || "Lubumbashi";
+  document.getElementById("edit-commune").value = a.commune || "";
+  document.getElementById("edit-quartier").value = a.quartier || "";
+  document.getElementById("edit-telephone").value = a.telephone || "";
+
+  ouvrirModal('modifier-annonce');
+}
+
 async function sauvegarderModificationAnnonce() {
   const id = document.getElementById("edit-id").value;
   const payload = {
@@ -424,5 +476,15 @@ function démarrerChangementBannièreAdSenseFonds() {
   }, 15000);
 }
 
-// INITIALISATION DU FLUX AU CHARGEMENT REQUIS
+// GESTION SUPACTTIVE POUR MOBILE (APPUI LONG DE 1,5 SECONDE SUR L'ENGRENAGE POUR LES ÉCRANS TACTILES)
+let tTriggerAdmin;
+const triggerBtn = document.getElementById("gear-admin-trigger");
+if(triggerBtn) {
+  triggerBtn.addEventListener("touchstart", () => {
+    tTriggerAdmin = setTimeout(() => { ouvrirConsoleAdminSecrète(); }, 1500);
+  });
+  triggerBtn.addEventListener("touchend", () => { clearTimeout(tTriggerAdmin); });
+}
+
+// INITIALISATION DU SYSTEME
 loadFeed(); démarrerChangementBannièreAdSenseFonds();

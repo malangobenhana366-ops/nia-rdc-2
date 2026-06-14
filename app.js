@@ -5,24 +5,18 @@ function val(id){
   return document.getElementById(id)?.value?.trim() || "";
 }
 
-/* NAV */
-function go(page){
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  const el = document.getElementById(page);
-  if(el) el.classList.add("active");
-  if(page === "home") loadFeed();
+/* MODALS CONTROLLERS */
+function ouvrirModal(id) {
+  const modal = document.getElementById(`modal-${id}`);
+  if(modal) modal.style.display = "flex";
 }
 
-/* UI */
-function showLogin(){ go("login"); }
-function showRegister(){ go("register"); }
-
-function showApp(){
-  document.getElementById("authBox").style.display = "none";
-  document.getElementById("appBox").style.display = "block";
+function fermerModal(id) {
+  const modal = document.getElementById(`modal-${id}`);
+  if(modal) modal.style.display = "none";
 }
 
-/* FEED */
+/* FEED GENERATOR */
 async function loadFeed(){
   const res = await fetch(`${API}/feed`);
   const data = await res.json();
@@ -32,95 +26,89 @@ async function loadFeed(){
 
   feed.innerHTML = "";
 
-  data.forEach(a => {
-    feed.innerHTML += `
-      <div style="background:#fff;padding:10px;margin:10px;border-radius:10px">
-        <h3>${a.titre || ""}</h3>
-        <p>${a.ville || ""} - ${a.quartier || ""}</p>
-        <p>${a.prix || 0} ${a.prix_type || ""}</p>
-        <p>${a.telephone || ""}</p>
+  if(data.length === 0) {
+    feed.innerHTML = `<p style="text-align:center; color:var(--text-light);">Aucune annonce disponible pour le moment.</p>`;
+    return;
+  }
 
-        ${a.image_url ? `<img src="${a.image_url}" style="width:100%;margin-top:10px">` : ""}
+  data.forEach(a => {
+    const isVip = a.statut === "vip";
+    const cardClass = isVip ? "annonce-card vip-premium" : "annonce-card";
+    const statusBadge = a.statut === "occupe" ? 
+      `<span class="badge-status status-occupe">🔴 Occupé</span>` : 
+      `<span class="badge-status status-disponible">🟢 Disponible</span>`;
+
+    // Gestion de la galerie d'images
+    let galleryHtml = "";
+    if(a.images && a.images.length > 0) {
+      galleryHtml = `<div class="gallery">`;
+      a.images.forEach(imgUrl => {
+        galleryHtml += `<img src="${imgUrl}" class="gallery-item" alt="${a.titre}">`;
+      });
+      galleryHtml += `</div>`;
+    }
+
+    feed.innerHTML += `
+      <div class="${cardClass}">
+        ${isVip ? `<div class="vip-badge-tag">👑 Premium VIP</div>` : ""}
+        <h3 style="margin:0 0 8px 0; font-size:1.25rem;">${a.titre || ""}</h3>
+        <div class="annonce-price">${a.prix || 0} USD <span style="font-size:0.85rem; font-weight:500; color:var(--text-light)">/ ${a.periode || "jour"}</span></div>
+        <div class="annonce-meta">📍 ${a.ville || ""} - ${a.commune || ""}, ${a.quartier || ""}</div>
+        
+        ${a.description ? `<div class="annonce-description">${a.description}</div>` : ""}
+        
+        ${galleryHtml}
+
+        <div class="annonce-footer">
+          <div>${statusBadge}</div>
+          <div class="footer-actions">
+            <a href="tel:${a.telephone}" class="btn-contact">📞 Appeler (${a.telephone || ""})</a>
+          </div>
+        </div>
       </div>
     `;
   });
 }
 
-/* REGISTER */
-async function register(){
-  await fetch(`${API}/auth/register`, {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      telephone: val("reg_tel"),
-      password: val("reg_pass")
-    })
-  });
-
-  alert("Compte créé");
-  go("login");
-}
-
-/* LOGIN */
-async function login(){
-  const res = await fetch(`${API}/auth/login`, {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      telephone: val("login_tel"),
-      password: val("login_pass")
-    })
-  });
-
-  const data = await res.json();
-
-  if(!res.ok) return alert(data.error);
-
-  localStorage.setItem("user", JSON.stringify(data));
-  showApp();
-  go("home");
-}
-
-/* PUBLISH (IMPORTANT FIX IMAGE) */
+/* PUBLISH METHOD (MULTIPLE IMAGES BASE64) */
 async function publier(){
-  const user = JSON.parse(localStorage.getItem("user"));
-  if(!user) return alert("Connecte-toi");
+  const files = document.getElementById("image")?.files;
+  let images_base64 = [];
 
-  const file = document.getElementById("image")?.files?.[0];
-
-  let image_base64 = "";
-
-  if(file){
-    image_base64 = await toBase64(file);
+  if(files && files.length > 0) {
+    for(let file of files) {
+      const b64 = await toBase64(file);
+      images_base64.push(b64);
+    }
   }
 
   const res = await fetch(`${API}/annonces`, {
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
-      user_id:user.id,
-      titre:val("titre"),
-      description:val("desc"),
-      prix:val("prix"),
-      prix_type:val("prix_type"),
-      ville:val("ville"),
-      quartier:val("quartier"),
-      telephone:val("telephone"),
-      disponibilite:val("disponibilite"),
-      image_base64
+      user_id: 1, // Utilisateur par défaut
+      titre: val("titre"),
+      description: val("description"),
+      prix: val("prix"),
+      periode: val("periode"),
+      ville: val("ville"),
+      commune: val("commune"),
+      quartier: val("quartier"),
+      telephone: val("telephone"),
+      statut: "disponible",
+      images_base64
     })
   });
 
   const data = await res.json();
+  if(!res.ok) return alert("Erreur lors de la publication");
 
-  if(!res.ok) return alert(data.error);
-
-  alert("Annonce publiée 🚀");
-  go("home");
+  alert("Annonce publiée avec succès ! 🚀");
+  fermerModal("publier");
   loadFeed();
 }
 
-/* BASE64 */
+/* BASE64 CONVERTER */
 function toBase64(file){
   return new Promise((resolve,reject)=>{
     const r = new FileReader();
@@ -130,6 +118,25 @@ function toBase64(file){
   });
 }
 
-/* INIT */
-go("home");
-loadFeed();
+/* SEARCH & FILTERS PLACEHOLDERS */
+function rechercher() {
+  alert("Filtrage en cours...");
+  fermerModal("rechercher");
+}
+
+function annulerRecherche() {
+  loadFeed();
+}
+
+function gererClicBoutonVipMenu() {
+  ouvrirModal("vip");
+}
+
+function ouvrirMonProfilOuMaBoutique() {
+  ouvrirModal("profil");
+}
+
+/* INITIALIZATION */
+document.addEventListener("DOMContentLoaded", () => {
+  loadFeed();
+});

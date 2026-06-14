@@ -1,12 +1,15 @@
 const API = ""; 
 let toutesLesAnnonces = [];
 let idAnnonceEnCoursDeBoost = null;
-let maBoutiqueVipInfos = null; 
 
-// CONFIGURATION VARIABLES DU PROFIL CLIENT ACTUEL
-let profilUtilisateurActuel = { id: 1, type: "standard" }; // Peut être 'standard' ou 'vip'
+// GESTION ET PERSISTENCE SÉCURISÉE DES MIGRATIONS DE COMPTE
+let sessionToken = localStorage.getItem("nia_token") || null;
+let monUserIdActuel = localStorage.getItem("nia_user_id") ? parseInt(localStorage.getItem("nia_user_id")) : null;
+let monUserTypeActuel = localStorage.getItem("nia_user_type") || "standard"; // 'standard' ou 'vip'
+let monShopNameActuel = localStorage.getItem("nia_shop_name") || null;
 
-// BASE DE DONNÉES PUBLICITAIRE ADSENSE (DÉCLENCHEMENT DE BANNIÈRES TOUTES LES 30 SECONDES)
+let modeAuthInscription = true; // Bascule entre Inscription et Connexion
+
 const BANNER_ADS_POOL = [
   { text: "🌟 Airtel Money RDC : Transférez vos fonds instantanément partout en RDC ! 🌟", link: "#" },
   { text: "👑 Orange RDC VIP : Restez connectés avec des forfaits internet illimités. 👑", link: "#" },
@@ -31,11 +34,22 @@ async function loadFeed(){
     const res = await fetch(`${API}/feed`);
     toutesLesAnnonces = await res.json();
     afficherAnnonces(toutesLesAnnonces);
+    mettreAJourLibelleBoutonProfil();
   } catch (e) { console.error(e); }
 }
 
-/* LE BOUTON BOOSTER EST EXCLUSIF A L'INTERFACE PROPRIETAIRE (MON PROFIL OU MA BOUTIQUE) */
-function afficherAnnonces(liste, executionContextId = null) {
+function mettreAJourLibelleBoutonProfil() {
+  const btn = document.getElementById("main-profile-nav-btn");
+  if(!btn) return;
+  if(!sessionToken) {
+    btn.innerHTML = `<span>👤</span><span>Connexion</span>`;
+  } else {
+    btn.innerHTML = monUserTypeActuel === "vip" ? `<span>🏢</span><span>Ma Boutique</span>` : `<span>👤</span><span>Mon Profil</span>`;
+  }
+}
+
+// AFFICHAGE DES BOUTONS DE CONTRÔLE SUR LES ANNONCES DE L'ESPACE PRIVÉ ET SUR LE FLUX PUBLIC (SI PROPRIÉTAIRE)
+function afficherAnnonces(liste, contextViewId = null) {
   const feed = document.getElementById("feed");
   if (!feed) return;
   if (liste.length === 0) {
@@ -52,6 +66,9 @@ function afficherAnnonces(liste, executionContextId = null) {
     const estVip = (a.statut === 'vip' || a.user_id === 100);
     const deviseAffichage = a.prix_devise || 'USD';
     const symboleDevise = deviseAffichage === 'USD' ? '$' : ' FC';
+    
+    // Vérification de propriété : est-ce l'annonce de l'utilisateur connecté ?
+    const mAppartient = (sessionToken && monUserIdActuel && a.user_id === monUserIdActuel);
 
     feed.innerHTML += `
       <div class="annonce-card ${estVip ? 'vip-premium' : ''}">
@@ -71,15 +88,15 @@ function afficherAnnonces(liste, executionContextId = null) {
             ${a.statut === 'occupe' ? '🔴 Occupé' : '🟢 Disponible'}
           </span>
           <div class="footer-actions">
-            ${estVip && executionContextId !== 'OWNER_VIP' ? `<button class="btn-shop" onclick="actionVisiterBoutiqueTierce(${a.user_id}, '${a.description}')">🏢 Visiter la boutique</button>` : ''}
+            ${estVip && contextViewId !== 'OWNER_VITRINE' ? `<button class="btn-shop" onclick="actionVisiterBoutiqueTierce(${a.user_id}, '${a.description}')">🏢 Visiter la boutique</button>` : ''}
             
-            ${executionContextId === 'OWNER_STANDARD' || executionContextId === 'OWNER_VIP' ? `
+            ${mAppartient || contextViewId === 'OWNER_VITRINE' ? `
               <button class="btn-boost" onclick="lancerLancementPubBoost(${a.id})">🚀 Booster</button>
               <button class="btn-edit" onclick="ouvrirFormulaireModificationAnnonce(${a.id})">📝 Modifier</button>
               <button class="btn-delete" onclick="supprimerAnnonce(${a.id})">🗑️ Supprimer</button>
             ` : ''}
             
-            ${a.telephone ? `<button class="btn-contact" onclick="intercepterAppelTelephonique('${a.telephone}')" style="cursor:pointer; border:none;">📞 Appeler</button>` : ''}
+            ${a.telephone ? `<button class="btn-contact" onclick="intercepterAppelTelephonique('${a.telephone}')">📞 Appeler</button>` : ''}
           </div>
         </div>
       </div>
@@ -87,33 +104,312 @@ function afficherAnnonces(liste, executionContextId = null) {
   });
 }
 
-/* RECHERCHE INTELLIGENTE VIA TRIGRAMMES POSTGRESQL NATIVE */
+// GESTION DE L'AUTHENTIFICATION SÉCURISÉE (INSCRIPTION / CONNEXION)
+function basculerModeAuth() {
+  modeAuthInscription = !modeAuthInscription;
+  document.getElementById("auth-title").innerText = modeAuthInscription ? "Créer un compte" : "Se connecter";
+  document.getElementById("auth-submit-btn").innerText = modeAuthInscription ? "Créer mon compte sécurisé" : "Accéder à mon espace";
+  document.getElementById("auth-toggle").innerText = modeAuthInscription ? "Déjà membre ? Connectez-vous ici" : "Pas encore de compte ? S'inscrire";
+  
+  const phoneGroup = document.getElementById("auth-phone").parentElement;
+  phoneGroup.style.display = modeAuthInscription ? "flex" : "none";
+}
+
+async function soumettreAuthentification() {
+  const username = document.getElementById("auth-username").value.trim();
+  const password = document.getElementById("auth-password").value.trim();
+  const phone = document.getElementById("auth-phone").value.trim();
+
+  if(!username || !password || (modeAuthInscription && !phone)) {
+    alert("Veuillez remplir tous les champs requis !"); return;
+  }
+
+  const endpoint = modeAuthInscription ? "/auth/register" : "/auth/login";
+  const payload = modeAuthInscription ? { username, password, telephone: phone } : { username, password };
+
+  try {
+    const res = await fetch(`${API}${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    
+    if(!res.ok) { alert(data.error || "Une erreur est survenue"); return; }
+
+    // Enregistrement de la session sécurisée
+    localStorage.setItem("nia_token", data.token);
+    localStorage.setItem("nia_user_id", data.userId);
+    localStorage.setItem("nia_user_type", data.type);
+    localStorage.setItem("nia_shop_name", data.shopName || "");
+
+    sessionToken = data.token;
+    monUserIdActuel = data.userId;
+    monUserTypeActuel = data.type;
+    monShopNameActuel = data.shopName;
+
+    alert(modeAuthInscription ? "Inscription réussie et sécurisée ! 🎉" : "Connexion réussie ! Welcome back.");
+    fermerModal('authentification');
+    loadFeed();
+  } catch (err) {
+    alert("Erreur serveur lors de la tentative d'accès.");
+  }
+}
+
+function deconnexionEspaceSecurise() {
+  localStorage.clear();
+  sessionToken = null; monUserIdActuel = null; monUserTypeActuel = "standard"; monShopNameActuel = null;
+  alert("Vous avez été déconnecté.");
+  fermerModal('profil');
+  loadFeed();
+}
+
+function declencherOuverturePublication() {
+  if(!sessionToken) { ouvrirModal('authentification'); return; }
+  ouvrirModal('publier');
+}
+
+// INTERFACE DU PROFIL PRIVÉ SÉCURISÉ AVEC SES BOUTONS PERSONNELS
+function ouvrirEspaceCompteUtilisateur() {
+  if(!sessionToken) { ouvrirModal('authentification'); return; }
+  
+  const title = document.getElementById("profil-modal-title");
+  const content = document.getElementById("profil-view-content");
+  const mesAnnoncesPersonnelles = toutesLesAnnonces.filter(a => a.user_id === monUserIdActuel);
+
+  let enteteHtml = `
+    <div style="background:#e2e8f0; padding:15px; border-radius:12px; margin-bottom:15px;">
+      <p style="margin:0;"><strong>Statut du Compte :</strong> ${monUserTypeActuel === 'vip' ? '👑 Professionnel VIP' : '👤 Standard'}</p>
+      ${monShopNameActuel ? `<p style="margin:5px 0 0 0;"><strong>Boutique :</strong> ${monShopNameActuel}</p>` : ''}
+      <button onclick="deconnexionEspaceSecurise()" style="background:var(--danger); color:white; border:none; padding:6px 12px; border-radius:6px; margin-top:10px; cursor:pointer; font-weight:bold;">Se déconnecter</button>
+    </div>
+  `;
+
+  title.innerText = monUserTypeActuel === 'vip' ? `🏢 Gestion Boutique : ${monShopNameActuel}` : "👤 Mon Espace Privé";
+  
+  content.innerHTML = `
+    ${enteteHtml}
+    <h4 style="margin:10px 0;">📋 Liste de vos publications personnelles (${mesAnnoncesPersonnelles.length}) :</h4>
+    <div id="private-user-items" style="display:flex; flex-direction:column; gap:12px; max-height:250px; overflow-y:auto; padding-right:5px;"></div>
+  `;
+
+  ouvrirModal('profil');
+  
+  // Affichage direct des annonces dans le sous-contenu du profil privé avec tous leurs boutons
+  afficherAnnoncesDansProfilPrivé(mesAnnoncesPersonnelles);
+}
+
+function afficherAnnoncesDansProfilPrivé(liste) {
+  const container = document.getElementById("private-user-items");
+  if(liste.length === 0) {
+    container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>Vous n'avez pas encore publié d'annonces.</p>";
+    return;
+  }
+  
+  liste.forEach(a => {
+    const dAffichage = a.prix_devise || 'USD';
+    const sDevise = dAffichage === 'USD' ? '$' : ' FC';
+    
+    const div = document.createElement("div");
+    div.style = "background:#f8fafc; border:1px solid var(--border); padding:12px; border-radius:10px;";
+    div.innerHTML = `
+      <div style="display:flex; justify-content:between; align-items:center; width:100%; justify-content: space-between;">
+        <span style="font-weight:700; font-size:0.9rem;">${a.titre}</span>
+        <span style="color:var(--primary); font-weight:800; font-size:0.85rem;">${a.prix}${sDevise}</span>
+      </div>
+      <div style="display:flex; gap:6px; margin-top:10px; justify-content:flex-end;">
+        <button class="btn-boost" style="padding:4px 8px; font-size:0.75rem;" onclick="fermerModal('profil'); lancerLancementPubBoost(${a.id})">🚀 Booster</button>
+        <button class="btn-edit" style="padding:4px 8px; font-size:0.75rem;" onclick="fermerModal('profil'); ouvrirFormulaireModificationAnnonce(${a.id})">📝 Modifier</button>
+        <button class="btn-delete" style="padding:4px 8px; font-size:0.75rem;" onclick="fermerModal('profil'); supprimerAnnonce(${a.id})">🗑️</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// MINI DÉROULANT DES PÉRIODES DE TEMPS ET GESTION DES COMPTES VIP EN LOT
+function gererClicBoutonVipMenu() {
+  if(!sessionToken) { ouvrirModal('authentification'); return; }
+  
+  if(monUserTypeActuel !== "vip") {
+    // Proposition d'upgrade en boutique VIP
+    document.getElementById("vip-modal-title").innerText = "👑 Devenir Partenaire VIP";
+    document.getElementById("vip-form-body").innerHTML = `
+      <div class="form-group full-width"><label>Nom de votre enseigne commerciale / Boutique</label><input id="upgrade-shop-name" placeholder="Ex: Grand Katanga Services"></div>
+      <button class="modal-submit-btn" style="background:var(--vip-gold);" onclick="validerUpgradeBoutiqueVip()">Activer mon abonnement VIP</button>
+    `;
+  } else {
+    // Si déjà VIP, formulaire de publication de catalogue en masse avec son sélecteur de période
+    document.getElementById("vip-modal-title").innerText = `📦 Catalogue de Masse : ${monShopNameActuel}`;
+    document.getElementById("vip-form-body").innerHTML = `
+      <div class="form-group full-width"><div id="bulk-items-container"></div>
+        <button type="button" style="background:#fffdf5; color:var(--vip-gold); border:1px dashed var(--vip-gold); padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; width:100%;" onclick="ajouterChampObjetUnique()">➕ Ajouter un objet à la liste</button>
+      </div>
+      <button class="modal-submit-btn" style="background:var(--vip-gold);" onclick="publierCatalogueEnMasse()">🚀 Publier tout le catalogue</button>
+    `;
+    document.getElementById("bulk-items-container").innerHTML = ""; countObjetsBulk = 0; ajouterChampObjetUnique();
+  }
+  ouvrirModal('vip');
+}
+
+let countObjetsBulk = 0;
+function ajouterChampObjetUnique() {
+  countObjetsBulk++;
+  const container = document.getElementById("bulk-items-container");
+  const htmlBox = document.createElement('div');
+  htmlBox.className = "bulk-item-box"; htmlBox.id = `bulk-box-${countObjetsBulk}`;
+  htmlBox.innerHTML = `
+    <button type="button" class="btn-remove-bulk" onclick="document.getElementById('bulk-box-${countObjetsBulk}').remove()">✕</button>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
+      <div class="form-group" style="grid-column:span 2"><label>Nom de l'objet</label><input class="bulk-titre" placeholder="Ex: Robe de mariée"></div>
+      <div class="form-group"><label>Prix</label><input type="number" class="bulk-prix" placeholder="10"></div>
+      <div class="form-group"><label>Devise</label><select class="bulk-devise"><option value="USD">USD ($)</option><option value="FC">FC (FC)</option></select></div>
+      
+      <!-- MINI SÉLECTEUR DÉROULANT DES PÉRIODES REQUIS DANS L'ESPACE VIP -->
+      <div class="form-group" style="grid-column:span 2">
+        <label>Période de facturation</label>
+        <select class="bulk-periode">
+          <option value="heure">par heure</option>
+          <option value="jour" selected>par jour</option>
+          <option value="semaine">par semaine</option>
+          <option value="mois">par mois</option>
+        </select>
+      </div>
+      
+      <div class="form-group" style="grid-column:span 2"><label>Photos</label><input type="file" class="bulk-image" accept="image/*" multiple></div>
+    </div>
+  `;
+  container.appendChild(htmlBox);
+}
+
+async function validerUpgradeBoutiqueVip() {
+  const shopName = document.getElementById("upgrade-shop-name").value.trim();
+  if(!shopName) { alert("Spécifiez un nom pour votre boutique !"); return; }
+  
+  try {
+    const res = await fetch(`${API}/auth/upgrade-vip`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${sessionToken}` },
+      body: JSON.stringify({ shopName })
+    });
+    if(res.ok) {
+      localStorage.setItem("nia_user_type", "vip");
+      localStorage.setItem("nia_shop_name", shopName);
+      monUserTypeActuel = "vip"; monShopNameActuel = shopName;
+      alert(`Votre espace pro VIP "${shopName}" est maintenant opérationnel !`);
+      fermerModal('vip');
+      loadFeed();
+    }
+  } catch (e) { alert("Erreur d'upgrade."); }
+}
+
+async function publierCatalogueEnMasse() {
+  const boxes = document.querySelectorAll(".bulk-item-box");
+  if(boxes.length === 0) return;
+  
+  for(let box of boxes) {
+    const titre = box.querySelector(".bulk-titre").value.trim();
+    const prix = box.querySelector(".bulk-prix").value.trim();
+    const prix_devise = box.querySelector(".bulk-devise").value;
+    const periode = box.querySelector(".bulk-periode").value;
+    const inputFiles = box.querySelector(".bulk-image").files;
+    if(!titre) continue;
+    
+    let images_base64 = [];
+    if(inputFiles) { for(let f of inputFiles) { images_base64.push(await compressAndToBase64(f)); } }
+
+    await fetch(`${API}/annonces`, {
+      method: "POST",
+      headers: { "Content-Type":"application/json", "Authorization": `Bearer ${sessionToken}` },
+      body: JSON.stringify({
+        titre: titre, description: `Vitrine VIP : ${monShopNameActuel}`,
+        prix: prix || 0, prix_devise: prix_devise, periode: periode, ville: "Lubumbashi", commune: "",
+        quartier: "", telephone: "", statut: "vip", images_base64
+      })
+    });
+  }
+  alert("Catalogue de masse publié avec succès ! 👑"); fermerModal('vip'); loadFeed();
+}
+
+async function publierAnnonceStandard(){
+  try {
+    const files = document.getElementById("image").files;
+    let images_base64 = [];
+    for(let f of files){ images_base64.push(await compressAndToBase64(f)); }
+    
+    const bodyData = {
+      titre: document.getElementById("titre").value,
+      prix: document.getElementById("prix").value, 
+      prix_devise: document.getElementById("prix_devise").value,
+      periode: document.getElementById("periode").value,
+      telephone: document.getElementById("telephone").value, 
+      description: document.getElementById("description").value,
+      ville: document.getElementById("ville").value, 
+      commune: document.getElementById("commune").value,
+      quartier: document.getElementById("quartier").value, 
+      statut: monUserTypeActuel === 'vip' ? "vip" : "disponible", 
+      images_base64
+    };
+    
+    const res = await fetch(`${API}/annonces`, { 
+      method:"POST", 
+      headers:{"Content-Type":"application/json", "Authorization": `Bearer ${sessionToken}`}, 
+      body:JSON.stringify(bodyData) 
+    });
+    if(res.ok) { fermerModal('publier'); loadFeed(); }
+  } catch (e) { alert("Erreur lors de la publication"); }
+}
+
+async function sauvegarderModificationAnnonce() {
+  const id = document.getElementById("edit-id").value;
+  const payload = {
+    titre: document.getElementById("edit-titre").value,
+    prix: document.getElementById("edit-prix").value,
+    prix_devise: document.getElementById("edit-prix-devise").value,
+    periode: document.getElementById("edit-periode").value,
+    statut: document.getElementById("edit-statut").value,
+    description: document.getElementById("edit-description").value,
+    ville: document.getElementById("edit-ville").value,
+    commune: document.getElementById("edit-commune").value,
+    quartier: document.getElementById("edit-quartier").value,
+    telephone: document.getElementById("edit-telephone").value
+  };
+  
+  const res = await fetch(`${API}/annonces/${id}/update`, {
+    method: "PUT",
+    headers: {"Content-Type": "application/json", "Authorization": `Bearer ${sessionToken}`},
+    body: JSON.stringify(payload)
+  });
+  if(res.ok) { alert("Mise à jour enregistrée !"); fermerModal('modifier-annonce'); loadFeed(); }
+}
+
+async function supprimerAnnonce(id) {
+  if(!confirm("Retirer cet objet de la plateforme de location ?")) return;
+  const res = await fetch(`${API}/annonces/${id}/delete`, { 
+    method: "DELETE",
+    headers: { "Authorization": `Bearer ${sessionToken}` }
+  });
+  if(res.ok) { alert("Objet supprimé."); loadFeed(); }
+}
+
+// RECHERCHE SMART TRIGRAMMES SQL
 async function rechercher() {
   const sTitre = document.getElementById("search-titre").value.trim();
   const sVille = document.getElementById("search-ville").value.trim();
   const sCommune = document.getElementById("search-commune").value.trim();
   const sQuartier = document.getElementById("search-quartier").value.trim();
 
-  if(!sTitre && !sVille && !sCommune && !sQuartier) {
-    annulerRecherche();
-    fermerModal('rechercher');
-    return;
-  }
+  if(!sTitre && !sVille && !sCommune && !sQuartier) { annulerRecherche(); fermerModal('rechercher'); return; }
 
   try {
-    const urlParams = new URLSearchParams({
-      q: sTitre, ville: sVille, commune: sCommune, quartier: sQuartier
-    });
+    const urlParams = new URLSearchParams({ q: sTitre, ville: sVille, commune: sCommune, quartier: sQuartier });
     const res = await fetch(`${API}/annonces/search?${urlParams.toString()}`);
-    const résultatsRecherche = await res.json();
-
+    const r = await res.json();
     document.getElementById("shop-header-container").innerHTML = "";
     document.getElementById("feed-title").innerText = "Résultats du filtre unique intelligent 🔍";
     document.getElementById("reset-btn").style.display = "inline-block";
-    afficherAnnonces(résultatsRecherche, 'PUBLIC_SEARCH_EXEC');
-  } catch (err) {
-    console.error("Erreur recherche intelligente", err);
-  }
+    afficherAnnonces(r);
+  } catch (err) { console.error(err); }
   fermerModal('rechercher');
 }
 
@@ -125,308 +421,60 @@ function annulerRecherche() {
 }
 
 function actionVisiterBoutiqueTierce(boutiqueUserId, descriptionAnnonce) {
-  let nomBoutique = "Partenaire Certifié";
-  if(descriptionAnnonce.includes("VIP :")) { nomBoutique = descriptionAnnonce.split("VIP :")[1].trim(); }
-  const articles = toutesLesAnnonces.filter(a => a.user_id === boutiqueUserId || (boutiqueUserId === 100 && a.statut === 'vip'));
-
+  const articles = toutesLesAnnonces.filter(a => a.user_id === boutiqueUserId);
   document.getElementById("shop-header-container").innerHTML = `
-    <div class="shop-banner"><h2>👑 Boutique ${nomBoutique}</h2><p style="margin-top:5px;">Espace Professionnel Certifié NIA RDC</p></div>
+    <div class="shop-banner"><h2>👑 Espace Vitrine Partenaire</h2><p>Découvrez tout le catalogue de cet annonceur</p></div>
   `;
   document.getElementById("feed-title").innerText = "Vitrine Boutique";
   document.getElementById("reset-btn").style.display = "inline-block";
-  afficherAnnonces(articles, 'VISITOR_MODE');
+  afficherAnnonces(articles, 'OWNER_VITRINE');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ZONE INTERNE DE GESTION DU PROFIL VIP / STANDARD */
-function ouvrirMonProfilOuMaBoutique() {
-  const title = document.getElementById("profil-modal-title");
-  const content = document.getElementById("profil-view-content");
-
-  let selecteurTypeCompteHtml = `
-    <div style="margin-bottom:15px; padding:10px; background:#f1f5f9; border-radius:8px;">
-      <label style="font-weight:bold; font-size:0.8rem; display:block; margin-bottom:4px;">Changer le type de mon compte :</label>
-      <select onchange="basculerTypeProfilActuel(this.value)" style="padding:6px; font-weight:bold; border-radius:6px; width:100%;">
-        <option value="standard" ${profilUtilisateurActuel.type === 'standard' ? 'selected' : ''}>Compte Standard (Normal)</option>
-        <option value="vip" ${profilUtilisateurActuel.type === 'vip' ? 'selected' : ''}>Compte VIP (Professionnel)</option>
-      </select>
-    </div>
-  `;
-
-  if(profilUtilisateurActuel.type === 'standard') {
-    title.innerText = "👤 Mon Profil Personnel (Standard)";
-    const mesAnnonces = toutesLesAnnonces.filter(a => a.user_id === 1 && a.statut !== 'vip');
-    content.innerHTML = `
-      ${selecteurTypeCompteHtml}
-      <p><strong>Type de compte :</strong> Standard (Publication Directe Gratuite)</p>
-      <h4 style="margin:15px 0 10px 0;">📋 Piloter mes fiches de location actives (${mesAnnonces.length}) :</h4>
-      <div id="sub-list" style="display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto;"></div>
-    `;
-    const subList = content.querySelector("#sub-list");
-    if(mesAnnonces.length === 0) {
-      subList.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>Aucune annonce en ligne.</p>";
-    } else {
-      mesAnnonces.forEach(o => {
-        subList.innerHTML += `
-          <div style="background:#f1f5f9; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:0.85rem; font-weight:700;">${o.titre}</span>
-            <button class="btn-edit" style="padding:4px 8px; font-size:0.75rem;" onclick="fermerModal('profil'); ouvrirFormulaireModificationAnnonce(${o.id})">Gérer la fiche</button>
-          </div>`;
-      });
-    }
-  } else {
-    // Profil VIP actif
-    const nomBoutiqueAffiche = maBoutiqueVipInfos ? maBoutiqueVipInfos.shopName : "Ma Vitrine Professionnelle";
-    const contactAffiche = maBoutiqueVipInfos ? maBoutiqueVipInfos.phone : "Non configuré";
-    title.innerText = `🏢 Ma Boutique : ${nomBoutiqueAffiche}`;
-    const mesAnnoncesVip = toutesLesAnnonces.filter(a => a.user_id === 100 || a.statut === 'vip');
-    
-    content.innerHTML = `
-      ${selecteurTypeCompteHtml}
-      <p style="color:var(--vip-gold); margin:0; font-weight:bold;">✨ Tableau de Bord Entrepreneur VIP actif</p>
-      <p style="margin:5px 0 15px 0; font-size:0.85rem; color:var(--text-light)">Ligne directe : ${contactAffiche}</p>
-      <h4 style="margin:10px 0;">📦 Administrer mes pièces exclusives (${mesAnnoncesVip.length}) :</h4>
-      <div id="sub-list-vip" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;"></div>
-    `;
-    const subListVip = content.querySelector("#sub-list-vip");
-    if(mesAnnoncesVip.length === 0) {
-      subListVip.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>Aucune pièce dans votre vitrine.</p>";
-    } else {
-      mesAnnoncesVip.forEach(o => {
-        subListVip.innerHTML += `
-          <div style="background:#fffdf5; border:1px solid #fde68a; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:0.85rem; font-weight:700; color:var(--vip-gold);">${o.titre}</span>
-            <button class="btn-edit" style="padding:4px 8px; font-size:0.75rem; background:var(--vip-gold);" onclick="fermerModal('profil'); ouvrirFormulaireModificationAnnonce(${o.id})">Gérer la fiche</button>
-          </div>`;
-      });
-    }
-  }
-  ouvrirModal('profil');
+function intercepterAppelTelephonique(num) {
+  declencherPubliciteInterstitielle(() => { window.location.href = `tel:${num}`; });
 }
 
-function basculerTypeProfilActuel(nouveauType) {
-  profilUtilisateurActuel.type = nouveauType;
-  if(nouveauType === 'vip' && !maBoutiqueVipInfos) {
-    fermerModal('profil');
-    gererClicBoutonVipMenu();
-  } else {
-    ouvrirMonProfilOuMaBoutique();
-  }
-}
-
-function gererClicBoutonVipMenu() {
-  const container = document.getElementById("vip-form-body");
-  if(!maBoutiqueVipInfos) {
-    document.getElementById("vip-modal-title").innerText = "👑 Inscription Espace Pro VIP";
-    container.innerHTML = `
-      <div class="form-group full-width"><label>Nom Commercial de la Boutique</label><input id="vip-shop-name" placeholder="Ex: Lubumbashi Rent Pro"></div>
-      <div class="form-group"><label>Téléphone Clientèle</label><input id="vip-phone" placeholder="+243..."></div>
-      <div class="form-group"><label>Ville Principale</label><input id="vip-ville" value="Lubumbashi"></div>
-      <div class="form-group full-width"><label>Commune</label><input id="vip-commune" placeholder="Ex: Kamalondo"></div>
-      <button class="modal-submit-btn" style="background:var(--vip-gold);" onclick="validerInscriptionBoutiqueLocale()">Créer ma boutique pro</button>
-    `;
-  } else {
-    document.getElementById("vip-modal-title").innerText = `📦 Publication de Masse VIP`;
-    container.innerHTML = `
-      <div class="form-group full-width"><div id="bulk-items-container"></div>
-        <button type="button" style="background:#fffdf5; color:var(--vip-gold); border:1px dashed var(--vip-gold); padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; width:100%;" onclick="ajouterChampObjetUnique()">➕ Ajouter un objet au lot</button>
-      </div>
-      <button class="modal-submit-btn" style="background:var(--vip-gold);" onclick="publierCatalogueEnMasse()">🚀 Balancer le catalogue en ligne</button>
-    `;
-    document.getElementById("bulk-items-container").innerHTML = ""; countObjetsBulk = 0; ajouterChampObjetUnique();
-  }
-  ouvrirModal('vip');
-}
-
-function validerInscriptionBoutiqueLocale() {
-  const shopName = document.getElementById("vip-shop-name").value.trim();
-  const phone = document.getElementById("vip-phone").value.trim();
-  const ville = document.getElementById("vip-ville").value.trim();
-  const commune = document.getElementById("vip-commune").value.trim();
-  if(!shopName || !phone) { alert("Veuillez remplir les informations de contact !"); return; }
-  
-  maBoutiqueVipInfos = { shopName, phone, ville, commune };
-  profilUtilisateurActuel.type = "vip";
-  const navBtnLabel = document.getElementById("main-profile-nav-btn");
-  if(navBtnLabel) navBtnLabel.innerHTML = `<span>🏢</span><span>Ma Boutique</span>`;
-
-  alert(`Félicitations ! Votre Espace Commercial Professionnel "${shopName}" est maintenant opérationnel sur l'application.`);
-  fermerModal('vip');
-  ouvrirMonProfilOuMaBoutique();
-}
-
-/* INTERCEPTION ET DÉCLENCHEMENT DE LA BANNIÈRE INTERSTITIELLE SUR APPEL */
-function intercepterAppelTelephonique(numeroTelephone) {
-  declencherPubliciteInterstitielle(() => {
-    window.location.href = `tel:${numeroTelephone}`;
-  });
-}
-
-function declencherPubliciteInterstitielle(actionDeFinCallback) {
-  fonctionRetourAppelInterstitiel = actionDeFinCallback;
+function declencherPubliciteInterstitielle(callback) {
+  fonctionRetourAppelInterstitiel = callback;
   const overlay = document.getElementById("adsense-interstitial");
   const closeBtn = document.getElementById("close-interstitial-btn");
-  const adBody = document.getElementById("interstitial-ad-body");
-
-  // Rendu aléatoire d'une publicité AdSense interstitielle
-  const randomAdIndex = Math.floor(Math.random() * INTERSTITIAL_ADS_POOL.length);
-  adBody.innerText = INTERSTITIAL_ADS_POOL[randomAdIndex];
-
-  closeBtn.disabled = true;
-  closeBtn.innerText = "Attendre (5s)";
-  overlay.style.display = "flex";
+  
+  document.getElementById("interstitial-ad-body").innerText = INTERSTITIAL_ADS_POOL[Math.floor(Math.random() * INTERSTITIAL_ADS_POOL.length)];
+  closeBtn.disabled = true; closeBtn.innerText = "Attendre (5s)"; overlay.style.display = "flex";
 
   let tempsRestant = 5;
-  const chronoPublicitaire = setInterval(() => {
+  const chrono = setInterval(() => {
     tempsRestant--;
-    if(tempsRestant > 0) {
-      closeBtn.innerText = `Attendre (${tempsRestant}s)`;
-    } else {
-      clearInterval(chronoPublicitaire);
-      closeBtn.disabled = false;
-      closeBtn.innerText = "Fermer l'annonce ✕";
-    }
+    if(tempsRestant > 0) { closeBtn.innerText = `Attendre (${tempsRestant}s)`; } 
+    else { clearInterval(chrono); closeBtn.disabled = false; closeBtn.innerText = "Fermer l'annonce ✕"; }
   }, 1000);
 }
 
 function fermerPubliciteInterstitielle() {
   document.getElementById("adsense-interstitial").style.display = "none";
-  if(typeof fonctionRetourAppelInterstitiel === "function") {
-    const callbackActuel = fonctionRetourAppelInterstitiel;
-    fonctionRetourAppelInterstitiel = null;
-    callbackActuel();
-  }
+  if(fonctionRetourAppelInterstitiel) { const cb = fonctionRetourAppelInterstitiel; fonctionRetourAppelInterstitiel = null; cb(); }
 }
 
-/* CYCLE DE ROTATION AUTOMATIQUE TOUTES LES 30 SECONDES DE LA BANNIÈRE ADSENSE EN BAS */
-function démarrerChangementBannièreAdSenseFonds() {
-  const conteneurBannière = document.getElementById("adsense-bottom-banner");
-  if(!conteneurBannière) return;
-
-  let indexAd = 0;
-  setInterval(() => {
-    indexAd = (indexAd + 1) % BANNER_ADS_POOL.length;
-    const adData = BANNER_ADS_POOL[indexAd];
-    conteneurBannière.innerHTML = `<a href="${adData.link}" class="ad-link-wrapper" onclick="event.preventDefault(); alert('Redirection vers le sponsor AdSense : ' + this.innerText)">${adData.text}</a>`;
-  }, 30000);
+function lancerLancementPubBoost(idAnnonce) {
+  idAnnonceEnCoursDeBoost = idAnnonce;
+  document.getElementById("btn-finaliser-boost").style.display = "none";
+  document.getElementById("interstitial-boost-banner-text").innerText = `📢 SPONSOR ADSENSE :\n"${INTERSTITIAL_ADS_POOL[Math.floor(Math.random()*INTERSTITIAL_ADS_POOL.length)]}"`;
+  document.getElementById("countdown").innerText = "15"; 
+  ouvrirModal('boost-pub');
+  let t = 15;
+  const inter = setInterval(() => {
+    t--; document.getElementById("countdown").innerText = t;
+    if(t <= 0) { clearInterval(inter); document.getElementById("btn-finaliser-boost").style.display = "block"; }
+  }, 1000);
 }
 
-/* CONFIGURATION VARIABLES CAPTEURS ACTION ADMIN PRIVÉ */
-let adminTimer = null;
-let aVibreEtValideTemps = false;
-let touchStartY = 0;
-
-/* ⚙️ INTELLIGENCE ET CINÉMATIQUE COFFRE-FORT : CAPTURE DE L'ADMINISTRATION SECRÈTE ⚙️ */
-const gearBtn = document.getElementById("gear-admin-trigger");
-
-gearBtn.addEventListener("mousedown", demarrerCompteAReboursAdmin);
-gearBtn.addEventListener("touchstart", demarrerCompteAReboursAdmin);
-gearBtn.addEventListener("mouseup", abandonnerCompteAReboursAdmin);
-gearBtn.addEventListener("touchend", abandonnerCompteAReboursAdmin);
-
-function demarrerCompteAReboursAdmin(e) {
-  aVibreEtValideTemps = false;
-  if(e.touches) touchStartY = e.touches[0].clientY; 
-  
-  adminTimer = setTimeout(() => {
-    aVibreEtValideTemps = true;
-    if (navigator.vibrate) { navigator.vibrate(150); } 
-    console.log("NIA RDC SECURE ENGINE: Lock 15 secondes validé. En attente du swipe vers le bas.");
-  }, 15000); 
-}
-
-function abandonnerCompteAReboursAdmin() { clearTimeout(adminTimer); }
-
-gearBtn.addEventListener("touchmove", (e) => {
-  if(!aVibreEtValideTemps) return;
-  let currentY = e.touches[0].clientY;
-  
-  if(currentY - touchStartY > 40) {
-    aVibreEtValideTemps = false;
-    clearTimeout(adminTimer);
-    declencherVerificationCodeSecretAdmin();
-  }
-});
-
-function declencherVerificationCodeSecretAdmin() {
-  const codeSaisi = prompt("🔒 ENTRER LE CODE SECRET DE SÉCURITÉ DE L'ADMINISTRATION :");
-  if(codeSaisi === "BEN4002ET4200") {
-    initialiserEtOuvrirEspaceAdmin();
-  } else if (codeSaisi !== null) {
-    alert("❌ Code d'accès incorrect. Accès refusé.");
-  }
-}
-
-function initialiserEtOuvrirEspaceAdmin() {
-  const total = toutesLesAnnonces.length;
-  const vips = toutesLesAnnonces.filter(a => a.statut === 'vip' || a.user_id === 100).length;
-  const standards = total - vips;
-
-  document.getElementById("adm-stat-total").innerText = total;
-  document.getElementById("adm-stat-vip").innerText = vips;
-  document.getElementById("adm-stat-stand").innerText = standards;
-
-  const selectVille = document.getElementById("adm-filter-ville");
-  const villesUniques = [...new Set(toutesLesAnnonces.map(a => a.ville || "Lubumbashi"))];
-  
-  selectVille.innerHTML = `<option value="all">Toutes les villes de la RDC</option>`;
-  villesUniques.forEach(v => {
-    selectVille.innerHTML += `<option value="${v.toLowerCase()}">${v}</option>`;
+async function executerRemonteeBdd() {
+  const res = await fetch(`${API}/annonces/${idAnnonceEnCoursDeBoost}/boost`, { 
+    method: "POST",
+    headers: { "Authorization": `Bearer ${sessionToken}` }
   });
-
-  filtrerIndexationAnnoncesAdmin();
-  ouvrirModal('admin-panel');
-}
-
-function filtrerIndexationAnnoncesAdmin() {
-  const fVille = document.getElementById("adm-filter-ville").value;
-  const fType = document.getElementById("adm-filter-type").value;
-  const listConteneur = document.getElementById("admin-liste-moderat-annonces");
-
-  const annoncesFiltrees = toutesLesAnnonces.filter(a => {
-    const isVip = (a.statut === 'vip' || a.user_id === 100);
-    const matchVille = (fVille === "all" || (a.ville && a.ville.toLowerCase() === fVille));
-    
-    let matchType = true;
-    if (fType === "vip") matchType = isVip;
-    if (fType === "standard") matchType = !isVip;
-
-    return matchVille && matchType;
-  });
-
-  listConteneur.innerHTML = "";
-  if(annoncesFiltrees.length === 0) {
-    listConteneur.innerHTML = `<p style="color:#64748b; font-size:0.9rem; text-align:center; padding:15px;">Aucune annonce ne correspond à ces critères d'administration.</p>`;
-    return;
-  }
-
-  annoncesFiltrees.forEach(a => {
-    const typeLabel = (a.statut === 'vip' || a.user_id === 100) ? "👑 VIP" : "👤 Standard";
-    listConteneur.innerHTML += `
-      <div class="admin-annonce-item">
-        <div style="max-width:70%;">
-          <strong style="color:white; font-size:0.9rem;">${a.titre}</strong> 
-          <span style="font-size:0.75rem; background:#334155; padding:2px 6px; border-radius:4px; margin-left:5px; color:#fde68a;">${typeLabel}</span>
-          <div style="font-size:0.75rem; color:#94a3b8; margin-top:3px;">📍 Ville: ${a.ville || 'Lubumbashi'} | Prix: ${a.prix} ${a.prix_devise || 'USD'}</div>
-        </div>
-        <button class="btn-delete" style="padding:6px 12px; font-size:0.8rem;" onclick="supprimerForceParAdmin(${a.id})">🗑️ Supprimer de force</button>
-      </div>
-    `;
-  });
-}
-
-async function supprimerForceParAdmin(id) {
-  if(!confirm("🕵️‍♂️ MODÉRATION ACTION : Confirmez-vous le retrait forcé et immédiat de cette annonce sur NIA RDC ?")) return;
-  try {
-    const res = await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" });
-    if(res.ok) {
-      alert("L'annonce abusive a été purgée de la base de données avec succès.");
-      const resFeed = await fetch(`${API}/feed`);
-      toutesLesAnnonces = await resFeed.json();
-      initialiserEtOuvrirEspaceAdmin();
-      afficherAnnonces(toutesLesAnnonces);
-    }
-  } catch(e) { console.error("Erreur de suppression administrative", e); }
+  if(res.ok) { alert("Boost positionnel validé !"); fermerModal('boost-pub'); loadFeed(); }
 }
 
 function ouvrirFormulaireModificationAnnonce(id) {
@@ -446,32 +494,13 @@ function ouvrirFormulaireModificationAnnonce(id) {
   ouvrirModal('modifier-annonce');
 }
 
-async function sauvegarderModificationAnnonce() {
-  const id = document.getElementById("edit-id").value;
-  const payload = {
-    titre: document.getElementById("edit-titre").value,
-    prix: document.getElementById("edit-prix").value,
-    prix_devise: document.getElementById("edit-prix-devise").value,
-    periode: document.getElementById("edit-periode").value,
-    statut: document.getElementById("edit-statut").value,
-    description: document.getElementById("edit-description").value,
-    ville: document.getElementById("edit-ville").value,
-    commune: document.getElementById("edit-commune").value,
-    quartier: document.getElementById("edit-quartier").value,
-    telephone: document.getElementById("edit-telephone").value
-  };
-  const res = await fetch(`${API}/annonces/${id}/update`, {
-    method: "PUT",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(payload)
-  });
-  if(res.ok) { alert("La fiche a été mise à jour !"); fermerModal('modifier-annonce'); loadFeed(); }
-}
-
-async function supprimerAnnonce(id) {
-  if(!confirm("Retirer cet objet de la plateforme ?")) return;
-  const res = await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" });
-  if(res.ok) { alert("Objet supprimé."); loadFeed(); }
+function démarrerChangementBannièreAdSenseFonds() {
+  const c = document.getElementById("adsense-bottom-banner");
+  let indexAd = 0;
+  setInterval(() => {
+    indexAd = (indexAd + 1) % BANNER_ADS_POOL.length;
+    c.innerHTML = `<a href="#" class="ad-link-wrapper" onclick="event.preventDefault(); alert('Redirection sponsor')">${BANNER_ADS_POOL[indexAd].text}</a>`;
+  }, 30000);
 }
 
 function compressAndToBase64(file) {
@@ -491,95 +520,47 @@ function compressAndToBase64(file) {
   });
 }
 
-let countObjetsBulk = 0;
-function ajouterChampObjetUnique() {
-  countObjetsBulk++;
-  const container = document.getElementById("bulk-items-container");
-  const htmlBox = document.createElement('div');
-  htmlBox.className = "bulk-item-box"; htmlBox.id = `bulk-box-${countObjetsBulk}`;
-  htmlBox.innerHTML = `
-    <button type="button" class="btn-remove-bulk" onclick="document.getElementById('bulk-box-${countObjetsBulk}').remove()">✕</button>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; border:1px solid var(--border); padding:10px; border-radius:8px;">
-      <div class="form-group" style="grid-column:span 2"><label>Nom de l'objet unique</label><input class="bulk-titre" placeholder="Ex: Véhicule de luxe"></div>
-      <div class="form-group"><label>Prix</label><input type="number" class="bulk-prix" placeholder="50"></div>
-      <div class="form-group"><label>Devise</label><select class="bulk-devise"><option value="USD">USD ($)</option><option value="FC">FC (FC)</option></select></div>
-      <div class="form-group" style="grid-column:span 2"><label>Photos</label><input type="file" class="bulk-image" accept="image/*" multiple></div>
-    </div>
-  `;
-  container.appendChild(htmlBox);
+// COFFRE FORT ACCÈS ADMINISTRATION DIRECTE TACTILE
+let adminTimer = null; let aVibreEtValideTemps = false; let touchStartY = 0;
+const gearBtn = document.getElementById("gear-admin-trigger");
+gearBtn.addEventListener("mousedown", (e) => {
+  adminTimer = setTimeout(() => { aVibreEtValideTemps = true; if(navigator.vibrate) navigator.vibrate(150); }, 15000);
+});
+gearBtn.addEventListener("mouseup", () => clearTimeout(adminTimer));
+gearBtn.addEventListener("touchstart", (e) => { touchStartY = e.touches[0].clientY; adminTimer = setTimeout(() => { aVibreEtValideTemps = true; if(navigator.vibrate) navigator.vibrate(150); }, 15000); });
+gearBtn.addEventListener("touchmove", (e) => {
+  if(!aVibreEtValideTemps) return;
+  if(e.touches[0].clientY - touchStartY > 40) { aVibreEtValideTemps = false; clearTimeout(adminTimer); verifierCodeAdmin(); }
+});
+
+function verifierCodeAdmin() {
+  if(prompt("🔒 ENTRER LE CODE SECRET ADMIN :") === "BEN4002ET4200") { openAdminPanel(); }
 }
 
-async function publierCatalogueEnMasse() {
-  const boxes = document.querySelectorAll(".bulk-item-box");
-  for(let box of boxes) {
-    const titre = box.querySelector(".bulk-titre").value.trim();
-    const prix = box.querySelector(".bulk-prix").value.trim();
-    const prix_devise = box.querySelector(".bulk-devise").value;
-    const inputFiles = box.querySelector(".bulk-image").files;
-    if(!titre) continue;
-    let images_base64 = [];
-    if(inputFiles) { for(let f of inputFiles) { images_base64.push(await compressAndToBase64(f)); } }
+async function openAdminPanel() {
+  const res = await fetch(`${API}/feed`);
+  const annonces = await res.json();
+  document.getElementById("adm-stat-total").innerText = annonces.length;
+  document.getElementById("adm-stat-vip").innerText = annonces.filter(a=>a.statut==='vip').length;
+  document.getElementById("adm-stat-stand").innerText = annonces.length - annonces.filter(a=>a.statut==='vip').length;
+  
+  const conteneur = document.getElementById("admin-liste-moderat-annonces");
+  conteneur.innerHTML = "";
+  annonces.forEach(a => {
+    conteneur.innerHTML += `
+      <div class="admin-annonce-item">
+        <div><strong>${a.titre}</strong></div>
+        <button class="btn-delete" onclick="purgerAnnonceAdmin(${a.id})">Purger de force</button>
+      </div>`;
+  });
+  ouvrirModal('admin-panel');
+}
 
-    await fetch(`${API}/annonces`, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({
-        user_id: 100, titre: titre,
-        description: `VIP : ${maBoutiqueVipInfos.shopName}`,
-        prix: prix || 0, prix_devise: prix_devise, periode: "jour", ville: maBoutiqueVipInfos.ville, commune: maBoutiqueVipInfos.commune,
-        quartier: "", telephone: maBoutiqueVipInfos.phone, statut: "vip", images_base64
-      })
-    });
+async function purgerAnnonceAdmin(id) {
+  if(confirm("Confirmer la suppression administrative ?")) {
+    await fetch(`${API}/admin/annonces/${id}`, { method: "DELETE", headers: {"Authorization": `Bearer ${sessionToken}`} });
+    openAdminPanel(); loadFeed();
   }
-  alert("Votre lot d'annonces est maintenant en ligne ! 👑"); fermerModal('vip'); loadFeed();
 }
 
-async function publier(){
-  try {
-    const files = document.getElementById("image").files;
-    let images_base64 = [];
-    for(let f of files){ images_base64.push(await compressAndToBase64(f)); }
-    const bodyData = {
-      user_id: profilUtilisateurActuel.type === 'vip' ? 100 : 1, 
-      titre: document.getElementById("titre").value,
-      prix: document.getElementById("prix").value, 
-      prix_devise: document.getElementById("prix_devise").value,
-      periode: document.getElementById("periode").value,
-      telephone: document.getElementById("telephone").value, 
-      description: document.getElementById("description").value,
-      ville: document.getElementById("ville").value, 
-      commune: document.getElementById("commune").value,
-      quartier: document.getElementById("quartier").value, 
-      statut: profilUtilisateurActuel.type === 'vip' ? "vip" : "disponible", 
-      images_base64
-    };
-    await fetch(`${API}/annonces`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(bodyData) });
-    fermerModal('publier'); loadFeed();
-  } catch (e) { alert("Erreur lors du dépôt de l'annonce"); }
-}
-
-function lancerLancementPubBoost(idAnnonce) {
-  idAnnonceEnCoursDeBoost = idAnnonce;
-  document.getElementById("btn-finaliser-boost").style.display = "none";
-  
-  // Rendu aléatoire du texte AdSense interstitiel pendant l'attente du boost
-  const randomAdText = INTERSTITIAL_ADS_POOL[Math.floor(Math.random() * INTERSTITIAL_ADS_POOL.length)];
-  document.getElementById("interstitial-boost-banner-text").innerText = `📢 SPONSOR ADSENSE :\n"${randomAdText}"`;
-  
-  document.getElementById("countdown").innerText = "15"; 
-  ouvrirModal('boost-pub');
-  let t = 15;
-  const inter = setInterval(() => {
-    t--; document.getElementById("countdown").innerText = t;
-    if(t <= 0) { clearInterval(inter); document.getElementById("btn-finaliser-boost").style.display = "block"; }
-  }, 1000);
-}
-
-async function executerRemonteeBdd() {
-  const res = await fetch(`${API}/annonces/${idAnnonceEnCoursDeBoost}/boost`, { method: "POST" });
-  if(res.ok) { alert("Boost positionnel validé !"); fermerModal('boost-pub'); loadFeed(); }
-}
-
-// INITIALISATIONS AU DÉMARRAGE DE L'APPLICATION
-loadFeed();
-démarrerChangementBannièreAdSenseFonds();
+loadFeed(); démarrerChangementBannièreAdSenseFonds();

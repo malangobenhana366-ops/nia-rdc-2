@@ -1,4 +1,4 @@
-require('dotenv').config(); // Utile pour le développement local, ignoré sur Render
+// Les variables d'environnement sont lues directement depuis le panneau Render en production
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
@@ -18,7 +18,7 @@ const pool = new Pool({
   }
 });
 
-// Test de connexion immédiat au démarrage
+// Test de connexion immédiat au démarrage du serveur
 pool.query('SELECT NOW()', (err, res) => {
   if (err) {
     console.error('❌ Erreur de connexion à PostgreSQL Neon :', err.stack);
@@ -36,9 +36,9 @@ cloudinary.config({
 
 // MIDDLEWARES
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); // Large limite pour recevoir les images en Base64 du mobile
+app.use(express.json({ limit: '50mb' })); // Large limite pour recevoir les images compressées en Base64 depuis le mobile
 
-// MIDDLEWARE DE VÉRIFICATION DU TOKEN JWT
+// MIDDLEWARE DE VÉRIFICATION DU TOKEN JWT SÉCURISÉ
 function verifierToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -53,7 +53,7 @@ function verifierToken(req, res, next) {
 }
 
 // =========================================================================
-// SÉCURITÉ & AUTHENTIFICATION (POSTGRESQL REQUÊTES)
+// SÉCURITÉ & AUTHENTIFICATION (REQUÊTES POSTGRESQL)
 // =========================================================================
 
 // INSCRIPTION COMPTE STANDARD
@@ -72,7 +72,7 @@ app.post('/auth/register', async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     
-    // Insertion en BDD
+    // Insertion dans la base de données
     const query = `
       INSERT INTO utilisateurs (username, password, telephone, type, shop_name)
       VALUES ($1, $2, $3, 'standard', NULL)
@@ -126,12 +126,12 @@ app.post('/auth/upgrade-vip', verifierToken, async (req, res) => {
     const { shopName } = req.body;
     if (!shopName) return res.status(400).json({ error: "Le nom de la boutique est requis." });
 
-    // Passer le profil en VIP
+    // Passer le profil de l'utilisateur en VIP
     await pool.query('UPDATE utilisateurs SET type = \'vip\', shop_name = $1 WHERE id = $2', [shopName, req.user.id]);
-    // Mettre à jour automatiquement le statut de ses annonces en 'vip'
+    // Mettre à jour automatiquement le statut de toutes ses annonces existantes en 'vip'
     await pool.query('UPDATE annonces SET statut = \'vip\' WHERE user_id = $1', [req.user.id]);
 
-    res.json({ message: "Compte promu au rang de Boutique VIP Pro !", shopName });
+    res.json({ message: "Compte promu au rang de Boutique VIP Pro avec succès !", shopName });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Erreur lors du passage au statut VIP." });
@@ -140,13 +140,13 @@ app.post('/auth/upgrade-vip', verifierToken, async (req, res) => {
 
 
 // =========================================================================
-// GESTION DES ANNONCES (POSTGRESQL + STORAGE CLOUDINARY)
+// GESTION DES ANNONCES (POSTGRESQL + STOCKAGE IMAGES CLOUDINARY)
 // =========================================================================
 
-// FLUX PRINCIPAL : TRICHE EN METTANT LES BOUTIQUES VIP TOUJOURS AU SOMMET
+// FLUX PRINCIPAL : MET LES BOUTIQUES VIP TOUJOURS AU SOMMET
 app.get('/feed', verifierToken, async (req, res) => {
   try {
-    // Tri : statut VIP d'abord, puis par date de mise à jour/création décroissante
+    // Tri stratégique : statut VIP d'abord, puis par date de création décroissante (plus récent)
     const query = `
       SELECT * FROM annonces 
       ORDER BY CASE WHEN statut = 'vip' THEN 0 ELSE 1 END ASC, date_creation DESC
@@ -159,7 +159,7 @@ app.get('/feed', verifierToken, async (req, res) => {
   }
 });
 
-// RECHERCHE MULTI-CRITÈRES INTÉGRÉE
+// RECHERCHE MULTI-CRITÈRES INTÉGRÉE (FLOU SUR LE TITRE/DESCRIPTION ET LA VILLE)
 app.get('/annonces/search', verifierToken, async (req, res) => {
   try {
     const queryTerm = `%${(req.query.q || "").toLowerCase().trim()}%`;
@@ -179,13 +179,13 @@ app.get('/annonces/search', verifierToken, async (req, res) => {
   }
 });
 
-// CRÉATION D'UNE PUBLICATION AVEC STOCKAGE IMAGE CLOUDINARY EN SÉRIE
+// CRÉATION D'UNE PUBLICATION AVEC TRANSFERT DES IMAGES VERS CLOUDINARY
 app.post('/annonces', verifierToken, async (req, res) => {
   try {
     const { titre, prix, prix_devise, periode, telephone, description, ville, commune, quartier, statut, images_base64 } = req.body;
     if (!titre || !prix) return res.status(400).json({ error: "Le titre et le prix sont obligatoires." });
 
-    // Traitement des images vers Cloudinary
+    // Traitement et envoi des chaînes Base64 vers Cloudinary
     let urlsImagesCloudinary = [];
     if (images_base64 && images_base64.length > 0) {
       for (const base64Str of images_base64) {
@@ -200,7 +200,7 @@ app.post('/annonces', verifierToken, async (req, res) => {
       }
     }
 
-    // Détermination du statut réel (Un compte VIP publie forcément des offres labellisées VIP)
+    // Détermination du statut (Un compte VIP publie obligatoirement ses offres labellisées VIP)
     const statutReel = req.user.type === "vip" ? "vip" : (statut || "disponible");
 
     const query = `
@@ -216,7 +216,6 @@ app.post('/annonces', verifierToken, async (req, res) => {
 
     const result = await pool.query(query, values);
     
-    // Adaptation pour le front (on repasse l'objet images en tableau propre si nécessaire)
     const annonceCreee = result.rows[0];
     if (typeof annonceCreee.images === 'string') {
       annonceCreee.images = JSON.parse(annonceCreee.images);
@@ -229,18 +228,18 @@ app.post('/annonces', verifierToken, async (req, res) => {
   }
 });
 
-// MODIFICATION DE L'ANNONCE
+// MODIFICATION COMPLÈTE DE L'ANNONCE PAR SON PROPRIÉTAIRE
 app.put('/annonces/:id/update', verifierToken, async (req, res) => {
   try {
     const idAnnonce = parseInt(req.params.id);
     
-    // Vérifier d'abord la propriété
+    // Vérification de la propriété de l'annonce
     const check = await pool.query('SELECT * FROM annonces WHERE id = $1', [idAnnonce]);
     if (check.rows.length === 0) return res.status(404).json({ error: "Publication introuvable." });
     
     const annonceActuelle = check.rows[0];
     if (annonceActuelle.user_id !== req.user.id) {
-      return res.status(403).json({ error: "Modification interdite sur ce profil." });
+      return res.status(403).json({ error: "Modification interdite. Ce n'est pas votre publication." });
     }
 
     const { titre, prix, prix_devise, periode, statut, description, ville, commune, quartier, telephone } = req.body;
@@ -268,40 +267,41 @@ app.put('/annonces/:id/update', verifierToken, async (req, res) => {
     ];
 
     const result = await pool.query(query, values);
-    res.json({ message: "Annonce mise à jour !", annonce: result.rows[0] });
+    res.json({ message: "Annonce mise à jour avec succès !", annonce: result.rows[0] });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Erreur lors de la mise à jour." });
   }
 });
 
-// BOOSTER (FORCER LE TIMESTAMPS DE REMONTÉE EN TÊTE DE LISTE)
+// BOOSTER / REMONTER EN HAUT DE LISTE (RÉINITIALISE LE TIMESTAMP DE FRAÎCHEUR)
 app.post('/annonces/:id/boost', verifierToken, async (req, res) => {
   try {
     const idAnnonce = parseInt(req.params.id);
     const result = await pool.query('UPDATE annonces SET date_creation = NOW() WHERE id = $1 AND user_id = $2 RETURNING *', [idAnnonce, req.user.id]);
     
-    if (result.rows.length === 0) return res.status(404).json({ error: "Impossible de propulser cette annonce." });
-    res.json({ message: "Annonce propulsée au sommet du flux !" });
+    if (result.rows.length === 0) return res.status(404).json({ error: "Impossible de propulser cette annonce. Vérifiez vos droits." });
+    res.json({ message: "Votre annonce a bien été propulsée au sommet du flux !" });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "Erreur pendant le boost." });
+    res.status(500).json({ error: "Erreur pendant l'exécution du boost." });
   }
 });
 
-// SUPPRESSION (ACCÈS TOTAL POUR LE DESIGNATEUR DE L'ANNONCE OU ACTION ADMIN)
+// SUPPRESSION DIRECTE (SÉCURISÉE UTILISATEUR OU SUPRESSION PANNEAU ADMIN)
 app.delete('/annonces/:id/delete', verifierToken, async (req, res) => {
   try {
     const idAnnonce = parseInt(req.params.id);
-    // On retire l'annonce directement de la base (la console admin et l'auteur y ont accès)
+    // Suppression complète de la ligne de la table
     await pool.query('DELETE FROM annonces WHERE id = $1', [idAnnonce]);
-    res.json({ message: "Publication retirée définitivement." });
+    res.json({ message: "Publication définitivement retirée de la base de données." });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Erreur lors de la suppression." });
   }
 });
 
+// LANCEMENT DU SERVEUR SUR LE PORT 5000
 app.listen(PORT, () => {
   console.log(`🚀 Serveur NIA RDC connecté à Neon et Cloudinary sur le port ${PORT}`);
 });

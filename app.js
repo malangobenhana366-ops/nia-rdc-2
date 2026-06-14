@@ -26,7 +26,7 @@ let fonctionRetourAppelInterstitiel = null;
 function ouvrirModal(id) { document.getElementById(`modal-${id}`).style.display = "flex"; }
 function fermerModal(id) { document.getElementById(`modal-${id}`).style.display = "none"; }
 
-// CHARGEMENT INTÉGRAL DU FLUX
+// CHARGEMENT DU FLUX PRINCIPAL
 async function loadFeed(){
   if (!sessionToken) {
     document.getElementById("gateway-screen").style.display = "flex";
@@ -50,7 +50,7 @@ function mettreAJourLibelleBoutonProfil() {
   btn.innerHTML = monUserTypeActuel === "vip" ? `<span>🏢</span><span>Ma Boutique</span>` : `<span>👤</span><span>Mon Profil</span>`;
 }
 
-// RENDU NETTOYÉ : AUCUN BOUTON DE SUPPRESSION/MODIF SUR LE FLUX PUBLIC
+// RENDU SÉCURISÉ : AUCUN BOUTON DE SUPPRESSION/MODIF SUR LE FLUX PUBLIC
 function afficherAnnonces(liste, contextViewId = null) {
   const feed = document.getElementById("feed");
   if (!feed) return;
@@ -95,45 +95,7 @@ function afficherAnnonces(liste, contextViewId = null) {
   });
 }
 
-// CONSOLE ADMIN SECRÈTE (APPELÉE PAR CLIC DROIT / LONG TOUCH SUR L'ENGRENAGE)
-function ouvrirConsoleAdminSecrète(e) {
-  if(e) e.preventDefault();
-  
-  const total = toutesLesAnnonces.length;
-  const vips = toutesLesAnnonces.filter(a => a.statut === 'vip').length;
-  const stands = total - vips;
-
-  document.getElementById("adm-stat-total").innerText = total;
-  document.getElementById("adm-stat-vip").innerText = vips;
-  document.getElementById("adm-stat-stand").innerText = stands;
-
-  const container = document.getElementById("admin-liste-moderat-annonces");
-  container.innerHTML = "";
-
-  toutesLesAnnonces.forEach(a => {
-    const sDevise = a.prix_devise === 'USD' ? '$' : ' FC';
-    const row = document.createElement("div");
-    row.className = "admin-annonce-item";
-    row.innerHTML = `
-      <div><strong>${a.titre}</strong> (${a.prix}${sDevise})</div>
-      <button class="btn-delete" style="padding:5px 10px; font-size:0.8rem;" onclick="adminSupprimerAnnonceDirecte(${a.id})">🗑️ Ban</button>
-    `;
-    container.appendChild(row);
-  });
-
-  ouvrirModal('admin-panel');
-}
-
-async function adminSupprimerAnnonceDirecte(id) {
-  if(!confirm("Êtes-vous sûr de vouloir supprimer définitivement cette annonce en tant qu'admin ?")) return;
-  const res = await fetch(`${API}/annonces/${id}/delete`, { 
-    method: "DELETE",
-    headers: { "Authorization": `Bearer ${sessionToken}` }
-  });
-  if(res.ok) { fermerModal('admin-panel'); loadFeed(); }
-}
-
-// GESTION DU PORTAIL AUTH
+// LOGIQUE PORTAIL AUTHENTIFICATION
 function basculerModeAuth() {
   modeAuthInscription = !modeAuthInscription;
   document.getElementById("auth-subtitle").innerText = modeAuthInscription ? "Inscrivez-vous pour accéder au réseau de location" : "Connectez-vous à votre compte sécurisé";
@@ -162,7 +124,7 @@ async function soumettreAuthentification() {
     });
     const data = await res.json();
     
-    if(!res.ok) { alert(data.error || "Identifiants incorrects ou utilisateur déjà existant."); return; }
+    if(!res.ok) { alert(data.error || "Identifiants ou compte incorrect."); return; }
 
     localStorage.setItem("nia_token", data.token);
     localStorage.setItem("nia_user_id", data.userId.toString());
@@ -176,9 +138,7 @@ async function soumettreAuthentification() {
 
     document.getElementById("gateway-screen").style.display = "none";
     loadFeed();
-  } catch (err) {
-    alert("Erreur de communication avec le serveur distant.");
-  }
+  } catch (err) { alert("Erreur de communication serveur."); }
 }
 
 function deconnexionEspaceSecurise() {
@@ -188,7 +148,7 @@ function deconnexionEspaceSecurise() {
   fermerModal('profil');
 }
 
-// L'UNIQUE ENDROIT OÙ L'ON PEUT BOOSTER, MODIFIER, SUPPRIMER SON COMPTE
+// ESPACE PRIVÉ : UNIQUE ENDROIT POUR GÉRER SES PROPRES ANNONCES
 function ouvrirEspaceCompteUtilisateur() {
   const title = document.getElementById("profil-modal-title");
   const content = document.getElementById("profil-view-content");
@@ -212,7 +172,7 @@ function ouvrirEspaceCompteUtilisateur() {
   ouvrirModal('profil');
   const container = document.getElementById("private-user-items");
   if(mesAnnoncesPersonnelles.length === 0) {
-    container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>Aucune annonce en ligne pour le moment.</p>";
+    container.innerHTML = "<p style='color:var(--text-light); font-size:0.85rem;'>Aucune annonce en ligne.</p>";
     return;
   }
   
@@ -476,15 +436,121 @@ function démarrerChangementBannièreAdSenseFonds() {
   }, 15000);
 }
 
-// GESTION SUPACTTIVE POUR MOBILE (APPUI LONG DE 1,5 SECONDE SUR L'ENGRENAGE POUR LES ÉCRANS TACTILES)
-let tTriggerAdmin;
-const triggerBtn = document.getElementById("gear-admin-trigger");
-if(triggerBtn) {
-  triggerBtn.addEventListener("touchstart", () => {
-    tTriggerAdmin = setTimeout(() => { ouvrirConsoleAdminSecrète(); }, 1500);
+// =========================================================================
+// MODULE ADMINISTRATION CACHÉE : RECONNAISSANCE DU GESTE SECRET & CODE
+// =========================================================================
+let tempsAppuiDebut = 0;
+let positionYDebut = 0;
+let appuiLongValide = false;
+const CODE_SECURITE_ADMIN = "BEN4002ET4200";
+
+const zoneEnTeteSecrete = document.getElementById("secret-header-zone");
+
+if (zoneEnTeteSecrete) {
+  // CONFIGURATION MOBILE
+  zoneEnTeteSecrete.addEventListener("touchstart", (e) => {
+    tempsAppuiDebut = Date.now();
+    positionYDebut = e.touches[0].clientY;
+    appuiLongValide = false;
   });
-  triggerBtn.addEventListener("touchend", () => { clearTimeout(tTriggerAdmin); });
+
+  zoneEnTeteSecrete.addEventListener("touchend", (e) => {
+    const dureeAppui = Date.now() - tempsAppuiDebut;
+    const positionYFin = e.changedTouches[0].clientY;
+    const distanceBalayageBas = positionYFin - positionYDebut;
+
+    if (dureeAppui >= 10000) appuiLongValide = true;
+    if (appuiLongValide && distanceBalayageBas > 30) declencherVerifCodeAdmin();
+  });
+
+  // CONFIGURATION ORDINATEURS
+  zoneEnTeteSecrete.addEventListener("mousedown", (e) => {
+    tempsAppuiDebut = Date.now();
+    positionYDebut = e.clientY;
+    appuiLongValide = false;
+  });
+
+  zoneEnTeteSecrete.addEventListener("mouseup", (e) => {
+    const dureeAppui = Date.now() - tempsAppuiDebut;
+    const positionYFin = e.clientY;
+    const distanceBalayageBas = positionYFin - positionYDebut;
+
+    if (dureeAppui >= 10000) appuiLongValide = true;
+    if (appuiLongValide && distanceBalayageBas > 30) declencherVerifCodeAdmin();
+  });
 }
 
-// INITIALISATION DU SYSTEME
+function declencherVerifCodeAdmin() {
+  const codeSaisi = prompt("🔒 Entrez le code de sécurité Super-Admin :");
+  if (codeSaisi === CODE_SECURITE_ADMIN) {
+    ouvrirConsoleAdminSecrète();
+  } else if (codeSaisi !== null) {
+    alert("❌ Code de sécurité incorrect. Accès refusé.");
+  }
+}
+
+function ouvrirConsoleAdminSecrète() {
+  const total = toutesLesAnnonces.length;
+  const vips = toutesLesAnnonces.filter(a => a.statut === 'vip').length;
+  const stands = total - vips;
+
+  document.getElementById("adm-stat-total").innerText = total;
+  document.getElementById("adm-stat-vip").innerText = vips;
+  document.getElementById("adm-stat-stand").innerText = stands;
+
+  // Répartition par Ville
+  const statsVilles = {};
+  toutesLesAnnonces.forEach(a => {
+    const villeNom = (a.ville && a.ville.trim() !== "") ? a.ville.trim() : "Non spécifiée";
+    statsVilles[villeNom] = (statsVilles[villeNom] || 0) + 1;
+  });
+
+  const conteneurVilles = document.getElementById("admin-stats-villes");
+  conteneurVilles.innerHTML = "";
+  for (const [ville, nb] of Object.entries(statsVilles)) {
+    conteneurVilles.innerHTML += `<div>🏙️ <strong>${ville}</strong> : ${nb} annonce(s)</div>`;
+  }
+
+  // Modération de la liste
+  const containerListe = document.getElementById("admin-liste-moderat-annonces");
+  containerListe.innerHTML = "";
+
+  toutesLesAnnonces.forEach(a => {
+    const sDevise = a.prix_devise === 'USD' ? '$' : ' FC';
+    const row = document.createElement("div");
+    row.className = "admin-annonce-item";
+    row.innerHTML = `
+      <div style="max-width: 60%;">
+        <strong>${a.titre}</strong> (${a.prix}${sDevise})<br>
+        <span style="font-size:0.75rem; color:#94a3b8;">📍 ${a.ville || 'RDC'} | 👤 Owner ID: ${a.user_id}</span>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="btn-boost" style="background:#eab308; padding:5px 8px; font-size:0.75rem;" onclick="adminAvertirUtilisateur(${a.user_id}, '${a.titre.replace(/'/g, "\\'")}')">⚠️ Avertir</button>
+        <button class="btn-delete" style="padding:5px 8px; font-size:0.75rem;" onclick="adminSupprimerAnnonceDirecte(${a.id})">🗑️ Ban</button>
+      </div>
+    `;
+    containerListe.appendChild(row);
+  });
+
+  ouvrirModal('admin-panel');
+}
+
+function adminAvertirUtilisateur(userId, titreAnnonce) {
+  alert(`⚠️ Un avertissement formel de modération a été envoyé au propriétaire (User ID: ${userId}) concernant l'annonce "${titreAnnonce}".`);
+}
+
+async function adminSupprimerAnnonceDirecte(id) {
+  if (!confirm("Voulez-vous retirer cette publication du serveur immédiatement ?")) return;
+  const res = await fetch(`${API}/annonces/${id}/delete`, { 
+    method: "DELETE",
+    headers: { "Authorization": `Bearer ${sessionToken}` }
+  });
+  if (res.ok) { 
+    fermerModal('admin-panel'); 
+    loadFeed(); 
+    setTimeout(() => { ouvrirConsoleAdminSecrète(); }, 400);
+  }
+}
+
+// ALLUMAGE
 loadFeed(); démarrerChangementBannièreAdSenseFonds();

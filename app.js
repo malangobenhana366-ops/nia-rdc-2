@@ -420,10 +420,36 @@ function actionVisiterBoutiqueTierce(idOwner) {
   afficherAnnonces(articles, 'OWNER_VITRINE');
 }
 
+// COMPRESSION FORCEE DES PHOTOS SUR LE NAVIGATEUR (MAX 800PX, QUALITE 70%)
 function compressAndToBase64(file) {
   return new Promise((resolve) => {
-    const reader = new FileReader(); reader.readAsDataURL(file);
-    reader.onload = (e) => { resolve(e.target.result); };
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const max_size = 800; // Résolution maximale pour l'affichage mobile
+
+        if (width > height) {
+          if (width > max_size) { height *= max_size / width; width = max_size; }
+        } else {
+          if (height > max_size) { width *= max_size / height; height = max_size; }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convertit l'image compressée en JPEG léger avec une qualité de 70%
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        resolve(dataUrl);
+      };
+    };
   });
 }
 

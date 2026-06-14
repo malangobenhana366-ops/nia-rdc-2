@@ -62,14 +62,17 @@ app.post("/annonces", async (req,res)=>{
     const fields = await pool.query(
       `INSERT INTO annonces (user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()) RETURNING id`,
-      [user_id || 1, titre, description, prix || 0, periode, ville, commune, quartier, telephone, statut]
+      [user_id || 1, titre, description, prix || 0, periode, ville, commune, quartier, telephone, statut || 'disponible']
     );
     const id = fields.rows[0].id;
-    if(images_base64){
+    if(images_base64 && Array.isArray(images_base64)){
       for(let b64 of images_base64){
         const url = await uploadImage(b64);
         if(url) await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [id,url]);
       }
+    } else if (images_base64 && typeof images_base64 === "string") {
+      const url = await uploadImage(images_base64);
+      if(url) await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [id,url]);
     }
     res.json({success:true});
   } catch(e) { res.status(500).json({error:"err"}); }
@@ -91,7 +94,6 @@ app.put("/annonces/:id/update", async (req, res) => {
 // SUPPRESSION DIRECTE (PROPRIÉTAIRE ET MODÉRATION FORCÉE ADMIN)
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
-    // Supprime d'abord les images liées à cause des clés étrangères
     await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
     await pool.query("DELETE FROM annonces WHERE id = $1", [req.params.id]);
     res.json({ success: true });

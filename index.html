@@ -167,8 +167,9 @@
         <button class="close-modal" onclick="fermerModal('profil')">✕</button>
       </div>
       <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button id="tab-standard-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('standard')">Mes Offres Standards</button>
+        <button id="tab-standard-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('standard')">Mes Offres</button>
         <button id="tab-vip-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('vip')">Mes Offres VIP 👑</button>
+        <button id="tab-messages-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; background:#e2e8f0;" onclick="changerOngletProfil('messages')">Messages 📩</button>
       </div>
       <div id="profil-view-content"></div>
     </div>
@@ -194,16 +195,30 @@
   </div>
 
   <div class="modal" id="modal-admin">
-    <div class="modal-content" style="background:#0f172a; color:white;">
+    <div class="modal-content" style="background:#0f172a; color:white; max-width:700px;">
       <div class="modal-header" style="border-bottom:1px solid #334155;">
         <h2 style="color:#ef4444;">🛠️ Console de Supervision Générale</h2>
         <button class="close-modal" style="background:#1e293b; color:white;" onclick="fermerModal('admin')">✕</button>
       </div>
+      
       <div class="form-group full-width" style="margin-bottom:15px;">
-        <label style="color:#94a3b8; margin-bottom:6px;">Diffuser un message d'alerte / avertissement à tous les utilisateurs :</label>
+        <label style="color:#94a3b8; margin-bottom:6px;">Diffuser un message d'alerte / avertissement à tous les utilisateurs (Bandeau défilant) :</label>
         <textarea id="admin-alerte-msg" style="background:#1e293b; color:white; border:1px solid #334155;" placeholder="Écrivez le message urgent ici..."></textarea>
+        <button class="modal-submit-btn" style="background:var(--danger); margin-top:8px;" onclick="envoyerAlerteGlobaleAdmin()">Diffuser l'alerte immédiate</button>
       </div>
-      <button class="modal-submit-btn" style="background:var(--danger);" onclick="envoyerAlerteGlobaleAdmin()">Diffuser l'alerte immédiate</button>
+
+      <hr style="border-color:#334155; margin:20px 0;">
+      <h3 style="color:#38bdf8;">📋 Gestion et Modération Générale des Annonces</h3>
+      
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-bottom:15px;">
+        <button style="padding:8px; font-weight:bold; cursor:pointer; background:#334155; color:white; border:none; border-radius:6px;" onclick="filtrerAdminAnnonces('all')">Tout</button>
+        <button style="padding:8px; font-weight:bold; cursor:pointer; background:#334155; color:white; border:none; border-radius:6px;" onclick="filtrerAdminAnnonces('ville')">Par Ville</button>
+        <button style="padding:8px; font-weight:bold; cursor:pointer; background:#2563eb; color:white; border:none; border-radius:6px;" onclick="filtrerAdminAnnonces('vip')">VIP Uniquement</button>
+        <button style="padding:8px; font-weight:bold; cursor:pointer; background:#475569; color:white; border:none; border-radius:6px;" onclick="filtrerAdminAnnonces('standard')">Standards</button>
+      </div>
+
+      <div id="admin-liste-annonces-conteneur" style="max-height:300px; overflow-y:auto; background:#1e293b; padding:10px; border-radius:10px; display:flex; flex-direction:column; gap:10px;">
+        </div>
     </div>
   </div>
 

@@ -114,6 +114,7 @@ function ouvrirSecuriteCodeAdmin() {
   const code = prompt("Veuillez saisir le code de sécurité Administrateur :");
   if (code === "BEN4002ET4200") {
     ouvrirModal("admin");
+    filtrerAdminAnnonces('all');
   } else if (code !== null) {
     alert("Code incorrect.");
   }
@@ -395,13 +396,45 @@ function ouvrirModal(id) {
 }
 function fermerModal(id) { document.getElementById(`modal-${id}`).style.display = "none"; }
 
-function changerOngletProfil(type) {
+async function changerOngletProfil(type) {
   ONGLE_PROFIL_ACTIF = type;
   document.getElementById("tab-standard-btn").style.background = type === "standard" ? "#cbd5e1" : "#f1f5f9";
   document.getElementById("tab-vip-btn").style.background = type === "vip" ? "#fde68a" : "#f1f5f9";
+  document.getElementById("tab-messages-btn").style.background = type === "messages" ? "#a7f3d0" : "#f1f5f9";
+
+  const content = document.getElementById("profil-view-content");
+
+  // INTERFACE RECEPTION MESSAGES DE L'ADMINISTRATION
+  if(type === "messages") {
+    const telStandard = localStorage.getItem("nia_standard_telephone") || "";
+    const telVip = localStorage.getItem("nia_vip_telephone") || "";
+    const telActif = telStandard || telVip;
+    
+    if(!telActif) {
+      content.innerHTML = "<p style='color:gray;text-align:center;'>Publiez d'abord une annonce pour activer votre messagerie.</p>";
+      return;
+    }
+    try {
+      const res = await fetch(`${API}/user/messages/${telActif}`);
+      const data = await res.json();
+      let htmlMsgs = "<h4 style='margin-top:0;'>📩 Boîte de réception Service Client</h4>";
+      if(data.length === 0) {
+        htmlMsgs += "<p style='color:gray; font-size:0.9rem;'>Aucun message reçu de la direction.</p>";
+      } else {
+        data.forEach(m => {
+          htmlMsgs += `
+            <div style="background:#fff; border-left:4px solid #10b981; padding:10px; border-radius:6px; margin-bottom:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+              <div style="font-size:0.75rem; color:gray;">NIA Administration • ${new Date(m.created_at).toLocaleDateString()}</div>
+              <div style="font-size:0.9rem; margin-top:4px; font-weight:500; color:#1e293b;">${m.content}</div>
+            </div>`;
+        });
+      }
+      content.innerHTML = htmlMsgs;
+    } catch(e) { content.innerHTML = "Erreur de chargement des messages."; }
+    return;
+  }
 
   const tel = type === "vip" ? localStorage.getItem("nia_vip_telephone") : localStorage.getItem("nia_standard_telephone");
-  const content = document.getElementById("profil-view-content");
   if(!tel) { content.innerHTML = "<p style='color:gray;text-align:center;'>Aucune annonce publiée avec ce profil.</p>"; return; }
 
   const mesAnnonces = toutesLesAnnonces.filter(a => a.telephone === tel && a.is_vip === (type === "vip"));
@@ -462,6 +495,68 @@ async function supprimerAnnonce(id) {
     fermerModal("profil");
     loadFeed();
   }
+}
+
+/* --- COMPOSANTS EXCLUSIFS CONSOLE GENERALE D'ADMINISTRATION --- */
+
+function filtrerAdminAnnonces(critere) {
+  const conteneur = document.getElementById("admin-liste-annonces-conteneur");
+  conteneur.innerHTML = "";
+  
+  let collection = [...toutesLesAnnonces];
+  
+  if(critere === "vip") collection = collection.filter(a => a.is_vip === true);
+  if(critere === "standard") collection = collection.filter(a => a.is_vip === false);
+  if(critere === "ville") {
+    collection.sort((x, y) => x.ville.localeCompare(y.ville));
+  }
+
+  if(collection.length === 0) {
+    conteneur.innerHTML = "<p style='color:gray; text-align:center;'>Aucune annonce trouvée.</p>";
+    return;
+  }
+
+  collection.forEach(a => {
+    conteneur.innerHTML += `
+      <div style="background:#0f172a; padding:10px; border-radius:8px; border:1px solid #334155;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span style="color:${a.is_vip ? '#eab308' : '#94a3b8'}; font-weight:bold;">[${a.is_vip ? 'VIP' : 'STD'}] ${a.titre}</span>
+            <div style="font-size:0.8rem; color:#64748b;">📍 ${a.ville} | Tel: ${a.telephone}</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button style="background:#2563eb; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer;" onclick="envoyerMessageDirectAdmin('${a.telephone}', false)">💬 Solo</button>
+            <button style="background:#10b981; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer;" onclick="envoyerMessageDirectAdmin('${a.telephone}', true)">📢 Tous</button>
+            <button style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.75rem; cursor:pointer;" onclick="supprimerAnnonceDepuisAdmin(${a.id})">🗑️ Effacer</button>
+          </div>
+        </div>
+      </div>`;
+  });
+}
+
+async function supprimerAnnonceDepuisAdmin(id) {
+  if(confirm("Administrateur : Confirmez-vous la suppression autoritaire de cette annonce ?")) {
+    await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" });
+    await loadFeed();
+    filtrerAdminAnnonces('all');
+  }
+}
+
+async function envoyerMessageDirectAdmin(telephone, estGlobal) {
+  const typeMessage = estGlobal ? "à TOUTES les annonces de la plateforme" : `uniquement à l'annonce reliée au profil (${telephone})`;
+  const msg = prompt(`Écrire le message de gestion à envoyer ${typeMessage} :`);
+  if(!msg) return;
+
+  const res = await fetch(`${API}/admin/send-message`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      telephone_destinataire: estGlobal ? null : telephone,
+      content: msg
+    })
+  });
+
+  if(res.ok) alert("Message envoyé avec succès !");
 }
 
 document.addEventListener("DOMContentLoaded", () => {

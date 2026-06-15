@@ -110,5 +110,31 @@ app.get("/notifications/globales", async (req, res) => {
   } catch (e) { res.json([]); }
 });
 
+/* ================= EXTENSION ADMINISTRATION GENERALE ================= */
+
+// ENVOYER UN MESSAGE ADMIN PRIVÉ OU TOTAL GLOBAL
+app.post("/admin/send-message", async (req, res) => {
+  try {
+    const { telephone_destinataire, content } = req.body;
+    await pool.query(
+      "INSERT INTO admin_messages (telephone_destinataire, content) VALUES ($1, $2)",
+      [telephone_destinataire || null, content]
+    );
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// LIRE LES MESSAGES REÇUS PAR UN UTILISATEUR DEPUIS SON PROFIL
+app.get("/user/messages/:telephone", async (req, res) => {
+  try {
+    const { telephone } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM admin_messages WHERE telephone_destinataire = $1 OR telephone_destinataire IS NULL ORDER BY created_at DESC",
+      [telephone]
+    );
+    res.json(result.rows);
+  } catch (e) { res.json([]); }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, ()=>console.log(`NIA ENGINE OPERATIONAL ON PORT ${PORT}`));

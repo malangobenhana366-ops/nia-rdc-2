@@ -26,6 +26,13 @@
     header .logo { margin: 0; color: var(--primary); font-size: 1.6rem; font-weight: 800; }
     header .settings-btn { background: #f1f5f9; border: none; font-size: 1.5rem; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; }
     
+    /* STYLE AJOUTÉ : BOUTON MENU HAUT GAUCHE & MENU DÉROULANT */
+    header .menu-left-container { position: relative; display: flex; align-items: center; gap: 10px; }
+    header .menu-left-btn { background: #f1f5f9; border: none; font-size: 1.2rem; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .dropdown-menu { display: none; position: absolute; top: 50px; left: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 220px; z-index: 1000; overflow: hidden; }
+    .dropdown-menu button { background: none; border: none; width: 100%; text-align: left; padding: 12px 16px; font-size: 0.9rem; font-weight: 600; color: var(--text); cursor: pointer; }
+    .dropdown-menu button:hover { background: #f1f5f9; color: var(--primary); }
+
     main { max-width: 800px; margin: 10px auto 160px auto; padding: 0 15px; }
     .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
     .section-title { margin: 0; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; }
@@ -88,12 +95,22 @@
     /* INTERSTITIEL PUBLICITAIRE */
     .interstitial-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0f172a; z-index: 5000; flex-direction: column; justify-content: center; align-items: center; color: white; padding: 24px; }
     .interstitial-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: none; color: white; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+    /* TEXTES TEXTUELS LISIBLES POUR LA DOCUMENTATION */
+    .legal-text-container { max-height: 400px; overflow-y: auto; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 15px; font-size: 0.9rem; line-height: 1.6; color: var(--text); margin-bottom: 15px; text-align: justify; }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="logo">NIA RDC</div>
+    <div class="menu-left-container">
+      <button class="menu-left-btn" onclick="toggleLeftDropdown()">☰</button>
+      <div class="dropdown-menu" id="left-dropdown">
+        <button onclick="ouvrirModalLegal('apropos')">ℹ️ À propos</button>
+        <button onclick="ouvrirModalLegal('confidentialite')">🔒 Politique de confidentialité</button>
+      </div>
+      <div class="logo">NIA RDC</div>
+    </div>
     <button class="settings-btn" id="gear-admin-trigger" onmousedown="startAdminTouch()" onmouseup="stopAdminTouch()" onmouseleave="stopAdminTouch()" ontouchstart="startAdminTouch()" ontouchend="stopAdminTouch()">⚙️</button>
   </header>
 
@@ -106,6 +123,46 @@
     </div>
     <div id="feed">Chargement des offres...</div>
   </main>
+
+  <div class="modal" id="modal-auth" style="background-color: #0f172a;">
+    <div class="modal-content" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2 id="auth-title">Créer un compte NIA RDC</h2>
+      </div>
+      <div class="form-grid" id="auth-form-register">
+        <div class="form-group full-width" style="background: #eff6ff; padding: 12px; border-radius: 8px; font-size: 0.8rem; line-height: 1.4; font-weight: normal; margin-bottom: 5px;">
+          Pour continuer, vous devez lire et accepter nos Conditions d'utilisation disponibles via le menu ☰ ou en cliquant sur le bouton ci-dessous.
+          <button type="button" style="background:none; border:none; color:var(--primary); font-weight:bold; cursor:pointer; padding:0; margin-top:5px; text-decoration:underline;" onclick="ouvrirModalLegal('conditions-forced')">Lire les Conditions Obligatoires 📄</button>
+        </div>
+        <div class="form-group full-width">
+          <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
+            <input type="checkbox" id="auth-accept-rules" style="width:auto;"> J'accepte expressément les Conditions de Sécurité et d'Utilisation de NIA RDC.
+          </label>
+        </div>
+        <div class="form-group full-width"><label>Numéro de Téléphone</label><input id="auth-tel" type="tel" placeholder="Ex: 0820000000"></div>
+        <div class="form-group full-width"><label>Mot de passe</label><input id="auth-pass" type="password" placeholder="••••••••"></div>
+        <div class="form-group full-width"><button class="modal-submit-btn" onclick="executerInscription()">M'inscrire de suite</button></div>
+        <div class="form-group full-width" style="text-align:center; margin-top:10px;"><a href="#" style="color:var(--primary); text-decoration:none;" onclick="basculerModeAuth(false)">Déjà inscrit ? Connectez-vous ici</a></div>
+      </div>
+      <div class="form-grid" id="auth-form-login" style="display:none;">
+        <div class="form-group full-width"><label>Numéro de Téléphone</label><input id="login-tel" type="tel" placeholder="Ex: 0820000000"></div>
+        <div class="form-group full-width"><label>Mot de passe</label><input id="login-pass" type="password" placeholder="••••••••"></div>
+        <div class="form-group full-width"><button class="modal-submit-btn" style="background:#0f172a;" onclick="executerConnexion()">Se connecter</button></div>
+        <div class="form-group full-width" style="text-align:center; margin-top:10px;"><a href="#" style="color:var(--primary); text-decoration:none;" onclick="basculerModeAuth(true)">Besoin d'un compte ? Inscrivez-vous</a></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-legal">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="modal-header">
+        <h2 id="legal-title-display">Document Officiel</h2>
+        <button class="close-modal" id="legal-close-btn" onclick="fermerModal('legal')">✕</button>
+      </div>
+      <div class="legal-text-container" id="legal-body-display"></div>
+      <button class="modal-submit-btn" id="legal-action-btn" onclick="fermerModal('legal')" style="display:none;">J'ai lu et j'accepte les conditions</button>
+    </div>
+  </div>
 
   <div class="modal" id="modal-publier">
     <div class="modal-content">
@@ -167,9 +224,8 @@
         <button class="close-modal" onclick="fermerModal('profil')">✕</button>
       </div>
       <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button id="tab-standard-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('standard')">Mes Offres</button>
+        <button id="tab-standard-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('standard')">Mes Offres Standards</button>
         <button id="tab-vip-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('vip')">Mes Offres VIP 👑</button>
-        <button id="tab-messages-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; background:#e2e8f0;" onclick="changerOngletProfil('messages')">Messages 📩</button>
       </div>
       <div id="profil-view-content"></div>
     </div>
@@ -195,30 +251,16 @@
   </div>
 
   <div class="modal" id="modal-admin">
-    <div class="modal-content" style="background:#0f172a; color:white; max-width:700px;">
+    <div class="modal-content" style="background:#0f172a; color:white;">
       <div class="modal-header" style="border-bottom:1px solid #334155;">
         <h2 style="color:#ef4444;">🛠️ Console de Supervision Générale</h2>
         <button class="close-modal" style="background:#1e293b; color:white;" onclick="fermerModal('admin')">✕</button>
       </div>
-      
       <div class="form-group full-width" style="margin-bottom:15px;">
-        <label style="color:#94a3b8; margin-bottom:6px;">Diffuser un message d'alerte / avertissement à tous les utilisateurs (Bandeau défilant) :</label>
+        <label style="color:#94a3b8; margin-bottom:6px;">Diffuser un message d'alerte / avertissement à tous les utilisateurs :</label>
         <textarea id="admin-alerte-msg" style="background:#1e293b; color:white; border:1px solid #334155;" placeholder="Écrivez le message urgent ici..."></textarea>
-        <button class="modal-submit-btn" style="background:var(--danger); margin-top:8px;" onclick="envoyerAlerteGlobaleAdmin()">Diffuser l'alerte immédiate</button>
       </div>
-
-      <hr style="border-color:#334155; margin:20px 0;">
-      <h3 style="color:#38bdf8;">📋 Gestion et Modération Générale des Annonces</h3>
-      
-      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-bottom:15px;">
-        <button style="padding:8px; font-weight:bold; cursor:pointer; background:#334155; color:white; border:none; border-radius:6px;" onclick="filtrerAdminAnnonces('all')">Tout</button>
-        <button style="padding:8px; font-weight:bold; cursor:pointer; background:#334155; color:white; border:none; border-radius:6px;" onclick="filtrerAdminAnnonces('ville')">Par Ville</button>
-        <button style="padding:8px; font-weight:bold; cursor:pointer; background:#2563eb; color:white; border:none; border-radius:6px;" onclick="filtrerAdminAnnonces('vip')">VIP Uniquement</button>
-        <button style="padding:8px; font-weight:bold; cursor:pointer; background:#475569; color:white; border:none; border-radius:6px;" onclick="filtrerAdminAnnonces('standard')">Standards</button>
-      </div>
-
-      <div id="admin-liste-annonces-conteneur" style="max-height:300px; overflow-y:auto; background:#1e293b; padding:10px; border-radius:10px; display:flex; flex-direction:column; gap:10px;">
-        </div>
+      <button class="modal-submit-btn" style="background:var(--danger);" onclick="envoyerAlerteGlobaleAdmin()">Diffuser l'alerte immédiate</button>
     </div>
   </div>
 

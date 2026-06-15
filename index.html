@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NIA RDC - Version Finale Professionnelle</title>
+  <title>NIA RDC - Version Finale</title>
   <style>
     :root {
       --primary: #2563eb; 
@@ -76,16 +76,23 @@
     .vip-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px; }
     .btn-add-block { background: #f1f5f9; color: var(--text); border: 1px solid var(--border); padding: 11px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 15px; }
 
-    /* ZONE ADSENSE BAS FIXE SANS GÊNE */
+    /* STRUCTURE DE L'ADMINISTRATION */
+    .admin-filter-bar { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+    .admin-filter-bar select, .admin-filter-bar input { padding: 8px; font-size: 0.85rem; border-radius: 6px; background: #1e293b; color: white; border: 1px solid #334155; }
+    .admin-list-container { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+    .admin-item-row { background: #1e293b; border: 1px solid #334155; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+
+    /* BOITE DE MESSAGE DANS LE PROFIL */
+    .mailbox-container { border-top: 2px solid var(--border); margin-top: 20px; padding-top: 15px; }
+    .message-bubble { background: #f1f5f9; border-left: 4px solid var(--primary); padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.85rem; }
+    .message-bubble.global-type { border-left-color: var(--danger); background: #fee2e2; }
+
     .bottom-area { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--card-bg); border-top: 1px solid var(--border); z-index: 1000; display: flex; flex-direction: column; }
     .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); }
     .nav-btn { background: none; border: none; padding: 12px 5px; font-size: 0.8rem; font-weight: 700; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .nav-btn.vip-btn { color: var(--vip-gold); }
-    
-    /* LE SQUELETTE DE TA BANNIÈRE DE PUB ROTATIVE */
     .adsense-space { background-color: #1e293b; height: 55px; display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 0.75rem; font-weight: bold; text-align: center; letter-spacing: 0.5px; border-top: 1px solid #334155; }
 
-    /* INTERSTITIEL PUBLICITAIRE */
     .interstitial-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0f172a; z-index: 5000; flex-direction: column; justify-content: center; align-items: center; color: white; padding: 24px; }
     .interstitial-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: none; color: white; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
   </style>
@@ -99,7 +106,6 @@
 
   <main>
     <div id="alert-bar-container"></div>
-
     <div class="section-header-flex">
       <div class="section-title" id="feed-title">Annonces récentes</div>
       <button class="btn-reset-search" id="reset-btn" onclick="annulerRecherche()">Voir tout 🔄</button>
@@ -141,7 +147,7 @@
         <button class="close-modal" onclick="fermerModal('rechercher')">✕</button>
       </div>
       <div class="form-grid">
-        <div class="form-group full-width"><label>Que cherchez-vous ? (Mots clés, fautes ou synonymes acceptés)</label><input id="search-titre" placeholder="Ex: grp electogene, auto, voiture..."></div>
+        <div class="form-group full-width"><label>Que cherchez-vous ?</label><input id="search-titre" placeholder="Ex: grp electogene, auto, voiture..."></div>
         <div class="form-group full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div>
         <div class="form-group"><label>Commune</label><input id="search-commune" placeholder="Toutes"></div>
         <div class="form-group"><label>Quartier</label><input id="search-quartier" placeholder="Tous"></div>
@@ -170,7 +176,13 @@
         <button id="tab-standard-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('standard')">Mes Offres Standards</button>
         <button id="tab-vip-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('vip')">Mes Offres VIP 👑</button>
       </div>
+      
       <div id="profil-view-content"></div>
+
+      <div class="mailbox-container">
+        <h3 style="margin-top:0; font-size:1.1rem; color:var(--primary);">📬 Boîte de messages NIA</h3>
+        <div id="user-mailbox-list">Chargement des messages...</div>
+      </div>
     </div>
   </div>
 
@@ -194,16 +206,38 @@
   </div>
 
   <div class="modal" id="modal-admin">
-    <div class="modal-content" style="background:#0f172a; color:white;">
+    <div class="modal-content" style="background:#0f172a; color:white; max-width: 680px;">
       <div class="modal-header" style="border-bottom:1px solid #334155;">
-        <h2 style="color:#ef4444;">🛠️ Console de Supervision Générale</h2>
+        <h2 style="color:#ef4444; margin:0;">🛠️ Super-Administration NIA</h2>
         <button class="close-modal" style="background:#1e293b; color:white;" onclick="fermerModal('admin')">✕</button>
       </div>
-      <div class="form-group full-width" style="margin-bottom:15px;">
-        <label style="color:#94a3b8; margin-bottom:6px;">Diffuser un message d'alerte / avertissement à tous les utilisateurs :</label>
-        <textarea id="admin-alerte-msg" style="background:#1e293b; color:white; border:1px solid #334155;" placeholder="Écrivez le message urgent ici..."></textarea>
+      
+      <div style="background:#1e293b; padding:15px; border-radius:10px; margin:15px 0; border:1px solid #334155;">
+        <h4 style="margin:0 0 10px 0; color:#3b82f6;">✉️ Envoyer un message administratif</h4>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+          <select id="admin-msg-type" onchange="toggleAdminTargetPhone()" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:6px; flex:1;">
+            <option value="ALL">📢 À tout le monde (Alerte Générale)</option>
+            <option value="SOLO">👤 À un utilisateur particulier</option>
+          </select>
+          <input id="admin-msg-phone" placeholder="N° Téléphone de la cible (Ex: 082...)" style="background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:6px; flex:1; display:none;">
+        </div>
+        <textarea id="admin-text-content" style="background:#0f172a; color:white; border:1px solid #334155; width:100%; height:60px; padding:10px; border-radius:6px; margin-bottom:10px;" placeholder="Écrire votre message ici..."></textarea>
+        <button class="modal-submit-btn" style="background:var(--primary); margin:0;" onclick="adminTraiterEnvoiMessage()">Transmettre le message</button>
       </div>
-      <button class="modal-submit-btn" style="background:var(--danger);" onclick="envoyerAlerteGlobaleAdmin()">Diffuser l'alerte immédiate</button>
+
+      <h4 style="margin:15px 0 5px 0; color:#10b981;">📋 Gestion des Annonces en Ligne</h4>
+      <div class="admin-filter-bar">
+        <input id="adm-flt-ville" placeholder="Filtrer par Ville" oninput="filtrerConsoleAdminAnnonces()">
+        <select id="adm-flt-type" onchange="filtrerConsoleAdminAnnonces()">
+          <option value="TOUT">Tous les types</option>
+          <option value="STANDARD">Uniquement Standard</option>
+          <option value="VIP">Uniquement VIP 👑</option>
+        </select>
+      </div>
+
+      <div id="admin-total-annonces-list" class="admin-list-container">
+        Chargement de l'inventaire complet...
+      </div>
     </div>
   </div>
 
@@ -227,9 +261,6 @@
     <div class="adsense-space" id="adsense-rotative-banner">ADSENSE : Chargement des annonces locales sponsorisées...</div>
   </div>
 
-  <script style="display:none;">
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </script>
   <script src="app.js"></script>
 </body>
 </html>

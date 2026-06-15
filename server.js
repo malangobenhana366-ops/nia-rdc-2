@@ -10,7 +10,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(cors());
-app.use(express.json({ limit: "35mb" }));
+// Augmentation calculée pour supporter les requêtes groupées d'images réduites
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.static(__dirname));
 
 cloudinary.config({
@@ -21,9 +23,13 @@ cloudinary.config({
 
 async function uploadImage(base64){
   try {
+    if (!base64 || !base64.startsWith("data:image")) return "";
     const res = await cloudinary.uploader.upload(base64, { folder: "nia_rdc" });
     return res.secure_url;
-  } catch { return ""; }
+  } catch (e) { 
+    console.error("Cloudinary error:", e);
+    return ""; 
+  }
 }
 
 // RECUPERATION GENERALE DU FLUX PUBLIC ET ADMIN
@@ -55,26 +61,38 @@ app.get("/admin/stats", async (req, res) => {
   }
 });
 
-// CREATION D'UNE ANNONCE (STANDARD OU VIP)
+// CREATION D'UNE ANNONCE (STANDARD OU VIP) AVEC PROTECTIONS ROBUSTES
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
     
+    if (!titre || !telephone) {
+      return res.status(400).json({ error: "Champs obligatoires manquants" });
+    }
+
     const fields = await pool.query(
       `INSERT INTO annonces (user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()) RETURNING id`,
-      [user_id || 1, titre, description, prix || 0, devise || '$', periode, ville, commune, quartier, telephone, statut || 'disponible', is_vip || false]
+      [user_id || 1, titre, description, prix || 0, devise || '$', periode || 'jour', ville || 'Lubumbashi', commune, quartier, telephone, statut || 'disponible', is_vip || false]
     );
     
     const id = fields.rows[0].id;
+    
     if(images_base64 && Array.isArray(images_base64)){
       for(let b64 of images_base64){
-        const url = await uploadImage(b64);
-        if(url) await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [id,url]);
+        if (b64) {
+          const url = await uploadImage(b64);
+          if(url) {
+            await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [id,url]);
+          }
+        }
       }
     }
-    res.json({success:true});
-  } catch(e) { res.status(500).json({error:"err"}); }
+    res.json({success:true, id: id});
+  } catch(e) { 
+    console.error("Erreur d'insertion d'annonce:", e);
+    res.status(500).json({error:"Erreur interne du serveur lors de la sauvegarde"}); 
+  }
 });
 
 // ENREGISTREMENT DES MODIFICATIONS SANS ALTERER LE PROFIL DE BASE (IS_VIP)
@@ -108,4 +126,4 @@ app.post("/annonces/:id/boost", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("NIA RDC ENGINE ONLINE WITH FIXED ADMIN & VIP CONTROLS"));
+app.listen(PORT, ()=>console.log(`NIA RDC ENGINE ONLINE ON PORT ${PORT}`));

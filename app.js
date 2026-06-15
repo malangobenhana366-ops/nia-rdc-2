@@ -44,10 +44,8 @@ function correspondRechercheIntelligente(champ, recherche) {
   const motsRecherche = recherche.toLowerCase().split(/\s+/);
 
   return motsRecherche.every(mr => {
-    // 1. Match Direct Complet ou Partiel
     if (champ.toLowerCase().includes(mr)) return true;
 
-    // 2. Vérification des synonymes
     for (let cle in DICT_SYNONYMES) {
       if (cle === mr || DICT_SYNONYMES[cle].includes(mr)) {
         if (motsChamp.some(mc => mc === cle || DICT_SYNONYMES[cle].includes(mc))) {
@@ -56,7 +54,6 @@ function correspondRechercheIntelligente(champ, recherche) {
       }
     }
 
-    // 3. Distance de Levenshtein (Tolérance de fautes de frappe si mot > 3 lettres)
     if (mr.length > 3) {
       return motsChamp.some(mc => distanceLevenshtein(mc, mr) <= 2);
     }
@@ -67,6 +64,35 @@ function correspondRechercheIntelligente(champ, recherche) {
 /* --- UTILITAIRES DE FORMULAIRE --- */
 function val(id) { return document.getElementById(id)?.value?.trim() || ""; }
 function setVal(id, valeur) { const el = document.getElementById(id); if (el) el.value = valeur; }
+
+/* --- COMPRESSEUR D'IMAGE ULTRA-PUISSANT CÔTÉ CLIENT (RÉPARE LE BUG DE MISE EN LIGNE) --- */
+function optimiserEtCompresserImage(file, maxWidth = 800, maxHeight = 800, quality = 0.7) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
+        } else {
+          if (height > maxHeight) { width = Math.round((width * maxHeight) / height); height = maxHeight; }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+    };
+  });
+}
 
 /* --- SYSTEME DE PUBLICITÉ INTERSTITIELLE ET BANNIÈRE ROTATIVE --- */
 const BANNER_ADS = [
@@ -81,10 +107,8 @@ function initialiserPubliciteBanniereRotative() {
   setInterval(() => {
     INDEX_PUB_ROTATIVE = (INDEX_PUB_ROTATIVE + 1) % BANNER_ADS.length;
     const placeholder = document.getElementById("adsense-rotative-banner");
-    if (placeholder) {
-      placeholder.innerHTML = BANNER_ADS[INDEX_PUB_ROTATIVE];
-    }
-  }, 30000); // 30 secondes pile
+    if (placeholder) placeholder.innerHTML = BANNER_ADS[INDEX_PUB_ROTATIVE];
+  }, 30000);
 }
 
 function declencherPubliciteInterstitielle(actionSuivante, titreText = "Publicité Interstitielle AdSense", corpsText = "Votre application se charge automatiquement...") {
@@ -98,10 +122,7 @@ function declencherPubliciteInterstitielle(actionSuivante, titreText = "Publicit
   modal.style.display = "flex";
   closeBtn.style.display = "none";
 
-  // Rendre le bouton fermer actif après 3 secondes de visionnage obligatoire
-  setTimeout(() => {
-    closeBtn.style.display = "block";
-  }, 3000);
+  setTimeout(() => { closeBtn.style.display = "block"; }, 3000);
 }
 
 function fermerPubliciteInterstitielle() {
@@ -112,7 +133,7 @@ function fermerPubliciteInterstitielle() {
   }
 }
 
-/* --- GESTION DES MODALS ET RELAIS --- */
+/* --- GESTION DES MODALS --- */
 function ouvrirModal(id) {
   const modal = document.getElementById(`modal-${id}`);
   if (modal) {
@@ -170,7 +191,6 @@ function filtrerEtAfficherFlux(listeAnnonces, modeRechercheActive = false) {
       galleryHtml += `</div>`;
     }
 
-    // Le bouton d'appel intercepte le clic pour la publicité interstitielle
     const actionsHtml = `
       <button class="btn-contact" onclick="intercepterAppel('${a.telephone}')">📞 Appeler (${a.telephone || ""})</button>
       ${a.is_vip ? `<button class="btn-shop" onclick="voirBoutiqueVip('${a.telephone}')">🏪 Vitrine Pro</button>` : ""}
@@ -199,7 +219,6 @@ function intercepterAppel(tel) {
   }, "Appel Direct Sécurisé", "Connexion avec le loueur après cette annonce AdSense...");
 }
 
-/* --- SÉCURISATION MODIFICATION PAR ID (RÉPARE CRASH GUILLEMETS) --- */
 function preparerModification(idAnnonce) {
   const a = toutesLesAnnonces.find(item => item.id === idAnnonce);
   if (!a) return;
@@ -218,47 +237,62 @@ function preparerModification(idAnnonce) {
   setVal("edit-telephone", a.telephone);
 }
 
-/* --- PUBLICATION STANDARD --- */
+/* --- ACTION PUBLIER SÉCURISÉE PAR COMPRESSION --- */
 async function publier() {
+  const btnSubmit = document.getElementById("btn-submit-standard");
   const files = document.getElementById("image")?.files;
+  const telephone = val("telephone");
+
+  if (!val("titre") || !telephone) return alert("Le titre et le téléphone sont obligatoires !");
+
+  if(btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = "Traitement et compression..."; }
+
   let images_base64 = [];
   if (files && files.length > 0) {
-    for (let f of files) { images_base64.push(await toBase64(f)); }
+    for (let f of files) { 
+      const compressed = await optimiserEtCompresserImage(f);
+      images_base64.push(compressed); 
+    }
   }
-
-  const telephone = val("telephone");
-  if (!val("titre") || !telephone) return alert("Le titre et le téléphone sont obligatoires !");
 
   localStorage.setItem("nia_standard_telephone", telephone);
 
-  const res = await fetch(`${API}/annonces`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: 1,
-      titre: val("titre"),
-      description: val("description"),
-      prix: val("prix"),
-      devise: val("devise"),
-      periode: val("periode"),
-      ville: val("ville"),
-      commune: val("commune"),
-      quartier: val("quartier"),
-      telephone: telephone,
-      statut: "disponible",
-      is_vip: false,
-      images_base64
-    })
-  });
+  try {
+    const res = await fetch(`${API}/annonces`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: 1,
+        titre: val("titre"),
+        description: val("description"),
+        prix: val("prix"),
+        devise: val("devise"),
+        periode: val("periode"),
+        ville: val("ville"),
+        commune: val("commune"),
+        quartier: val("quartier"),
+        telephone: telephone,
+        statut: "disponible",
+        is_vip: false,
+        images_base64
+      })
+    });
 
-  if (res.ok) {
-    alert("Annonce publiée ! 🚀");
-    fermerModal("publier");
-    loadFeed();
+    if (res.ok) {
+      alert("Annonce publiée avec succès ! 🚀");
+      fermerModal("publier");
+      loadFeed();
+    } else {
+      alert("Erreur de sauvegarde serveur.");
+    }
+  } catch(e) {
+    alert("Erreur lors de la mise en ligne.");
+  } finally {
+    if(btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = "Mettre en ligne"; }
   }
 }
 
-/* --- RECHERCHE INTELLIGENTE INTEGREE --- */
+/* --- RECHERCHE INTELLIGENTE --- */
 function rechercher() {
   const sTitre = val("search-titre");
   const sVille = val("search-ville").toLowerCase();
@@ -283,7 +317,7 @@ function annulerRecherche() {
   filtrerEtAfficherFlux(toutesLesAnnonces, false);
 }
 
-/* --- ESPACE BOUTIQUE / PROFIL PRO VIP --- */
+/* --- ESPACE VIP --- */
 function rafraichirEspaceVip() {
   const body = document.getElementById("vip-form-body");
   const nomBoutique = localStorage.getItem("nia_vip_nom");
@@ -292,7 +326,7 @@ function rafraichirEspaceVip() {
     body.innerHTML = `
       <div class="form-group full-width"><p style="margin:0; color:var(--text-light)">Devenez membre VIP pour obtenir la couronne sur vos offres et posséder votre propre vitrine commerciale.</p></div>
       <div class="form-group full-width"><label>Nom commercial de la boutique</label><input id="reg-vip-nom" placeholder="Ex: Élite Électronique"></div>
-      <div class="form-group full-width"><label>Téléphone Professionnel VIP</label><input id="reg-vip-tel" type="tel" placeholder="Ex: +243..."></div>
+      <div class="form-group full-width"><label>Téléphone Professionnel VIP</label><input id="reg-vip-tel" type="tel" placeholder="Ex: 083..."></div>
       <button class="modal-submit-btn" style="background:linear-gradient(135deg, var(--vip-gold) 0%, #b45309 100%)" onclick="creerBoutiqueVipLocal()">👑 Activer mon Profil VIP</button>
     `;
   } else {
@@ -313,7 +347,7 @@ function rafraichirEspaceVip() {
       <div class="form-group"><label>Commune</label><input id="vip-commune"></div>
       <div class="form-group"><label>Quartier</label><input id="vip-quartier"></div>
       <div class="form-group full-width"><label>Photos du produit</label><input id="vip-image" type="file" multiple accept="image/*"></div>
-      <button class="modal-submit-btn" style="background:linear-gradient(135deg, var(--vip-gold) 0%, #b45309 100%)" onclick="publierAnnonceVip()">🚀 Publier en Premium VIP</button>
+      <button id="btn-submit-vip" class="modal-submit-btn" style="background:linear-gradient(135deg, var(--vip-gold) 0%, #b45309 100%)" onclick="publierAnnonceVip()">🚀 Publier en Premium VIP</button>
       <button class="modal-submit-btn" style="background:#e2e8f0; color:var(--text); box-shadow:none; margin-top:5px;" onclick="supprimerMaBoutiqueVip()">Quitter le Programme VIP</button>
     `;
   }
@@ -337,38 +371,50 @@ function supprimerMaBoutiqueVip() {
 }
 
 async function publierAnnonceVip() {
+  const btnSubmit = document.getElementById("btn-submit-vip");
   const files = document.getElementById("vip-image")?.files;
-  let images_base64 = [];
-  if (files && files.length > 0) {
-    for (let file of files) { images_base64.push(await toBase64(file)); }
-  }
-
   if (!val("vip-titre")) return alert("Le titre est requis !");
 
-  const res = await fetch(`${API}/annonces`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: 100,
-      titre: val("vip-titre"),
-      description: val("vip-description"),
-      prix: val("vip-prix"),
-      devise: val("vip-devise"),
-      periode: val("vip-periode"),
-      ville: val("vip-ville"),
-      commune: val("vip-commune"),
-      quartier: val("vip-quartier"),
-      telephone: localStorage.getItem("nia_vip_telephone"),
-      statut: "disponible",
-      is_vip: true,
-      images_base64
-    })
-  });
+  if(btnSubmit) { btnSubmit.disabled = true; btnSubmit.textContent = "Compression des photos..."; }
 
-  if (res.ok) {
-    alert("Offre VIP en ligne ! 👑");
-    fermerModal("vip");
-    loadFeed();
+  let images_base64 = [];
+  if (files && files.length > 0) {
+    for (let file of files) { 
+      const compressed = await optimiserEtCompresserImage(file);
+      images_base64.push(compressed); 
+    }
+  }
+
+  try {
+    const res = await fetch(`${API}/annonces`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: 100,
+        titre: val("vip-titre"),
+        description: val("vip-description"),
+        prix: val("vip-prix"),
+        devise: val("vip-devise"),
+        periode: val("vip-periode"),
+        ville: val("vip-ville"),
+        commune: val("vip-commune"),
+        quartier: val("vip-quartier"),
+        telephone: localStorage.getItem("nia_vip_telephone"),
+        statut: "disponible",
+        is_vip: true,
+        images_base64
+      })
+    });
+
+    if (res.ok) {
+      alert("Offre VIP en ligne ! 👑");
+      fermerModal("vip");
+      loadFeed();
+    }
+  } catch(e) {
+    alert("Erreur d'envoi VIP");
+  } finally {
+    if(btnSubmit) { btnSubmit.disabled = false; btnSubmit.textContent = "Publier en Premium VIP"; }
   }
 }
 
@@ -386,10 +432,8 @@ function voirBoutiqueVip(telBoutique) {
   filtrerEtAfficherFlux(offresBoutique, true);
 }
 
-/* --- SYSTEME DE DOUBLE PROFIL SÉPARÉ (STANDARD & VIP) --- */
-function ouvrirEspaceProfilGeneral() {
-  ouvrirModal("profil");
-}
+/* --- PROFIL SÉPARÉ --- */
+function ouvrirEspaceProfilGeneral() { ouvrirModal("profil"); }
 
 function changerOngletProfil(type) {
   ONGLE_PROFIL_ACTIF = type;
@@ -402,11 +446,10 @@ function changerOngletProfil(type) {
   const telephoneActif = type === "vip" ? localStorage.getItem("nia_vip_telephone") : localStorage.getItem("nia_standard_telephone");
 
   if (!telephoneActif) {
-    content.innerHTML = `<p style="text-align:center; padding:20px; color:var(--text-light)">Aucune publication enregistrée sur ce profil de cet appareil.</p>`;
+    content.innerHTML = `<p style="text-align:center; padding:20px; color:var(--text-light)">Aucune publication enregistrée.</p>`;
     return;
   }
 
-  // Filtrage strict : Seul le propriétaire légitime voit les boutons d'action (Modifier, Supprimer, Booster)
   const mesAnnonces = toutesLesAnnonces.filter(a => a.telephone === telephoneActif && a.is_vip === (type === "vip"));
   
   let html = `<p style="font-weight:bold;">Vos publications actives (${mesAnnonces.length}) :</p>`;
@@ -432,11 +475,8 @@ function changerOngletProfil(type) {
   content.innerHTML = html;
 }
 
-/* --- INTERSTICIELLE AVANT AD-BOOSTER SYSTEM --- */
 function intercepterBoosterAdSense(idAnnonce) {
-  declencherPubliciteInterstitielle(() => {
-    ouvrirBoosterAdSense(idAnnonce);
-  }, "AdSense Premium Interstitiel", "Votre option de boost se déverrouille immédiatement après ce spot...");
+  declencherPubliciteInterstitielle(() => { ouvrirBoosterAdSense(idAnnonce); }, "AdSense Premium Interstitiel", "Votre option de boost se déverrouille immédiatement après ce spot...");
 }
 
 function ouvrirBoosterAdSense(idAnnonce) {
@@ -471,7 +511,6 @@ async function executerRemonteeBdd() {
   }
 }
 
-/* --- ENREGISTREMENT MODIFICATION SANS PERDRE STATUT VIP --- */
 async function sauvegarderModificationAnnonce() {
   const id = val("edit-id");
   const res = await fetch(`${API}/annonces/${id}/update`, {
@@ -501,11 +540,11 @@ async function sauvegarderModificationAnnonce() {
 async function supprimerAnnonce(id) {
   if (confirm("Supprimer définitivement ?")) {
     const res = await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" });
-    if (res.ok) { loadFeed(); }
+    if (res.ok) loadFeed();
   }
 }
 
-/* --- CONSOLE ADMIN GÉNÉRALE REPARÉE SANS CONFLITS --- */
+/* --- CONSOLE ADMIN --- */
 async function chargerConsoleAdmin() {
   try {
     const resStats = await fetch(`${API}/admin/stats`);
@@ -560,10 +599,7 @@ function filtrerIndexationAnnoncesAdmin() {
 async function adminSupprimerAnnonceDirecte(id) {
   if (confirm("ADMIN : Confirmer le bannissement immédiat ?")) {
     const res = await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" });
-    if (res.ok) {
-      loadFeed();
-      chargerConsoleAdmin();
-    }
+    if (res.ok) { loadFeed(); chargerConsoleAdmin(); }
   }
 }
 
@@ -576,13 +612,6 @@ function initTriggerAdminSecret() {
   gearBtn.addEventListener("mouseup", () => clearTimeout(timerAppui));
   gearBtn.addEventListener("touchstart", () => { timerAppui = setTimeout(() => ouvrirModal("admin-panel"), 1500); }, { passive: true });
   gearBtn.addEventListener("touchend", () => clearTimeout(timerAppui));
-}
-
-function toBase64(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader(); r.readAsDataURL(file);
-    r.onload = () => resolve(r.result); r.onerror = reject;
-  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {

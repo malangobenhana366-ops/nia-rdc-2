@@ -26,12 +26,13 @@
     header .logo { margin: 0; color: var(--primary); font-size: 1.6rem; font-weight: 800; }
     header .settings-btn { background: #f1f5f9; border: none; font-size: 1.5rem; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; }
     
-    /* STYLE AJOUTÉ : BOUTON MENU HAUT GAUCHE & MENU DÉROULANT */
     header .menu-left-container { position: relative; display: flex; align-items: center; gap: 10px; }
     header .menu-left-btn { background: #f1f5f9; border: none; font-size: 1.2rem; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     .dropdown-menu { display: none; position: absolute; top: 50px; left: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 220px; z-index: 1000; overflow: hidden; }
     .dropdown-menu button { background: none; border: none; width: 100%; text-align: left; padding: 12px 16px; font-size: 0.9rem; font-weight: 600; color: var(--text); cursor: pointer; }
     .dropdown-menu button:hover { background: #f1f5f9; color: var(--primary); }
+    .dropdown-menu button.danger-action { color: var(--danger); border-top: 1px solid var(--border); }
+    .dropdown-menu button.danger-action:hover { background: #fee2e2; }
 
     main { max-width: 800px; margin: 10px auto 160px auto; padding: 0 15px; }
     .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
@@ -83,20 +84,16 @@
     .vip-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px; }
     .btn-add-block { background: #f1f5f9; color: var(--text); border: 1px solid var(--border); padding: 11px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 15px; }
 
-    /* ZONE ADSENSE BAS FIXE SANS GÊNE */
     .bottom-area { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--card-bg); border-top: 1px solid var(--border); z-index: 1000; display: flex; flex-direction: column; }
     .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); }
     .nav-btn { background: none; border: none; padding: 12px 5px; font-size: 0.8rem; font-weight: 700; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .nav-btn.vip-btn { color: var(--vip-gold); }
     
-    /* LE SQUELETTE DE TA BANNIÈRE DE PUB ROTATIVE */
     .adsense-space { background-color: #1e293b; height: 55px; display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 0.75rem; font-weight: bold; text-align: center; letter-spacing: 0.5px; border-top: 1px solid #334155; }
 
-    /* INTERSTITIEL PUBLICITAIRE */
     .interstitial-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0f172a; z-index: 5000; flex-direction: column; justify-content: center; align-items: center; color: white; padding: 24px; }
     .interstitial-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: none; color: white; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-    /* TEXTES TEXTUELS LISIBLES POUR LA DOCUMENTATION */
     .legal-text-container { max-height: 400px; overflow-y: auto; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 15px; font-size: 0.9rem; line-height: 1.6; color: var(--text); margin-bottom: 15px; text-align: justify; }
   </style>
 </head>
@@ -106,8 +103,11 @@
     <div class="menu-left-container">
       <button class="menu-left-btn" onclick="toggleLeftDropdown()">☰</button>
       <div class="dropdown-menu" id="left-dropdown">
+        <button onclick="ouvrirModalLegal('conditions')">📄 Conditions d'utilisation</button>
         <button onclick="ouvrirModalLegal('apropos')">ℹ️ À propos</button>
-        <button onclick="ouvrirModalLegal('confidentialite')">🔒 Politique de confidentialité</button>
+        <button onclick="ouvrirModalLegal('confidentialite')">🔒 Confidentialité</button>
+        <button class="danger-action" onclick="deconnecterUtilisateur()">🚪 Se déconnecter</button>
+        <button class="danger-action" onclick="supprimerCompteUtilisateur()" style="background:#fee2e2; font-weight:bold;">⚠️ Supprimer mon compte</button>
       </div>
       <div class="logo">NIA RDC</div>
     </div>
@@ -131,8 +131,8 @@
       </div>
       <div class="form-grid" id="auth-form-register">
         <div class="form-group full-width" style="background: #eff6ff; padding: 12px; border-radius: 8px; font-size: 0.8rem; line-height: 1.4; font-weight: normal; margin-bottom: 5px;">
-          Pour continuer, vous devez lire et accepter nos Conditions d'utilisation disponibles via le menu ☰ ou en cliquant sur le bouton ci-dessous.
-          <button type="button" style="background:none; border:none; color:var(--primary); font-weight:bold; cursor:pointer; padding:0; margin-top:5px; text-decoration:underline;" onclick="ouvrirModalLegal('conditions-forced')">Lire les Conditions Obligatoires 📄</button>
+          Pour continuer, vous devez lire et accepter nos Conditions de sécurité et d'utilisation NIA RDC ci-dessous.
+          <button type="button" style="background:none; border:none; color:var(--primary); font-weight:bold; cursor:pointer; padding:0; margin-top:5px; text-decoration:underline;" onclick="ouvrirModalLegal('conditions-forced')">Lire les Conditions d'utilisation obligatoires 📄</button>
         </div>
         <div class="form-group full-width">
           <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
@@ -159,7 +159,7 @@
         <h2 id="legal-title-display">Document Officiel</h2>
         <button class="close-modal" id="legal-close-btn" onclick="fermerModal('legal')">✕</button>
       </div>
-      <div class="legal-text-container" id="legal-body-display"></div>
+      <div class="legal-text-container" id="legal-body-display" style="white-space: pre-wrap;"></div>
       <button class="modal-submit-btn" id="legal-action-btn" onclick="fermerModal('legal')" style="display:none;">J'ai lu et j'accepte les conditions</button>
     </div>
   </div>
@@ -198,7 +198,7 @@
         <button class="close-modal" onclick="fermerModal('rechercher')">✕</button>
       </div>
       <div class="form-grid">
-        <div class="form-group full-width"><label>Que cherchez-vous ? (Mots clés, fautes ou synonymes acceptés)</label><input id="search-titre" placeholder="Ex: grp electogene, auto, voiture..."></div>
+        <div class="form-group full-width"><label>Que cherchez-vous ?</label><input id="search-titre" placeholder="Ex: groupe electrogene..."></div>
         <div class="form-group full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div>
         <div class="form-group"><label>Commune</label><input id="search-commune" placeholder="Toutes"></div>
         <div class="form-group"><label>Quartier</label><input id="search-quartier" placeholder="Tous"></div>
@@ -257,7 +257,7 @@
         <button class="close-modal" style="background:#1e293b; color:white;" onclick="fermerModal('admin')">✕</button>
       </div>
       <div class="form-group full-width" style="margin-bottom:15px;">
-        <label style="color:#94a3b8; margin-bottom:6px;">Diffuser un message d'alerte / avertissement à tous les utilisateurs :</label>
+        <label style="color:#94a3b8; margin-bottom:6px;">Diffuser un message d'alerte à tous les utilisateurs :</label>
         <textarea id="admin-alerte-msg" style="background:#1e293b; color:white; border:1px solid #334155;" placeholder="Écrivez le message urgent ici..."></textarea>
       </div>
       <button class="modal-submit-btn" style="background:var(--danger);" onclick="envoyerAlerteGlobaleAdmin()">Diffuser l'alerte immédiate</button>

@@ -54,7 +54,6 @@
       font-size: 1.6rem; 
       font-weight: 800; 
       letter-spacing: -0.5px; 
-      animation: pulseLogo 3s infinite alternate; 
     }
     
     header .settings-btn { 
@@ -68,13 +67,6 @@
       display: flex; 
       align-items: center; 
       justify-content: center; 
-      user-select: none; 
-      -webkit-user-select: none; 
-    }
-    
-    header .settings-btn:active { 
-      transform: scale(0.9) rotate(45deg); 
-      background: var(--border); 
     }
     
     main { 
@@ -95,7 +87,6 @@
       font-size: 1.2rem; 
       font-weight: 700; 
       text-transform: uppercase; 
-      letter-spacing: 0.5px; 
     }
     
     .btn-reset-search { 
@@ -108,10 +99,6 @@
       font-weight: 600; 
       cursor: pointer; 
       display: none; 
-    }
-    
-    .btn-reset-search:hover { 
-      background: #cbd5e1; 
     }
     
     #feed { 
@@ -127,18 +114,11 @@
       background: var(--card-bg); 
       position: relative; 
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); 
-      animation: slideUpIn 0.5s ease-out; 
-    }
-    
-    .annonce-card:hover { 
-      transform: translateY(-4px); 
-      box-shadow: 0 12px 20px -5px rgba(0,0,0,0.08); 
     }
     
     .annonce-card.vip-premium { 
       border: 2px solid var(--vip-gold); 
       background: linear-gradient(180deg, #fffdf7 0%, #ffffff 100%); 
-      box-shadow: 0 6px 15px rgba(217, 119, 6, 0.08); 
     }
     
     .vip-badge-tag { 
@@ -152,7 +132,6 @@
       padding: 4px 10px; 
       border-radius: 8px; 
       text-transform: uppercase; 
-      animation: shineBadge 2s infinite; 
     }
     
     .annonce-price { 
@@ -166,7 +145,6 @@
       font-size: 0.85rem; 
       color: var(--text-light); 
       margin-bottom: 12px; 
-      font-weight: 500; 
     }
     
     .annonce-description { 
@@ -177,12 +155,6 @@
       margin: 14px 0; 
       white-space: pre-line; 
       border-left: 4px solid var(--primary); 
-      color: #334155; 
-    }
-    
-    .annonce-card.vip-premium .annonce-description { 
-      background: #fefaf0; 
-      border-left-color: var(--vip-gold); 
     }
     
     .gallery { 
@@ -190,11 +162,7 @@
       overflow-x: auto; 
       gap: 12px; 
       padding-bottom: 10px; 
-      scroll-behavior: smooth; 
     }
-    
-    .gallery::-webkit-scrollbar { height: 6px; }
-    .gallery::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     
     .gallery-item { 
       width: 290px; 
@@ -207,38 +175,24 @@
     
     .annonce-footer { 
       display: flex; 
-      flex-wrap: wrap; 
       justify-content: space-between; 
       align-items: center; 
-      gap: 10px; 
-      padding-top: 12px; 
       border-top: 1px solid var(--border); 
+      padding-top: 12px; 
     }
     
-    .footer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .footer-actions { display: flex; gap: 8px; }
     
-    .btn-contact { 
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-      color: white; 
-      text-decoration: none; 
-      padding: 8px 16px; 
-      border-radius: 8px; 
-      font-weight: 600; 
-      font-size: 0.85rem; 
-      display: inline-flex; 
-      align-items: center; 
-      cursor: pointer;
+    .btn-contact, .btn-shop, .btn-boost, .btn-edit, .btn-delete { 
+      border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; color: white; text-decoration: none;
     }
-    
-    .btn-shop, .btn-boost, .btn-edit, .btn-delete { 
-      border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; color: white;
-    }
+    .btn-contact { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
     .btn-shop { background: linear-gradient(135deg, var(--vip-gold) 0%, #d97706 100%); }
     .btn-boost { background-color: #3b82f6; }
     .btn-edit { background-color: #64748b; }
     .btn-delete { background-color: var(--danger); }
     
-    .badge-status { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+    .badge-status { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
     .status-disponible { background-color: #d1fae5; color: #065f46; }
     .status-occupe { background-color: #fee2e2; color: #991b1b; }
 
@@ -249,77 +203,60 @@
       padding: 25px; 
       margin-bottom: 25px; 
       text-align: center; 
-      animation: slideDownIn 0.4s ease-out; 
     }
-    .shop-banner h2 { margin: 0 0 6px 0; color: #92400e; font-size: 1.7rem; font-weight: 800; }
-    .shop-banner p { margin: 0; color: #78350f; font-weight: 500; }
 
     .modal { 
       display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
       background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); 
-      z-index: 2000; justify-content: center; align-items: center; padding: 15px; animation: fadeIn 0.3s ease; 
+      z-index: 2000; justify-content: center; align-items: center; padding: 15px; 
     }
     
     .modal-content { 
-      background-color: var(--card-bg); border-radius: 20px; width: 100%; max-width: 550px; 
-      max-height: 85vh; overflow-y: auto; padding: 26px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); 
+      background-color: var(--card-bg); border-radius: 20px; width: 100%; max-width: 600px; 
+      max-height: 85vh; overflow-y: auto; padding: 26px; 
     }
     
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-    .close-modal { background: #f1f5f9; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    .close-modal { background: #f1f5f9; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-weight: bold; }
     
     .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
     .form-group { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 0.85rem; color: #475569; }
     .form-group.full-width { grid-column: span 2; }
-    .price-container { display: flex; gap: 8px; }
     
     input, select, textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem; outline: none; }
-    input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15); }
-    textarea { height: 90px; resize: vertical; }
+    textarea { height: 75px; resize: vertical; }
     
     .modal-submit-btn { 
-      grid-column: span 2; background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%); 
-      color: white; border: none; padding: 14px; font-size: 1rem; font-weight: 700; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 10px rgba(37,99,235,0.2); 
+      background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%); 
+      color: white; border: none; padding: 14px; font-size: 1rem; font-weight: 700; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px;
     }
-    .modal-submit-btn:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; }
+    
+    /* STYLE POUR LES MULTIPLES FORMULAIRES VIP */
+    .vip-block-annonce {
+      background: #fafafa; border: 2px dashed #cbd5e1; padding: 16px; border-radius: 14px; margin-bottom: 20px; position: relative;
+    }
+    .vip-block-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px;
+    }
+    .btn-add-block {
+      background: #f1f5f9; color: var(--text); border: 1px solid var(--border); padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 15px;
+    }
 
-    /* ZONE ADMIN SOMBRE */
-    .modal-admin-content { background-color: var(--admin-bg); color: #f8fafc; border-radius: 24px; width: 95%; max-width: 750px; max-height: 90vh; overflow-y: auto; padding: 26px; border: 2px solid #334155; }
-    .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 20px; }
-    .admin-stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-    .stat-box { background-color: var(--admin-card); border: 1px solid #334155; padding: 15px; border-radius: 14px; text-align: center; }
-    .stat-number { font-size: 1.8rem; font-weight: 800; color: #38bdf8; margin-top: 5px; }
-    .admin-filters { background-color: var(--admin-card); padding: 15px; border-radius: 14px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border: 1px solid #334155; }
-    .admin-annonce-item { background: var(--admin-card); border: 1px solid #334155; border-radius: 12px; padding: 14px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-
-    /* PUBLICITÉ INTERSTITIELLE */
-    .interstitial-modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: #000000; z-index: 5000; flex-direction: column; justify-content: center; align-items: center; color: white; padding: 20px; }
-    .interstitial-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-    /* BAS FIXE NAVIGATION & ADSENSE BANNER */
-    .bottom-area { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--card-bg); border-top: 1px solid var(--border); z-index: 1000; display: flex; flex-direction: column; box-shadow: 0 -4px 15px rgba(0,0,0,0.04); }
+    .bottom-area { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--card-bg); border-top: 1px solid var(--border); z-index: 1000; display: flex; flex-direction: column; }
     .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); }
     .nav-btn { background: none; border: none; padding: 14px 5px; font-size: 0.8rem; font-weight: 700; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .nav-btn span:first-child { font-size: 1.3rem; }
     .nav-btn.vip-btn { color: var(--vip-gold); }
-    
-    .adsense-space { background-color: #0f172a; height: 60px; display: flex; align-items: center; justify-content: center; color: #fbbf24; font-size: 0.8rem; font-weight: bold; border-top: 1px solid var(--border); text-align: center; padding: 0 10px; overflow: hidden; }
+    .adsense-space { background-color: #0f172a; height: 60px; display: flex; align-items: center; justify-content: center; color: #fbbf24; font-size: 0.8rem; font-weight: bold; text-align: center; }
 
-    .pub-simulation { background: #1e293b; color: white; padding: 30px; border-radius: 14px; margin: 15px 0; }
-    .countdown-number { font-size: 3rem; font-weight: 800; color: var(--vip-gold); }
-
-    @keyframes pulseLogo { from { transform: scale(1); } to { transform: scale(1.04); } }
-    @keyframes slideUpIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes slideDownIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes shineBadge { 0% { box-shadow: 0 0 0 0 rgba(219, 119, 6, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(219, 119, 6, 0); } 100% { box-shadow: 0 0 0 0 rgba(219, 119, 6, 0); } }
+    .interstitial-modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: #000000; z-index: 5000; flex-direction: column; justify-content: center; align-items: center; color: white; padding: 20px; }
+    .interstitial-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
 
   <header>
     <div class="logo">NIA RDC</div>
-    <button class="settings-btn" id="gear-admin-trigger" oncontextmenu="return false;">⚙️</button>
+    <button class="settings-btn" id="gear-admin-trigger">⚙️</button>
   </header>
 
   <main>
@@ -331,15 +268,6 @@
     <div id="feed">Chargement des offres...</div>
   </main>
 
-  <div class="interstitial-modal" id="interstitial-ad">
-    <button class="interstitial-close" id="interstitial-close-btn" onclick="fermerPubliciteInterstitielle()">Fermer l'annonce ✕</button>
-    <div style="text-align:center;">
-      <span style="color:var(--vip-gold); font-size:1rem; font-weight:bold; display:block; margin-bottom:10px;">SPONSOR NIA RDC</span>
-      <h2 style="font-size:2rem; margin:0 0 15px 0;" id="interstitial-title">Publicité Interstitielle AdSense</h2>
-      <p style="color:#94a3b8; max-width:400px; margin:0 auto;" id="interstitial-body">Chargement de votre contenu premium après cette annonce...</p>
-    </div>
-  </div>
-
   <div class="modal" id="modal-publier">
     <div class="modal-content">
       <div class="modal-header">
@@ -349,19 +277,19 @@
       <div class="form-grid">
         <div class="form-group full-width"><label>Nom de l'objet</label><input id="titre" placeholder="Ex: Groupe électrogène 5KVA"></div>
         <div class="form-group"><label>Prix</label>
-          <div class="price-container">
+          <div style="display:flex; gap:8px;">
             <input id="prix" type="number" placeholder="Ex: 25" style="flex:2;">
-            <select id="devise" style="flex:1;"><option value="$">$ (USD)</option><option value="FC">FC (CDF)</option></select>
+            <select id="devise" style="flex:1;"><option value="$">$</option><option value="FC">FC</option></select>
           </div>
         </div>
         <div class="form-group"><label>Période</label><select id="periode"><option value="jour">par jour</option><option value="heure">par heure</option></select></div>
         <div class="form-group full-width"><label>Téléphone de contact</label><input id="telephone" type="tel" placeholder="Ex: 0834754695"></div>
-        <div class="form-group full-width"><label>Description de l'état ou conditions</label><textarea id="description" placeholder="Écrivez les détails ici..."></textarea></div>
+        <div class="form-group full-width"><label>Description</label><textarea id="description" placeholder="Détails..."></textarea></div>
         <div class="form-group"><label>Ville</label><input id="ville" value="Lubumbashi"></div>
         <div class="form-group"><label>Commune</label><input id="commune" placeholder="Ex: Lubumbashi"></div>
         <div class="form-group"><label>Quartier</label><input id="quartier" placeholder="Ex: Golf"></div>
-        <div class="form-group full-width"><label>Sélectionner des Photos</label><input id="image" type="file" multiple accept="image/*"></div>
-        <button id="btn-submit-standard" class="modal-submit-btn" onclick="publier()">Mettre en ligne</button>
+        <div class="form-group full-width"><label>Photos</label><input id="image" type="file" multiple accept="image/*"></div>
+        <div class="form-group full-width"><button id="btn-submit-standard" class="modal-submit-btn" onclick="publier()">Mettre en ligne</button></div>
       </div>
     </div>
   </div>
@@ -369,72 +297,33 @@
   <div class="modal" id="modal-rechercher">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>🔍 Recherche Universelle Intelligente</h2>
+        <h2>🔍 Recherche Universelle</h2>
         <button class="close-modal" onclick="fermerModal('rechercher')">✕</button>
       </div>
       <div class="form-grid">
-        <div class="form-group full-width"><label>Que cherchez-vous ? (Correction automatique incluse)</label><input id="search-titre" placeholder="Ex: grope electrogene, jenerateur, mezon..."></div>
+        <div class="form-group full-width"><label>Que cherchez-vous ?</label><input id="search-titre" placeholder="Ex: groupe..."></div>
         <div class="form-group full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div>
-        <div class="form-group"><label>Commune</label><input id="search-commune" placeholder="Toutes les communes"></div>
-        <div class="form-group"><label>Quartier</label><input id="search-quartier" placeholder="Tous les quartiers"></div>
-        <button class="modal-submit-btn" style="background:#0f172a;" onclick="rechercher()">Lancer le filtrage</button>
+        <div class="form-group"><label>Commune</label><input id="search-commune" placeholder="Toutes"></div>
+        <div class="form-group"><label>Quartier</label><input id="search-quartier" placeholder="Tous"></div>
+        <div class="form-group full-width"><button class="modal-submit-btn" style="background:#0f172a;" onclick="rechercher()">Filtrer</button></div>
       </div>
     </div>
   </div>
 
   <div class="modal" id="modal-vip">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width:650px;">
       <div class="modal-header">
-        <h2>👑 Espace Pro Boutique VIP</h2>
+        <h2>👑 Espace Boutique Multi-VIP</h2>
         <button class="close-modal" onclick="fermerModal('vip')">✕</button>
       </div>
-      <div class="form-grid" id="vip-form-body"></div>
-    </div>
-  </div>
-
-  <div class="modal" id="modal-modifier-annonce">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>📝 Modifier l'annonce</h2>
-        <button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button>
-      </div>
-      <div class="form-grid">
-        <input type="hidden" id="edit-id">
-        <div class="form-group full-width"><label>Titre de l'objet</label><input id="edit-titre"></div>
-        <div class="form-group"><label>Prix</label>
-          <div class="price-container">
-            <input id="edit-prix" type="number" style="flex:2;">
-            <select id="edit-devise" style="flex:1;"><option value="$">$</option><option value="FC">FC</option></select>
-          </div>
-        </div>
-        <div class="form-group"><label>Période</label><select id="edit-periode"><option value="heure">heure</option><option value="jour">jour</option></select></div>
-        <div class="form-group"><label>Disponibilité Directe</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div>
-        <div class="form-group full-width"><label>Description</label><textarea id="edit-description"></textarea></div>
-        <div class="form-group"><label>Ville</label><input id="edit-ville"></div>
-        <div class="form-group"><label>Commune</label><input id="edit-commune"></div>
-        <div class="form-group"><label>Quartier</label><input id="edit-quartier"></div>
-        <div class="form-group full-width"><label>Téléphone</label><input id="edit-telephone" type="tel"></div>
-        <button class="modal-submit-btn" style="background:var(--success);" onclick="sauvegarderModificationAnnonce()">💾 Enregistrer</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" id="modal-boost-pub">
-    <div class="modal-content" style="max-width:400px; text-align:center;">
-      <h3>🚀 AdSense Booster Engine</h3>
-      <p style="font-size:0.85rem; color:var(--text-light)">Veuillez regarder ce sponsor pour propulser instantanément votre offre au top.</p>
-      <div class="pub-simulation">
-        <div id="boost-ad-banner-placement" style="color:#a7f3d0; font-weight:bold; font-size:0.9rem; margin-bottom:10px;">[Publicité AdSense Premium Actrice]</div>
-        <div class="countdown-number" id="countdown">15</div>
-      </div>
-      <button id="btn-finaliser-boost" class="modal-submit-btn" style="background:var(--success); display:none;" onclick="executerRemonteeBdd()">✅ Remonter en haut de liste</button>
+      <div id="vip-form-body"></div>
     </div>
   </div>
 
   <div class="modal" id="modal-profil">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>👤 Gestion de vos Profils</h2>
+        <h2>👤 Mon Profil</h2>
         <button class="close-modal" onclick="fermerModal('profil')">✕</button>
       </div>
       <div style="display:flex; gap:10px; margin-bottom:20px;">
@@ -445,33 +334,12 @@
     </div>
   </div>
 
-  <div class="modal" id="modal-admin-panel">
-    <div class="modal-admin-content">
-      <div class="admin-header">
-        <h2>🕶️ CONSOLE GÉNÉRALE ADMIN</h2>
-        <button class="close-modal" style="background:#334155; color:white;" onclick="fermerModal('admin-panel')">✕</button>
-      </div>
-      <div class="admin-stats-row">
-        <div class="stat-box"><div>Total Annonces</div><div class="stat-number" id="adm-stat-total">0</div></div>
-        <div class="stat-box"><div>Annonces VIP</div><div class="stat-number" id="adm-stat-vip" style="color:var(--vip-gold)">0</div></div>
-        <div class="stat-box"><div>Annonces Stand.</div><div class="stat-number" id="adm-stat-stand" style="color:var(--success)">0</div></div>
-      </div>
-      <div class="admin-filters">
-        <div>
-          <label style="font-size:0.8rem; font-weight:bold; color:#94a3b8;">Filtrer par Ville :</label>
-          <select id="adm-filter-ville" onchange="filtrerIndexationAnnoncesAdmin()" style="background:#1e293b; color:white; border:1px solid #334155; margin-top:4px;"></select>
-        </div>
-        <div>
-          <label style="font-size:0.8rem; font-weight:bold; color:#94a3b8;">Type de Publication :</label>
-          <select id="adm-filter-type" onchange="filtrerIndexationAnnoncesAdmin()" style="background:#1e293b; color:white; border:1px solid #334155; margin-top:4px;">
-            <option value="all">Afficher tout (VIP + Standard)</option>
-            <option value="vip">Uniquement les VIP 👑</option>
-            <option value="standard">Uniquement les Standards 👤</option>
-          </select>
-        </div>
-      </div>
-      <h4 style="color:#94a3b8; margin:15px 0 10px 0;">📋 Toutes les publications actives (Modération Directe) :</h4>
-      <div id="admin-liste-moderat-annonces" style="display:flex; flex-direction:column; gap:10px; max-height:300px; overflow-y:auto; padding-right:5px;"></div>
+  <div class="interstitial-modal" id="interstitial-ad">
+    <button class="interstitial-close" id="interstitial-close-btn" onclick="fermerPubliciteInterstitielle()">Fermer ✕</button>
+    <div style="text-align:center;">
+      <span style="color:var(--vip-gold); font-weight:bold;">SPONSOR ADSENSE</span>
+      <h2 style="font-size:2rem; margin:10px 0;">Publicité Interstitielle</h2>
+      <p style="color:#94a3b8;" id="interstitial-body">Chargement...</p>
     </div>
   </div>
 
@@ -480,9 +348,9 @@
       <button class="nav-btn" onclick="ouvrirModal('publier')"><span>📢</span><span>Publier</span></button>
       <button class="nav-btn" onclick="ouvrirModal('rechercher')"><span>🔍</span><span>Rechercher</span></button>
       <button class="nav-btn vip-btn" onclick="ouvrirModal('vip')"><span>👑</span><span>Espace VIP</span></button>
-      <button class="nav-btn" id="main-profile-nav-btn" onclick="ouvrirEspaceProfilGeneral()"><span>👤</span><span>Mon Profil</span></button>
+      <button class="nav-btn" onclick="ouvrirEspaceProfilGeneral()"><span>👤</span><span>Mon Profil</span></button>
     </nav>
-    <div class="adsense-space" id="adsense-rotative-banner">⚡ CHARGEMENT DU SPONSOR PUBLICITAIRE ADSENSE... ⚡</div>
+    <div class="adsense-space" id="adsense-rotative-banner">⚡ PUBLICITÉ ADSENSE ACTIVE ⚡</div>
   </div>
 
   <script src="app.js"></script>

@@ -26,12 +26,11 @@ async function uploadImage(base64){
     const res = await cloudinary.uploader.upload(base64, { folder: "nia_rdc" });
     return res.secure_url;
   } catch (e) { 
-    console.error("Erreur Cloudinary:", e);
     return ""; 
   }
 }
 
-// FLUX D'ANNONCES
+// FLUX GÉNÉRAL DES OFFRES
 app.get("/feed", async (req,res)=>{
   try {
     const annonces = await pool.query("SELECT * FROM annonces ORDER BY is_vip DESC, created_at DESC, id DESC");
@@ -44,7 +43,7 @@ app.get("/feed", async (req,res)=>{
   } catch (e) { res.json([]); }
 });
 
-// PUBLICATION (STANDARD ET MULTI-VIP)
+// ENREGISTRER UNE ANNONCE (STANDARD OU COMPILATION VIP)
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
@@ -67,12 +66,11 @@ app.post("/annonces", async (req,res)=>{
     }
     res.json({ success: true, id });
   } catch(e) { 
-    console.error("Crash Insertion:", e);
     res.status(500).json({ error: e.message }); 
   }
 });
 
-// METTRE À JOUR LE STATUT OU L'ANNONCE EN DIRECTPUIS L'ESPACE PRIVÉ
+// ÉDITER UN CHAMP DIRECT DEPUIS LE PROFIL PRIVÉ
 app.put("/annonces/:id", async (req, res) => {
   try {
     const { titre, prix, devise, periode, description, statut } = req.body;
@@ -84,7 +82,7 @@ app.put("/annonces/:id", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// SUPPRESSION D'UNE ANNONCE
+// SUPPRESSION COMMUNE (UTILISATEUR OU ADMINISTRATEUR)
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
     await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
@@ -93,16 +91,51 @@ app.delete("/annonces/:id/delete", async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Erreur" }); }
 });
 
-// ENVOI D'UN MESSAGE GLOBAL / ALERTE DEPUIS L'ADMINISTRATEUR
-app.post("/admin/alerte", async (req, res) => {
+/* ================= EXTENSION DE LA STRATÉGIE MESSAGERIE ADMIN ================= */
+
+// ADMIN ENVOIE MESSAGE : GLOBAL OU CIBLÉ SUR UN TÉLÉPHONE UNIQUE
+app.post("/admin/envoyer-message", async (req, res) => {
   try {
-    const { message } = req.body;
-    await pool.query("INSERT INTO notifications (type, message, is_read) VALUES ($1, $2, FALSE)", ["ALERTE_ADMIN", message]);
+    const { type, telephone_cible, message } = req.body;
+    
+    if (type === "ALL") {
+      // 1. Crée la notification d'alerte bandeau globale
+      await pool.query("INSERT INTO notifications (type, message, is_read) VALUES ($1, $2, FALSE)", ["ALERTE_ADMIN", message]);
+      // 2. Stocke aussi dans la table messages avec un flag spécial 'ALL' pour la boîte de réception
+      await pool.query("INSERT INTO messages (content, sender_id, receiver_id) VALUES ($1, 1, 0)", [`[Alerte Générale] ${message}`]);
+    } else {
+      // Message privé à une personne spécifique via son téléphone (utilisé comme clé de profil)
+      // On cherche si un user existe avec ce téléphone pour lier l'ID, sinon on met 0 (profil invité temporaire)
+      const userReq = await pool.query("SELECT id FROM users WHERE telephone = $1", [telephone_cible]);
+      const receiver_id = userReq.rows.length > 0 ? userReq.rows[0].id : 0;
+      
+      // Stocke dans messages en mettant le numéro de téléphone cible dans une note ou structure
+      await pool.query(
+        "INSERT INTO messages (content, sender_id, receiver_id) VALUES ($1, 1, $2)",
+        [`[Message Privé Admin destiné à ${telephone_cible}] : ${message}`, receiver_id]
+      );
+    }
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// LIRE LES ALERTES GLOBALES SUR L'APPLICATION
+// RÉCUPÉRER LA BOITE DE RÉCEPTION LIÉE À UN PROFIL (MESSAGES PRIVÉS + ALERTES TOTALES)
+app.get("/messages/boite/:telephone", async (req, res) => {
+  try {
+    const tel = req.params.telephone;
+    // On prend les messages globaux (receiver_id = 0) ET les messages qui mentionnent le numéro ou liés à l'user ID
+    const query = await pool.query(
+      `SELECT * FROM messages 
+       WHERE receiver_id = 0 
+       OR content LIKE $1 
+       ORDER BY created_at DESC`,
+      [`%${tel}%`]
+    );
+    res.json(query.rows);
+  } catch (e) { res.json([]); }
+});
+
+// ANCIENNE ROUTE BANDEAU ALERTE CONSERVÉE POUR LE HAUT DE L'APP
 app.get("/notifications/globales", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM notifications WHERE type='ALERTE_ADMIN' ORDER BY created_at DESC LIMIT 3");

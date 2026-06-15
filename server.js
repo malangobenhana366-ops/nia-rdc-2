@@ -26,11 +26,12 @@ async function uploadImage(base64){
     const res = await cloudinary.uploader.upload(base64, { folder: "nia_rdc" });
     return res.secure_url;
   } catch (e) { 
-    console.error("Cloudinary error:", e);
+    console.error("Erreur Cloudinary:", e);
     return ""; 
   }
 }
 
+// FLUX D'ANNONCES
 app.get("/feed", async (req,res)=>{
   try {
     const annonces = await pool.query("SELECT * FROM annonces ORDER BY is_vip DESC, created_at DESC, id DESC");
@@ -43,15 +44,11 @@ app.get("/feed", async (req,res)=>{
   } catch (e) { res.json([]); }
 });
 
-// ROUTE REFAITE POUR LE MULTI-POSTING VIP SÉCURISÉ
+// PUBLICATION (STANDARD ET MULTI-VIP)
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
     
-    if (!titre || !telephone) {
-      return res.status(400).json({ error: "Champs obligatoires manquants" });
-    }
-
     const fields = await pool.query(
       `INSERT INTO annonces (user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()) RETURNING id`,
@@ -64,25 +61,53 @@ app.post("/annonces", async (req,res)=>{
       for(let b64 of images_base64){
         if (b64) {
           const url = await uploadImage(b64);
-          if(url) {
-            await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [id,url]);
-          }
+          if(url) await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [id,url]);
         }
       }
     }
-    res.json({success:true, id: id});
+    res.json({ success: true, id });
   } catch(e) { 
-    console.error("Database Crash Log:", e);
-    res.status(500).json({error: e.message || "Erreur interne de base de données."}); 
+    console.error("Crash Insertion:", e);
+    res.status(500).json({ error: e.message }); 
   }
 });
 
+// METTRE À JOUR LE STATUT OU L'ANNONCE EN DIRECTPUIS L'ESPACE PRIVÉ
+app.put("/annonces/:id", async (req, res) => {
+  try {
+    const { titre, prix, devise, periode, description, statut } = req.body;
+    await pool.query(
+      `UPDATE annonces SET titre=$1, prix=$2, devise=$3, periode=$4, description=$5, statut=$6 WHERE id=$7`,
+      [titre, prix, devise, periode, description, statut, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// SUPPRESSION D'UNE ANNONCE
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
     await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
     await pool.query("DELETE FROM annonces WHERE id = $1", [req.params.id]);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "err" }); }
+  } catch (e) { res.status(500).json({ error: "Erreur" }); }
+});
+
+// ENVOI D'UN MESSAGE GLOBAL / ALERTE DEPUIS L'ADMINISTRATEUR
+app.post("/admin/alerte", async (req, res) => {
+  try {
+    const { message } = req.body;
+    await pool.query("INSERT INTO notifications (type, message, is_read) VALUES ($1, $2, FALSE)", ["ALERTE_ADMIN", message]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// LIRE LES ALERTES GLOBALES SUR L'APPLICATION
+app.get("/notifications/globales", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM notifications WHERE type='ALERTE_ADMIN' ORDER BY created_at DESC LIMIT 3");
+    res.json(result.rows);
+  } catch (e) { res.json([]); }
 });
 
 const PORT = process.env.PORT || 5000;

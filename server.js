@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(cors());
-app.use(express.json({ limit: "25mb" }));
+app.use(express.json({ limit: "35mb" }));
 app.use(express.static(__dirname));
 
 cloudinary.config({
@@ -26,10 +26,10 @@ async function uploadImage(base64){
   } catch { return ""; }
 }
 
-// FLUX PUBLIC & ADMIN (RÉCUPÉRATION GÉNÉRALE)
+// RECUPERATION GENERALE DU FLUX PUBLIC ET ADMIN
 app.get("/feed", async (req,res)=>{
   try {
-    const annonces = await pool.query("SELECT * FROM annonces ORDER BY created_at DESC, id DESC");
+    const annonces = await pool.query("SELECT * FROM annonces ORDER BY is_vip DESC, created_at DESC, id DESC");
     const data = [];
     for(let a of annonces.rows){
       const imgs = await pool.query("SELECT image_url FROM annonce_images WHERE annonce_id=$1", [a.id]);
@@ -39,11 +39,11 @@ app.get("/feed", async (req,res)=>{
   } catch (e) { res.json([]); }
 });
 
-// ROUTE REQUÉRANTE POUR LE TABLEAU DE BORD ADMIN
+// ROUTE REQUERANTE POUR LE TABLEAU DE BORD ADMIN SÉCURISÉ
 app.get("/admin/stats", async (req, res) => {
   try {
     const totalReq = await pool.query("SELECT COUNT(*) FROM annonces");
-    const vipReq = await pool.query("SELECT COUNT(*) FROM annonces WHERE statut = 'vip' OR user_id = 100");
+    const vipReq = await pool.query("SELECT COUNT(*) FROM annonces WHERE is_vip = true");
     
     const total = parseInt(totalReq.rows[0].count) || 0;
     const vip = parseInt(vipReq.rows[0].count) || 0;
@@ -55,43 +55,42 @@ app.get("/admin/stats", async (req, res) => {
   }
 });
 
-// CREATION DIRECTE ET GRATUITE (SANS APPROBATION MANUELLE)
+// CREATION D'UNE ANNONCE (STANDARD OU VIP)
 app.post("/annonces", async (req,res)=>{
   try {
-    let { user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, images_base64 } = req.body;
+    let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
+    
     const fields = await pool.query(
-      `INSERT INTO annonces (user_id, titre, description, prix, periode, ville, commune, quartier, telephone, statut, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()) RETURNING id`,
-      [user_id || 1, titre, description, prix || 0, periode, ville, commune, quartier, telephone, statut || 'disponible']
+      `INSERT INTO annonces (user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()) RETURNING id`,
+      [user_id || 1, titre, description, prix || 0, devise || '$', periode, ville, commune, quartier, telephone, statut || 'disponible', is_vip || false]
     );
+    
     const id = fields.rows[0].id;
     if(images_base64 && Array.isArray(images_base64)){
       for(let b64 of images_base64){
         const url = await uploadImage(b64);
         if(url) await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [id,url]);
       }
-    } else if (images_base64 && typeof images_base64 === "string") {
-      const url = await uploadImage(images_base64);
-      if(url) await pool.query("INSERT INTO annonce_images (annonce_id,image_url) VALUES ($1,$2)", [id,url]);
     }
     res.json({success:true});
   } catch(e) { res.status(500).json({error:"err"}); }
 });
 
-// ENREGISTREMENT DES MODIFICATIONS (PROPRIÉTAIRE ET ADMIN)
+// ENREGISTREMENT DES MODIFICATIONS SANS ALTERER LE PROFIL DE BASE (IS_VIP)
 app.put("/annonces/:id/update", async (req, res) => {
   const { id } = req.params;
-  const { titre, prix, periode, statut, description, ville, commune, quartier, telephone } = req.body;
+  const { titre, prix, devise, periode, statut, description, ville, commune, quartier, telephone } = req.body;
   try {
     await pool.query(
-      `UPDATE annonces SET titre=$1, prix=$2, periode=$3, statut=$4, description=$5, ville=$6, commune=$7, quartier=$8, telephone=$9 WHERE id=$10`,
-      [titre, prix, periode, statut, description, ville, commune, quartier, telephone, id]
+      `UPDATE annonces SET titre=$1, prix=$2, devise=$3, periode=$4, statut=$5, description=$6, ville=$7, commune=$8, quartier=$9, telephone=$10 WHERE id=$11`,
+      [titre, prix, devise, periode, statut, description, ville, commune, quartier, telephone, id]
     );
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: "err" }); }
 });
 
-// SUPPRESSION DIRECTE (PROPRIÉTAIRE ET MODÉRATION FORCÉE ADMIN)
+// SUPPRESSION CASCADE
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
     await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
@@ -100,7 +99,7 @@ app.delete("/annonces/:id/delete", async (req, res) => {
   } catch (e) { res.status(500).json({ error: "err" }); }
 });
 
-// BOOSTER ADSENSE (REMONTER AU TOP)
+// ADSENSE BOOSTER ENGINE
 app.post("/annonces/:id/boost", async (req, res) => {
   try {
     await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [req.params.id]);
@@ -109,4 +108,4 @@ app.post("/annonces/:id/boost", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log("NIA RDC ENGINE ONLINE WITH ADMIN ROUTES"));
+app.listen(PORT, ()=>console.log("NIA RDC ENGINE ONLINE WITH FIXED ADMIN & VIP CONTROLS"));

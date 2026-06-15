@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { pool } from "./db.js";
 import { v2 as cloudinary } from "cloudinary";
+import bcrypt from "bcrypt";
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -30,6 +31,54 @@ async function uploadImage(base64){
     return ""; 
   }
 }
+
+// ROUTE : INSCRIPTION AVEC HACHAGE DE MOT DE PASSE
+app.post("/auth/register", async (req, res) => {
+  try {
+    const { telephone, password } = req.body;
+    if (!telephone || !password) {
+      return res.status(400).json({ error: "Téléphone et mot de passe requis." });
+    }
+
+    const userExist = await pool.query("SELECT id FROM users WHERE telephone = $1", [telephone]);
+    if (userExist.rows.length > 0) {
+      return res.status(400).json({ error: "Ce numéro de téléphone est déjà enregistré." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await pool.query(
+      "INSERT INTO users (telephone, password) VALUES ($1, $2) RETURNING id, telephone",
+      [telephone, hashedPassword]
+    );
+
+    res.json({ success: true, user: newUser.rows[0] });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ROUTE : CONNEXION SÉCURISÉE
+app.post("/auth/login", async (req, res) => {
+  try {
+    const { telephone, password } = req.body;
+    const result = await pool.query("SELECT * FROM users WHERE telephone = $1", [telephone]);
+    
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: "Utilisateur introuvable." });
+    }
+
+    const user = result.rows[0];
+    const match = await bcrypt.compare(password, user.password);
+    
+    if (!match) {
+      return res.status(400).json({ error: "Mot de passe incorrect." });
+    }
+
+    res.json({ success: true, user: { id: user.id, telephone: user.telephone } });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 // FLUX D'ANNONCES
 app.get("/feed", async (req,res)=>{
@@ -106,32 +155,6 @@ app.post("/admin/alerte", async (req, res) => {
 app.get("/notifications/globales", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM notifications WHERE type='ALERTE_ADMIN' ORDER BY created_at DESC LIMIT 3");
-    res.json(result.rows);
-  } catch (e) { res.json([]); }
-});
-
-/* ================= EXTENSION ADMINISTRATION GENERALE ================= */
-
-// ENVOYER UN MESSAGE ADMIN PRIVÉ OU TOTAL GLOBAL
-app.post("/admin/send-message", async (req, res) => {
-  try {
-    const { telephone_destinataire, content } = req.body;
-    await pool.query(
-      "INSERT INTO admin_messages (telephone_destinataire, content) VALUES ($1, $2)",
-      [telephone_destinataire || null, content]
-    );
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// LIRE LES MESSAGES REÇUS PAR UN UTILISATEUR DEPUIS SON PROFIL
-app.get("/user/messages/:telephone", async (req, res) => {
-  try {
-    const { telephone } = req.params;
-    const result = await pool.query(
-      "SELECT * FROM admin_messages WHERE telephone_destinataire = $1 OR telephone_destinataire IS NULL ORDER BY created_at DESC",
-      [telephone]
-    );
     res.json(result.rows);
   } catch (e) { res.json([]); }
 });

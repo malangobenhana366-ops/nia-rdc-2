@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NIA RDC - Premium & Animé</title>
+  <title>NIA RDC - Version Finale Professionnelle</title>
   <style>
     :root {
       --primary: #2563eb; 
@@ -17,205 +17,49 @@
       --danger: #ef4444; 
       --vip-gold: #d97706; 
       --vip-bg: #fef3c7;
-      --admin-bg: #0f172a; 
-      --admin-card: #1e293b;
+      --admin-bg: #0f172a;
     }
     
-    * { 
-      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; 
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; transition: all 0.2s ease; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; }
+    header { background-color: var(--card-bg); border-bottom: 1px solid var(--border); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    header .logo { margin: 0; color: var(--primary); font-size: 1.6rem; font-weight: 800; }
+    header .settings-btn { background: #f1f5f9; border: none; font-size: 1.5rem; cursor: pointer; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; user-select: none; -webkit-user-select: none; }
     
-    body { 
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; 
-      background-color: var(--bg); 
-      color: var(--text); 
-      margin: 0; 
-      padding: 0; 
-      overflow-x: hidden; 
-    }
+    main { max-width: 800px; margin: 10px auto 160px auto; padding: 0 15px; }
+    .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
+    .section-title { margin: 0; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; }
+    .btn-reset-search { background: #e2e8f0; color: var(--text); border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: none; }
     
-    header { 
-      background-color: var(--card-bg); 
-      border-bottom: 1px solid var(--border); 
-      padding: 15px 20px; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      position: sticky; 
-      top: 0; 
-      z-index: 100; 
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
-    }
+    #alert-bar-container { margin-bottom: 15px; }
+    .admin-global-alert { background: #fee2e2; border-left: 5px solid var(--danger); padding: 12px; border-radius: 8px; color: #991b1b; font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; animation: pulse 2s infinite; }
     
-    header .logo { 
-      margin: 0; 
-      color: var(--primary); 
-      font-size: 1.6rem; 
-      font-weight: 800; 
-      letter-spacing: -0.5px; 
-    }
+    @keyframes pulse { 0% { opacity: 0.9; } 50% { opacity: 1; } 100% { opacity: 0.9; } }
+
+    #feed { display: flex; flex-direction: column; gap: 20px; }
+    .annonce-card { border: 1px solid var(--border); border-radius: 16px; padding: 18px; background: var(--card-bg); position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.01); }
+    .annonce-card.vip-premium { border: 2px solid var(--vip-gold); background: linear-gradient(180deg, #fffdf7 0%, #ffffff 100%); }
+    .vip-badge-tag { position: absolute; top: 15px; right: 15px; background: linear-gradient(135deg, var(--vip-gold) 0%, #b45309 100%); color: white; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 8px; }
+    .annonce-price { font-size: 1.3rem; font-weight: 800; color: var(--primary); margin: 6px 0; }
+    .annonce-meta { font-size: 0.85rem; color: var(--text-light); margin-bottom: 12px; }
+    .annonce-description { background: #f8fafc; padding: 12px 16px; border-radius: 10px; font-size: 0.9rem; margin: 14px 0; white-space: pre-line; border-left: 4px solid var(--primary); }
     
-    header .settings-btn { 
-      background: #f1f5f9; 
-      border: none; 
-      font-size: 1.5rem; 
-      cursor: pointer; 
-      width: 42px; 
-      height: 42px; 
-      border-radius: 50%; 
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-    }
+    .gallery { display: flex; overflow-x: auto; gap: 12px; padding-bottom: 10px; }
+    .gallery-item { width: 280px; height: 200px; object-fit: contain; background-color: #0f172a; border-radius: 12px; flex-shrink: 0; }
     
-    main { 
-      max-width: 800px; 
-      margin: 10px auto 240px auto; 
-      padding: 0 15px; 
-    }
-    
-    .section-header-flex { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      margin: 15px 0; 
-    }
-    
-    .section-title { 
-      margin: 0; 
-      font-size: 1.2rem; 
-      font-weight: 700; 
-      text-transform: uppercase; 
-    }
-    
-    .btn-reset-search { 
-      background: #e2e8f0; 
-      color: var(--text); 
-      border: none; 
-      padding: 8px 16px; 
-      border-radius: 8px; 
-      font-size: 0.85rem; 
-      font-weight: 600; 
-      cursor: pointer; 
-      display: none; 
-    }
-    
-    #feed { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 20px; 
-    }
-    
-    .annonce-card { 
-      border: 1px solid var(--border); 
-      border-radius: 16px; 
-      padding: 18px; 
-      background: var(--card-bg); 
-      position: relative; 
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); 
-    }
-    
-    .annonce-card.vip-premium { 
-      border: 2px solid var(--vip-gold); 
-      background: linear-gradient(180deg, #fffdf7 0%, #ffffff 100%); 
-    }
-    
-    .vip-badge-tag { 
-      position: absolute; 
-      top: 15px; 
-      right: 15px; 
-      background: linear-gradient(135deg, var(--vip-gold) 0%, #b45309 100%); 
-      color: white; 
-      font-size: 0.75rem; 
-      font-weight: 700; 
-      padding: 4px 10px; 
-      border-radius: 8px; 
-      text-transform: uppercase; 
-    }
-    
-    .annonce-price { 
-      font-size: 1.3rem; 
-      font-weight: 800; 
-      color: var(--primary); 
-      margin: 6px 0; 
-    }
-    
-    .annonce-meta { 
-      font-size: 0.85rem; 
-      color: var(--text-light); 
-      margin-bottom: 12px; 
-    }
-    
-    .annonce-description { 
-      background: #f8fafc; 
-      padding: 12px 16px; 
-      border-radius: 10px; 
-      font-size: 0.9rem; 
-      margin: 14px 0; 
-      white-space: pre-line; 
-      border-left: 4px solid var(--primary); 
-    }
-    
-    .gallery { 
-      display: flex; 
-      overflow-x: auto; 
-      gap: 12px; 
-      padding-bottom: 10px; 
-    }
-    
-    .gallery-item { 
-      width: 290px; 
-      height: 210px; 
-      object-fit: contain; 
-      background-color: #0f172a; 
-      border-radius: 12px; 
-      flex-shrink: 0; 
-    }
-    
-    .annonce-footer { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      border-top: 1px solid var(--border); 
-      padding-top: 12px; 
-    }
-    
-    .footer-actions { display: flex; gap: 8px; }
-    
-    .btn-contact, .btn-shop, .btn-boost, .btn-edit, .btn-delete { 
-      border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; color: white; text-decoration: none;
-    }
+    .annonce-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px; flex-wrap: wrap; gap: 10px; }
+    .btn-contact, .btn-boost, .btn-edit, .btn-delete { border: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; color: white; }
     .btn-contact { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-    .btn-shop { background: linear-gradient(135deg, var(--vip-gold) 0%, #d97706 100%); }
-    .btn-boost { background-color: #3b82f6; }
-    .btn-edit { background-color: #64748b; }
+    .btn-boost { background: linear-gradient(135deg, var(--vip-gold) 0%, #b45309 100%); }
+    .btn-edit { background-color: #475569; }
     .btn-delete { background-color: var(--danger); }
     
     .badge-status { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
     .status-disponible { background-color: #d1fae5; color: #065f46; }
     .status-occupe { background-color: #fee2e2; color: #991b1b; }
 
-    .shop-banner { 
-      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); 
-      border: 2px solid var(--vip-gold); 
-      border-radius: 16px; 
-      padding: 25px; 
-      margin-bottom: 25px; 
-      text-align: center; 
-    }
-
-    .modal { 
-      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-      background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); 
-      z-index: 2000; justify-content: center; align-items: center; padding: 15px; 
-    }
-    
-    .modal-content { 
-      background-color: var(--card-bg); border-radius: 20px; width: 100%; max-width: 600px; 
-      max-height: 85vh; overflow-y: auto; padding: 26px; 
-    }
-    
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(5px); z-index: 2000; justify-content: center; align-items: center; padding: 15px; }
+    .modal-content { background-color: var(--card-bg); border-radius: 20px; width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto; padding: 25px; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
     .close-modal { background: #f1f5f9; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-weight: bold; }
     
@@ -223,44 +67,39 @@
     .form-group { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 0.85rem; color: #475569; }
     .form-group.full-width { grid-column: span 2; }
     
-    input, select, textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem; outline: none; }
-    textarea { height: 75px; resize: vertical; }
+    input, select, textarea { width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem; outline: none; }
+    textarea { height: 80px; resize: vertical; }
     
-    .modal-submit-btn { 
-      background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%); 
-      color: white; border: none; padding: 14px; font-size: 1rem; font-weight: 700; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px;
-    }
+    .modal-submit-btn { background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%); color: white; border: none; padding: 14px; font-size: 1rem; font-weight: 700; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; }
     
-    /* STYLE POUR LES MULTIPLES FORMULAIRES VIP */
-    .vip-block-annonce {
-      background: #fafafa; border: 2px dashed #cbd5e1; padding: 16px; border-radius: 14px; margin-bottom: 20px; position: relative;
-    }
-    .vip-block-header {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px;
-    }
-    .btn-add-block {
-      background: #f1f5f9; color: var(--text); border: 1px solid var(--border); padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 15px;
-    }
+    .vip-block-annonce { background: #f8fafc; border: 2px dashed #cbd5e1; padding: 16px; border-radius: 14px; margin-bottom: 20px; }
+    .vip-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px; }
+    .btn-add-block { background: #f1f5f9; color: var(--text); border: 1px solid var(--border); padding: 11px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 15px; }
 
+    /* ZONE ADSENSE BAS FIXE SANS GÊNE */
     .bottom-area { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--card-bg); border-top: 1px solid var(--border); z-index: 1000; display: flex; flex-direction: column; }
     .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); }
-    .nav-btn { background: none; border: none; padding: 14px 5px; font-size: 0.8rem; font-weight: 700; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .nav-btn { background: none; border: none; padding: 12px 5px; font-size: 0.8rem; font-weight: 700; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .nav-btn.vip-btn { color: var(--vip-gold); }
-    .adsense-space { background-color: #0f172a; height: 60px; display: flex; align-items: center; justify-content: center; color: #fbbf24; font-size: 0.8rem; font-weight: bold; text-align: center; }
+    
+    /* LE SQUELETTE DE TA BANNIÈRE DE PUB ROTATIVE */
+    .adsense-space { background-color: #1e293b; height: 55px; display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 0.75rem; font-weight: bold; text-align: center; letter-spacing: 0.5px; border-top: 1px solid #334155; }
 
-    .interstitial-modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: #000000; z-index: 5000; flex-direction: column; justify-content: center; align-items: center; color: white; padding: 20px; }
-    .interstitial-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    /* INTERSTITIEL PUBLICITAIRE */
+    .interstitial-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0f172a; z-index: 5000; flex-direction: column; justify-content: center; align-items: center; color: white; padding: 24px; }
+    .interstitial-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.15); border: none; color: white; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
 
   <header>
     <div class="logo">NIA RDC</div>
-    <button class="settings-btn" id="gear-admin-trigger">⚙️</button>
+    <button class="settings-btn" id="gear-admin-trigger" onmousedown="startAdminTouch()" onmouseup="stopAdminTouch()" onmouseleave="stopAdminTouch()" ontouchstart="startAdminTouch()" ontouchend="stopAdminTouch()">⚙️</button>
   </header>
 
   <main>
-    <div id="shop-header-container"></div>
+    <div id="alert-bar-container"></div>
+
     <div class="section-header-flex">
       <div class="section-title" id="feed-title">Annonces récentes</div>
       <button class="btn-reset-search" id="reset-btn" onclick="annulerRecherche()">Voir tout 🔄</button>
@@ -271,25 +110,26 @@
   <div class="modal" id="modal-publier">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>📢 Louer un objet (Standard)</h2>
+        <h2>📢 Déposer une annonce</h2>
         <button class="close-modal" onclick="fermerModal('publier')">✕</button>
       </div>
       <div class="form-grid">
-        <div class="form-group full-width"><label>Nom de l'objet</label><input id="titre" placeholder="Ex: Groupe électrogène 5KVA"></div>
+        <div class="form-group full-width"><label>Nom de l'objet</label><input id="titre" placeholder="Ex: Groupe électrogène"></div>
         <div class="form-group"><label>Prix</label>
           <div style="display:flex; gap:8px;">
-            <input id="prix" type="number" placeholder="Ex: 25" style="flex:2;">
+            <input id="prix" type="number" placeholder="Ex: 20" style="flex:2;">
             <select id="devise" style="flex:1;"><option value="$">$</option><option value="FC">FC</option></select>
           </div>
         </div>
-        <div class="form-group"><label>Période</label><select id="periode"><option value="jour">par jour</option><option value="heure">par heure</option></select></div>
-        <div class="form-group full-width"><label>Téléphone de contact</label><input id="telephone" type="tel" placeholder="Ex: 0834754695"></div>
-        <div class="form-group full-width"><label>Description</label><textarea id="description" placeholder="Détails..."></textarea></div>
+        <div class="form-group"><label>Période</label><select id="periode"><option value="jour">par jour</option><option value="heure">par heure</option><option value="semaine">par semaine</option></select></div>
+        <div class="form-group"><label>Statut initial</label><select id="statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div>
+        <div class="form-group"><label>Téléphone</label><input id="telephone" type="tel" placeholder="Ex: 0820000000"></div>
+        <div class="form-group full-width"><label>Description</label><textarea id="description" placeholder="Détails du matériel..."></textarea></div>
         <div class="form-group"><label>Ville</label><input id="ville" value="Lubumbashi"></div>
-        <div class="form-group"><label>Commune</label><input id="commune" placeholder="Ex: Lubumbashi"></div>
-        <div class="form-group"><label>Quartier</label><input id="quartier" placeholder="Ex: Golf"></div>
+        <div class="form-group"><label>Commune</label><input id="commune" placeholder="Ex: Kampemba"></div>
+        <div class="form-group"><label>Quartier</label><input id="quartier" placeholder="Ex: Bel-Air"></div>
         <div class="form-group full-width"><label>Photos</label><input id="image" type="file" multiple accept="image/*"></div>
-        <div class="form-group full-width"><button id="btn-submit-standard" class="modal-submit-btn" onclick="publier()">Mettre en ligne</button></div>
+        <div class="form-group full-width"><button class="modal-submit-btn" onclick="publier()">Mettre en ligne</button></div>
       </div>
     </div>
   </div>
@@ -297,15 +137,15 @@
   <div class="modal" id="modal-rechercher">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>🔍 Recherche Universelle</h2>
+        <h2>🔍 Recherche Intelligente</h2>
         <button class="close-modal" onclick="fermerModal('rechercher')">✕</button>
       </div>
       <div class="form-grid">
-        <div class="form-group full-width"><label>Que cherchez-vous ?</label><input id="search-titre" placeholder="Ex: groupe..."></div>
+        <div class="form-group full-width"><label>Que cherchez-vous ? (Mots clés, fautes ou synonymes acceptés)</label><input id="search-titre" placeholder="Ex: grp electogene, auto, voiture..."></div>
         <div class="form-group full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div>
         <div class="form-group"><label>Commune</label><input id="search-commune" placeholder="Toutes"></div>
         <div class="form-group"><label>Quartier</label><input id="search-quartier" placeholder="Tous"></div>
-        <div class="form-group full-width"><button class="modal-submit-btn" style="background:#0f172a;" onclick="rechercher()">Filtrer</button></div>
+        <div class="form-group full-width"><button class="modal-submit-btn" style="background:#0f172a;" onclick="rechercher()">Lancer la recherche</button></div>
       </div>
     </div>
   </div>
@@ -323,23 +163,57 @@
   <div class="modal" id="modal-profil">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>👤 Mon Profil</h2>
+        <h2>👤 Mon Espace Privé (Gestion)</h2>
         <button class="close-modal" onclick="fermerModal('profil')">✕</button>
       </div>
       <div style="display:flex; gap:10px; margin-bottom:20px;">
-        <button id="tab-standard-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('standard')">Profil Standard</button>
-        <button id="tab-vip-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('vip')">Profil VIP 👑</button>
+        <button id="tab-standard-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('standard')">Mes Offres Standards</button>
+        <button id="tab-vip-btn" style="flex:1; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('vip')">Mes Offres VIP 👑</button>
       </div>
       <div id="profil-view-content"></div>
     </div>
   </div>
 
+  <div class="modal" id="modal-modifier-annonce">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>✏️ Modifier mon annonce</h2>
+        <button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button>
+      </div>
+      <input type="hidden" id="edit-id">
+      <div class="form-grid">
+        <div class="form-group full-width"><label>Nom de l'objet</label><input id="edit-titre"></div>
+        <div class="form-group"><label>Prix</label><input id="edit-prix" type="number"></div>
+        <div class="form-group"><label>Devise</label><select id="edit-devise"><option value="$">$</option><option value="FC">FC</option></select></div>
+        <div class="form-group"><label>Période</label><select id="edit-periode"><option value="jour">par jour</option><option value="heure">par heure</option><option value="semaine">par semaine</option></select></div>
+        <div class="form-group"><label>Disponibilité Actuelle</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div>
+        <div class="form-group full-width"><label>Description</label><textarea id="edit-description"></textarea></div>
+        <div class="form-group full-width"><button class="modal-submit-btn" onclick="sauvegarderModificationAnnonce()">Appliquer les changements</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-admin">
+    <div class="modal-content" style="background:#0f172a; color:white;">
+      <div class="modal-header" style="border-bottom:1px solid #334155;">
+        <h2 style="color:#ef4444;">🛠️ Console de Supervision Générale</h2>
+        <button class="close-modal" style="background:#1e293b; color:white;" onclick="fermerModal('admin')">✕</button>
+      </div>
+      <div class="form-group full-width" style="margin-bottom:15px;">
+        <label style="color:#94a3b8; margin-bottom:6px;">Diffuser un message d'alerte / avertissement à tous les utilisateurs :</label>
+        <textarea id="admin-alerte-msg" style="background:#1e293b; color:white; border:1px solid #334155;" placeholder="Écrivez le message urgent ici..."></textarea>
+      </div>
+      <button class="modal-submit-btn" style="background:var(--danger);" onclick="envoyerAlerteGlobaleAdmin()">Diffuser l'alerte immédiate</button>
+    </div>
+  </div>
+
   <div class="interstitial-modal" id="interstitial-ad">
-    <button class="interstitial-close" id="interstitial-close-btn" onclick="fermerPubliciteInterstitielle()">Fermer ✕</button>
+    <button class="interstitial-close" onclick="fermerPubliciteInterstitielle()">Passer l'annonce ✕</button>
     <div style="text-align:center;">
-      <span style="color:var(--vip-gold); font-weight:bold;">SPONSOR ADSENSE</span>
-      <h2 style="font-size:2rem; margin:10px 0;">Publicité Interstitielle</h2>
-      <p style="color:#94a3b8;" id="interstitial-body">Chargement...</p>
+      <span style="color:var(--vip-gold); font-weight:bold; font-size:0.8rem; letter-spacing:2px;">ADSENSE PREMIUM INTERSTITIAL</span>
+      <h2 style="font-size:2.2rem; margin:15px 0 10px 0; color:#ffffff;">Sponsor Officiel</h2>
+      <p style="color:#94a3b8; max-width:400px; font-size:1rem; line-height:1.5; margin:0 auto 20px auto;" id="interstitial-body">Chargement du contenu publicitaire...</p>
+      <div style="width:50px; height:50px; border:5px solid #334155; border-top-color:var(--primary); border-radius:50%; animation:spin 1s linear infinite; margin:0 auto;"></div>
     </div>
   </div>
 
@@ -348,11 +222,14 @@
       <button class="nav-btn" onclick="ouvrirModal('publier')"><span>📢</span><span>Publier</span></button>
       <button class="nav-btn" onclick="ouvrirModal('rechercher')"><span>🔍</span><span>Rechercher</span></button>
       <button class="nav-btn vip-btn" onclick="ouvrirModal('vip')"><span>👑</span><span>Espace VIP</span></button>
-      <button class="nav-btn" onclick="ouvrirEspaceProfilGeneral()"><span>👤</span><span>Mon Profil</span></button>
+      <button class="nav-btn" onclick="ouvrirModal('profil')"><span>👤</span><span>Mon Profil</span></button>
     </nav>
-    <div class="adsense-space" id="adsense-rotative-banner">⚡ PUBLICITÉ ADSENSE ACTIVE ⚡</div>
+    <div class="adsense-space" id="adsense-rotative-banner">ADSENSE : Chargement des annonces locales sponsorisées...</div>
   </div>
 
+  <script style="display:none;">
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

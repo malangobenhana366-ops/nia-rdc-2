@@ -32,12 +32,15 @@ async function uploadImage(base64){
   }
 }
 
-// ROUTE : INSCRIPTION AVEC HACHAGE DE MOT DE PASSE
+// ROUTE : INSCRIPTION AVEC HACHAGE ET CHARTE ACCEPTEE
 app.post("/auth/register", async (req, res) => {
   try {
-    const { telephone, password } = req.body;
+    const { telephone, password, acceptedTerms } = req.body;
     if (!telephone || !password) {
       return res.status(400).json({ error: "Téléphone et mot de passe requis." });
+    }
+    if (!acceptedTerms) {
+      return res.status(400).json({ error: "Vous devez accepter les conditions d'utilisation." });
     }
 
     const userExist = await pool.query("SELECT id FROM users WHERE telephone = $1", [telephone]);
@@ -47,7 +50,7 @@ app.post("/auth/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await pool.query(
-      "INSERT INTO users (telephone, password) VALUES ($1, $2) RETURNING id, telephone",
+      "INSERT INTO users (telephone, password, accepted_terms) VALUES ($1, $2, TRUE) RETURNING id, telephone",
       [telephone, hashedPassword]
     );
 
@@ -57,7 +60,7 @@ app.post("/auth/register", async (req, res) => {
   }
 });
 
-// ROUTE : CONNEXION SÉCURISÉE
+// ROUTE : CONNEXION SÉCURISÉE CONTRE LES ROBOTS BRUTE-FORCE
 app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -68,11 +71,25 @@ app.post("/auth/login", async (req, res) => {
     }
 
     const user = result.rows[0];
+
+    // Vérification blocage temporel automatique
+    if (user.lock_until && new Date(user.lock_until) > new Date()) {
+      return res.status(403).json({ error: "Compte temporairement bloqué suite à de trop nombreuses tentatives (robots détectés). Réessayez plus tard." });
+    }
+
     const match = await bcrypt.compare(password, user.password);
     
     if (!match) {
+      // Incrémentation des erreurs pour bloquer les robots hacker
+      await pool.query("UPDATE users SET login_attempts = login_attempts + 1 WHERE id = $1", [user.id]);
+      if (user.login_attempts + 1 >= 5) {
+        await pool.query("UPDATE users SET lock_until = NOW() + INTERVAL '15 minutes', login_attempts = 0 WHERE id = $1", [user.id]);
+      }
       return res.status(400).json({ error: "Mot de passe incorrect." });
     }
+
+    // Reset des tentatives si connexion réussie
+    await pool.query("UPDATE users SET login_attempts = 0, lock_until = NULL WHERE id = $1", [user.id]);
 
     res.json({ success: true, user: { id: user.id, telephone: user.telephone } });
   } catch (e) {
@@ -80,20 +97,39 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
-// FLUX D'ANNONCES
-app.get("/feed", async (req,res)=>{
+// ROUTE : SUPPRESSION DÉFINITIVE DE COMPTE
+app.delete("/auth/delete-account", async (req, res) => {
   try {
-    const annonces = await pool.query("SELECT * FROM annonces ORDER BY is_vip DESC, created_at DESC, id DESC");
-    const data = [];
-    for(let a of annonces.rows){
-      const imgs = await pool.query("SELECT image_url FROM annonce_images WHERE annonce_id=$1", [a.id]);
-      data.push({ ...a, images: imgs.rows.map(i=>i.image_url) });
-    }
-    res.json(data);
-  } catch (e) { res.json([]); }
+    const { user_id } = req.body;
+    if(!user_id) return res.status(400).json({ error: "ID Utilisateur requis." });
+
+    // La suppression se fait en cascade automatiquement sur la base de données
+    await pool.query("DELETE FROM users WHERE id = $1", [user_id]);
+    res.json({ success: true, message: "Compte et données supprimés définitivement." });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-// PUBLICATION (STANDARD ET MULTI-VIP)
+// FLUX D'ANNONCES OPTIMISÉ POUR DES MILLIERS D'UTILISATEURS EN SIMULTANÉ (HAUTE CHARGE)
+app.get("/feed", async (req, res) => {
+  try {
+    const query = `
+      SELECT a.*, COALESCE(JSON_AGG(ai.image_url) FILTER (WHERE ai.image_url IS NOT NULL), '[]') as images
+      FROM annonces a
+      LEFT JOIN annonce_images ai ON a.id = ai.annonce_id
+      GROUP BY a.id
+      ORDER BY a.is_vip DESC, a.created_at DESC, a.id DESC;
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (e) { 
+    console.error(e);
+    res.json([]); 
+  }
+});
+
+// PUBLICATION
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
@@ -121,7 +157,6 @@ app.post("/annonces", async (req,res)=>{
   }
 });
 
-// METTRE À JOUR LE STATUT OU L'ANNONCE EN DIRECTPUIS L'ESPACE PRIVÉ
 app.put("/annonces/:id", async (req, res) => {
   try {
     const { titre, prix, devise, periode, description, statut } = req.body;
@@ -133,7 +168,6 @@ app.put("/annonces/:id", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// SUPPRESSION D'UNE ANNONCE
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
     await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
@@ -142,7 +176,6 @@ app.delete("/annonces/:id/delete", async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Erreur" }); }
 });
 
-// ENVOI D'UN MESSAGE GLOBAL / ALERTE DEPUIS L'ADMINISTRATEUR
 app.post("/admin/alerte", async (req, res) => {
   try {
     const { message } = req.body;
@@ -151,7 +184,6 @@ app.post("/admin/alerte", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// LIRE LES ALERTES GLOBALES SUR L'APPLICATION
 app.get("/notifications/globales", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM notifications WHERE type='ALERTE_ADMIN' ORDER BY created_at DESC LIMIT 3");

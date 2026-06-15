@@ -10,7 +10,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(cors());
-// Augmentation calculée pour supporter les requêtes groupées d'images réduites
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.static(__dirname));
@@ -32,7 +31,6 @@ async function uploadImage(base64){
   }
 }
 
-// RECUPERATION GENERALE DU FLUX PUBLIC ET ADMIN
 app.get("/feed", async (req,res)=>{
   try {
     const annonces = await pool.query("SELECT * FROM annonces ORDER BY is_vip DESC, created_at DESC, id DESC");
@@ -45,23 +43,7 @@ app.get("/feed", async (req,res)=>{
   } catch (e) { res.json([]); }
 });
 
-// ROUTE REQUERANTE POUR LE TABLEAU DE BORD ADMIN SÉCURISÉ
-app.get("/admin/stats", async (req, res) => {
-  try {
-    const totalReq = await pool.query("SELECT COUNT(*) FROM annonces");
-    const vipReq = await pool.query("SELECT COUNT(*) FROM annonces WHERE is_vip = true");
-    
-    const total = parseInt(totalReq.rows[0].count) || 0;
-    const vip = parseInt(vipReq.rows[0].count) || 0;
-    const standard = total - vip;
-
-    res.json({ total, vip, standard });
-  } catch (e) {
-    res.status(500).json({ error: "Erreur lors du calcul des statistiques" });
-  }
-});
-
-// CREATION D'UNE ANNONCE (STANDARD OU VIP) AVEC PROTECTIONS ROBUSTES
+// ROUTE REFAITE POUR LE MULTI-POSTING VIP SÉCURISÉ
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
@@ -90,25 +72,11 @@ app.post("/annonces", async (req,res)=>{
     }
     res.json({success:true, id: id});
   } catch(e) { 
-    console.error("Erreur d'insertion d'annonce:", e);
-    res.status(500).json({error:"Erreur interne du serveur lors de la sauvegarde"}); 
+    console.error("Database Crash Log:", e);
+    res.status(500).json({error: e.message || "Erreur interne de base de données."}); 
   }
 });
 
-// ENREGISTREMENT DES MODIFICATIONS SANS ALTERER LE PROFIL DE BASE (IS_VIP)
-app.put("/annonces/:id/update", async (req, res) => {
-  const { id } = req.params;
-  const { titre, prix, devise, periode, statut, description, ville, commune, quartier, telephone } = req.body;
-  try {
-    await pool.query(
-      `UPDATE annonces SET titre=$1, prix=$2, devise=$3, periode=$4, statut=$5, description=$6, ville=$7, commune=$8, quartier=$9, telephone=$10 WHERE id=$11`,
-      [titre, prix, devise, periode, statut, description, ville, commune, quartier, telephone, id]
-    );
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "err" }); }
-});
-
-// SUPPRESSION CASCADE
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
     await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
@@ -117,13 +85,5 @@ app.delete("/annonces/:id/delete", async (req, res) => {
   } catch (e) { res.status(500).json({ error: "err" }); }
 });
 
-// ADSENSE BOOSTER ENGINE
-app.post("/annonces/:id/boost", async (req, res) => {
-  try {
-    await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [req.params.id]);
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "err" }); }
-});
-
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log(`NIA RDC ENGINE ONLINE ON PORT ${PORT}`));
+app.listen(PORT, ()=>console.log(`NIA ENGINE OPERATIONAL ON PORT ${PORT}`));

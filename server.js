@@ -32,38 +32,52 @@ async function uploadImage(base64){
   }
 }
 
-// INSCRIPTION
+// AUTHENTIFICATION : INSCRIPTION
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password, acceptedTerms } = req.body;
-    if (!telephone || !password) return res.status(400).json({ error: "Téléphone et mot de passe requis." });
-    if (!acceptedTerms) return res.status(400).json({ error: "Vous devez accepter les conditions d'utilisation." });
+    if (!telephone || !password) {
+      return res.status(400).json({ error: "Téléphone et mot de passe requis." });
+    }
+    if (!acceptedTerms) {
+      return res.status(400).json({ error: "Vous devez accepter les conditions d'utilisation." });
+    }
 
     const userExist = await pool.query("SELECT id FROM users WHERE telephone = $1", [telephone]);
-    if (userExist.rows.length > 0) return res.status(400).json({ error: "Ce numéro est déjà enregistré." });
+    if (userExist.rows.length > 0) {
+      return res.status(400).json({ error: "Ce numéro de téléphone est déjà enregistré." });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await pool.query(
       "INSERT INTO users (telephone, password, accepted_terms) VALUES ($1, $2, TRUE) RETURNING id, telephone, is_admin",
       [telephone, hashedPassword]
     );
+
     res.json({ success: true, user: newUser.rows[0] });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-// CONNEXION
+// AUTHENTIFICATION : CONNEXION
 app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
     const result = await pool.query("SELECT * FROM users WHERE telephone = $1", [telephone]);
-    if (result.rows.length === 0) return res.status(400).json({ error: "Utilisateur introuvable." });
+    
+    if (result.rows.length === 0) {
+      return res.status(400).json({ error: "Utilisateur introuvable." });
+    }
 
     const user = result.rows[0];
+
     if (user.lock_until && new Date(user.lock_until) > new Date()) {
-      return res.status(403).json({ error: "Compte temporairement bloqué (sécurité robots). Réessayez plus tard." });
+      return res.status(403).json({ error: "Compte temporairement bloqué (robots détectés). Réessayez plus tard." });
     }
 
     const match = await bcrypt.compare(password, user.password);
+    
     if (!match) {
       await pool.query("UPDATE users SET login_attempts = login_attempts + 1 WHERE id = $1", [user.id]);
       if (user.login_attempts + 1 >= 5) {
@@ -73,8 +87,11 @@ app.post("/auth/login", async (req, res) => {
     }
 
     await pool.query("UPDATE users SET login_attempts = 0, lock_until = NULL WHERE id = $1", [user.id]);
+
     res.json({ success: true, user: { id: user.id, telephone: user.telephone, is_admin: user.is_admin } });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // SUPPRESSION DE COMPTE
@@ -84,10 +101,12 @@ app.delete("/auth/delete-account", async (req, res) => {
     if(!user_id) return res.status(400).json({ error: "ID Utilisateur requis." });
     await pool.query("DELETE FROM users WHERE id = $1", [user_id]);
     res.json({ success: true, message: "Compte supprimé définitivement." });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-// FLUX D'ANNONCES (ACCESSIBLE AUX VISITEURS NON CONNECTES)
+// FLUX D'ANNONCES GLOBAL PUBLIC
 app.get("/feed", async (req, res) => {
   try {
     const query = `
@@ -99,15 +118,16 @@ app.get("/feed", async (req, res) => {
     `;
     const result = await pool.query(query);
     res.json(result.rows);
-  } catch (e) { res.json([]); }
+  } catch (e) { 
+    res.json([]); 
+  }
 });
 
-// PUBLICATION D'ANNONCE (NÉCESSITE CONNEXION)
+// CRÉATION D'UNE ANNONCE
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
-    if(!user_id) return res.status(401).json({ error: "Veuillez vous connecter pour publier." });
-
+    
     const fields = await pool.query(
       `INSERT INTO annonces (user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()) RETURNING id`,
@@ -115,6 +135,7 @@ app.post("/annonces", async (req,res)=>{
     );
     
     const id = fields.rows[0].id;
+    
     if(images_base64 && Array.isArray(images_base64)){
       for(let b64 of images_base64){
         if (b64) {
@@ -124,22 +145,15 @@ app.post("/annonces", async (req,res)=>{
       }
     }
     res.json({ success: true, id });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+  } catch(e) { 
+    res.status(500).json({ error: e.message }); 
+  }
 });
 
-// MODIFICATION D'ANNONCE (PROPRIÉTAIRE ET ADMIN)
+// MODIFICATION D'UNE ANNONCE
 app.put("/annonces/:id", async (req, res) => {
   try {
-    const { titre, prix, devise, periode, description, statut, user_id } = req.body;
-    const item = await pool.query("SELECT user_id FROM annonces WHERE id = $1", [req.params.id]);
-    if(item.rows.length === 0) return res.status(404).json({ error: "Annonce introuvable." });
-    
-    // Vérification des droits
-    if (item.rows[0].user_id != user_id) {
-      const adminCheck = await pool.query("SELECT is_admin FROM users WHERE id = $1", [user_id]);
-      if (!adminCheck.rows[0]?.is_admin) return res.status(403).json({ error: "Action non autorisée." });
-    }
-
+    const { titre, prix, devise, periode, description, statut } = req.body;
     await pool.query(
       `UPDATE annonces SET titre=$1, prix=$2, devise=$3, periode=$4, description=$5, statut=$6 WHERE id=$7`,
       [titre, prix, devise, periode, description, statut, req.params.id]
@@ -148,57 +162,77 @@ app.put("/annonces/:id", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// SIGNALER UNE ANNONCE
-app.post("/annonces/:id/signaler", async (req, res) => {
+// SUPPRESSION D'UNE ANNONCE
+app.delete("/annonces/:id/delete", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM annonces WHERE id = $1", [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: "Erreur serveur" }); }
+});
+
+// SIGNALEMENT D'UNE ANNONCE
+app.post("/annonces/:id/report", async (req, res) => {
   try {
     const { user_id, raison } = req.body;
     await pool.query("INSERT INTO reports (annonce_id, user_id, raison) VALUES ($1, $2, $3)", [req.params.id, user_id || null, raison]);
-    res.json({ success: true, message: "Signalement enregistré." });
+    res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// SUPPRESSION D'ANNONCE
-app.delete("/annonces/:id/delete", async (req, res) => {
+// MESSAGES DE L'ADMINISTRATION POUR UN UTILISATEUR EN PARTICULIER
+app.get("/users/:id/messages", async (req, res) => {
   try {
-    await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
-    await pool.query("DELETE FROM annonces WHERE id = $1", [req.params.id]);
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "Erreur" }); }
+    const result = await pool.query(
+      "SELECT * FROM admin_messages WHERE user_id = $1 OR is_global = TRUE ORDER BY created_at DESC", 
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// MESSAGERIE ADMINISTRATIVE (ADMIN ONLY)
+/* ================= CONSOLE ADMINISTRATION CONTROLE ================= */
+
+// LISTE DE TOUTES LES ANNONCES DE LA PLATEFORME (POUR L'ADMINISTRATION)
+app.get("/admin/annonces", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM annonces ORDER BY created_at DESC");
+    res.json(result.rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// LISTE DE TOUS LES UTILISATEURS DU SYSTÈME
+app.get("/admin/users", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT id, telephone, is_vip, created_at FROM users ORDER BY created_at DESC");
+    res.json(result.rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ENVOI DE MESSAGE DEPUIS L'ADMINISTRATION (GLOBAL OU UNITAIRE)
 app.post("/admin/send-message", async (req, res) => {
   try {
-    const { admin_id, cible, telephone_cible, message, type } = req.body;
-    const checkResult = await pool.query("SELECT is_admin FROM users WHERE id = $1", [admin_id]);
-    if (!checkResult.rows[0]?.is_admin) return res.status(403).json({ error: "Droit refusé." });
-
-    if (cible === "un" && telephone_cible) {
-      const userRes = await pool.query("SELECT id FROM users WHERE telephone = $1", [telephone_cible]);
-      if (userRes.rows.length === 0) return res.status(404).json({ error: "Destinataire introuvable." });
-      await pool.query("INSERT INTO notifications (user_id, type, message) VALUES ($1, $2, $3)", [userRes.rows[0].id, type || "ADMIN", message]);
+    const { target_user_id, message, is_global } = req.body;
+    if (is_global) {
+      await pool.query("INSERT INTO admin_messages (message, is_global) VALUES ($1, TRUE)", [message]);
     } else {
-      // Envoyer à tout le monde (user_id = NULL)
-      await pool.query("INSERT INTO notifications (user_id, type, message) VALUES (NULL, $1, $2)", [type || "ALERTE_ADMIN", message]);
+      await pool.query("INSERT INTO admin_messages (user_id, message, is_global) VALUES ($1, $2, FALSE)", [target_user_id, message]);
     }
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// RECUPERER LES MESSAGES DE L'ADMIN POUR UN UTILISATEUR COMPRIS LES MESSAGES GLOBAUX
-app.get("/notifications/user/:id", async (req, res) => {
+// DIFFUSION DE LA BANNIÈRE D'ALERTE ROUGE
+app.post("/admin/alerte", async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT * FROM notifications WHERE user_id = $1 OR user_id IS NULL ORDER BY created_at DESC LIMIT 15",
-      [req.params.id]
-    );
-    res.json(result.rows);
-  } catch (e) { res.json([]); }
+    const { message } = req.body;
+    await pool.query("INSERT INTO notifications (type, message, is_read) VALUES ($1, $2, FALSE)", ["ALERTE_ADMIN", message]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get("/notifications/globales", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM notifications WHERE user_id IS NULL AND type='ALERTE_ADMIN' ORDER BY created_at DESC LIMIT 3");
+    const result = await pool.query("SELECT * FROM notifications WHERE type='ALERTE_ADMIN' ORDER BY created_at DESC LIMIT 3");
     res.json(result.rows);
   } catch (e) { res.json([]); }
 });

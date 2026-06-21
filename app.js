@@ -1,167 +1,91 @@
-const API = "https://nia-rdc-2.onrender.com";
+const API = "https://nia-rdc-2.onrender.com"; // Modifiable par votre adresse finale de déploiement
 
 let toutesLesAnnonces = [];
-let adminAnnoncesCache = [];
 let ONGLE_PROFIL_ACTIF = "standard";
-let ACTION_POST_INTERSTITIELLE = null;
 let BLOCS_VIP_COUNT = 0;
-
 let adminTimer = null;
 let tempsValide = false;
 let yStart = 0;
 
-/* --- CONTENUS JURIDIQUES NIA RDC (JUIN 2026) --- */
-const CHARTE_CONDITIONS = `Conditions de sécurité et d'utilisation de NIA RDC
+const CHARTE_APROPOS = `À propos de NIA RDC\n\nWelcome sur NIA RDC. NIA RDC est une plateforme numérique conçue pour faciliter la mise en relation entre les personnes souhaitant louer, proposer ou rechercher des biens et des services en République Démocratique du Congo.\n\nNotre objectif est de rendre les échanges plus simples, rapides et accessibles grâce à une plateforme facile à utiliser, adaptée aussi bien aux particuliers qu'aux professionnels.\n\nNotre mission :\nPermettre à chacun de trouver ou de proposer des objets, équipements et services en toute simplicité, tout en favorisant les opportunités économiques locales.\n\nCe que propose NIA RDC :\nLes utilisateurs peuvent notamment publier des annonces, consulter les annonces disponibles, contacter les annonceurs et rechercher des biens selon leurs besoins.\n\nNos valeurs :\nSimplicité, accessibilité, respect des utilisateurs, innovation et amélioration continue.`;
+const CHARTE_PRIVACY = `Politique de confidentialité de NIA RDC\n\nDernière mise à jour : Juin 2026.\n\nBienvenue sur NIA RDC. La protection des informations personnelles de nos utilisateurs est importante. Cette politique explique quelles informations sont collectées, pourquoi elles sont utilisées et les droits des utilisateurs.\n\n1. Informations collectées :\n- Le numéro de téléphone fourni lors de l'inscription.\n- Le mot de passe protégé par hachage.\n- Les annonces publiées et photos ajoutées.\n- Les informations techniques indispensables au fonctionnement.\n\n2. Utilisation :\nGérer les comptes, publier et afficher les annonces, assurer la sécurité de la plateforme et prévenir les fraudes.\n\n3. Partage :\nNIA RDC ne vend pas vos données. Les numéros ajoutés aux annonces sont visibles publiquement pour permettre les appels directs.\n\n4. Sécurité :\nNous mettons en œuvre des mesures raisonnables mais rappelons qu'aucune solution sur Internet n'est absolue à 100%.`;
 
-Bienvenue sur NIA RDC.
-En utilisant la plateforme, vous acceptez pleinement les règles suivantes :
-1. Utilisation loyale des services de mise en relation en République Démocratique du Congo.
-2. Responsabilité pleine de l'annonceur sur l'exactitude de ses descriptions.
-3. Interdiction absolue de publier des contenus trompeurs ou frauduleux. NIA RDC supprimera immédiatement les comptes en infraction.`;
-
-const CHARTE_APROPOS = `À propos de NIA RDC
-
-Bienvenue sur NIA RDC.
-
-NIA RDC est une plateforme numérique conçue pour faciliter la mise en relation entre les personnes souhaitant louer, proposer ou rechercher des biens et des services en République Démocratique du Congo.
-
-Notre objectif est de rendre les échanges plus simples, rapides et accessibles grâce à une plateforme facile à utiliser, adaptée aussi bien aux particuliers qu'aux professionnels.
-
-Notre mission
-Permettre à chacun de trouver ou de proposer des objets, équipements et services en toute simplicité, tout en favorisant les opportunités économiques locales.`;
-
-const CHARTE_PRIVACY = `Politique de confidentialité de NIA RDC
-Dernière mise à jour : Juin 2026.
-
-La protection des informations personnelles de nos utilisateurs est importante. 
-
-1. Informations collectées :
-- le numéro de téléphone fourni lors de l'inscription ;
-- le mot de passe du compte protégé ;
-- les annonces publiées et les photos associées.
-
-2. Partage des informations :
-NIA RDC ne vend pas les informations personnelles des utilisateurs. Certaines données comme votre téléphone sont visibles publiquement sur vos annonces pour permettre le contact direct.`;
-
-function initialiserMiseAJourAutomatique() {
-  setInterval(async () => {
-    try {
-      const res = await fetch(`${API}/feed`);
-      if (res.ok) {
-        const nouvellesAnnonces = await res.json();
-        if (JSON.stringify(nouvellesAnnonces) !== JSON.stringify(toutesLesAnnonces)) {
-          toutesLesAnnonces = nouvellesAnnonces;
-          const resetBtn = document.getElementById("reset-btn");
-          if (resetBtn && resetBtn.style.display !== "block") {
-            filtrerEtAfficherFlux(toutesLesAnnonces, false);
-          }
-        }
-      }
-    } catch (e) {
-      console.log("Auto-refresh déconnecté.");
-    }
-  }, 15000);
-}
-
-// PROTECTION DES ROUTES PRIVEES
-function exigerConnexionPourAction(callbackAction) {
+// VÉRIFICATION COMPTE POUR ACTION PRIVÉE
+function ouvrirModalSeccurisee(modalId) {
   const userId = localStorage.getItem("nia_user_id");
   if (!userId) {
-    basculerModeAuth(VersInscription = false);
     document.getElementById("modal-auth").style.display = "flex";
   } else {
-    callbackAction();
+    ouvrirModal(modalId);
   }
-}
-
-function verifierMenuOptionsVisibles() {
-  const userId = localStorage.getItem("nia_user_id");
-  document.getElementById("logout-btn-menu").style.display = userId ? "block" : "none";
-  document.getElementById("delete-btn-menu").style.display = userId ? "block" : "none";
 }
 
 function deconnecterUtilisateur() {
   localStorage.clear();
-  alert("Déconnexion réussie.");
+  alert("Session fermée.");
   window.location.reload();
 }
 
 async function supprimerCompteUtilisateur() {
   const userId = localStorage.getItem("nia_user_id");
   if(!userId) return;
-  if (confirm("⚠️ Voulez-vous vraiment supprimer définitivement votre compte ainsi que TOUTES vos annonces associées ?")) {
-    try {
-      const res = await fetch(`${API}/auth/delete-account`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId })
-      });
-      if(res.ok) {
-        localStorage.clear();
-        window.location.reload();
-      }
-    } catch(e) { alert("Erreur réseau."); }
+  if (confirm("⚠️ Confirmez-vous la suppression définitive de votre compte ainsi que de tout votre historique de publication ?")) {
+    const res = await fetch(`${API}/auth/delete-account`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId })
+    });
+    if(res.ok) {
+      localStorage.clear();
+      window.location.reload();
+    }
   }
 }
 
 function basculerModeAuth(versInscription) {
-  if (versInscription) {
-    document.getElementById("auth-title").textContent = "Créer un compte NIA RDC";
-    document.getElementById("auth-form-register").style.display = "grid";
-    document.getElementById("auth-form-login").style.display = "none";
-  } else {
-    document.getElementById("auth-title").textContent = "Connexion à votre espace";
-    document.getElementById("auth-form-register").style.display = "none";
-    document.getElementById("auth-form-login").style.display = "grid";
-  }
+  document.getElementById("auth-title").textContent = versInscription ? "Créer un compte NIA RDC" : "Connexion à l'espace privé";
+  document.getElementById("auth-form-register").style.display = versInscription ? "grid" : "none";
+  document.getElementById("auth-form-login").style.display = versInscription ? "none" : "grid";
 }
 
 async function executerInscription() {
   if (!document.getElementById("auth-accept-rules")?.checked) {
-    return alert("Veuillez accepter les conditions de sécurité pour continuer.");
+    return alert("Veuillez cocher la case d'acceptation réglementaire.");
   }
   const telephone = val("auth-tel");
   const password = val("auth-pass");
-  if (!telephone || !password) return alert("Veuillez remplir les champs.");
+  if (!telephone || !password) return alert("Remplissez les champs.");
 
-  try {
-    const res = await fetch(`${API}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ telephone, password, acceptedTerms: true })
-    });
-    const data = await res.json();
-    if (res.ok && data.success) {
-      localStorage.setItem("nia_user_id", data.user.id);
-      localStorage.setItem("nia_standard_telephone", data.user.telephone);
-      fermerModal('auth');
-      verifierMenuOptionsVisibles();
-      loadFeed();
-    } else { alert(data.error); }
-  } catch (e) { alert("Erreur réseau."); }
+  const res = await fetch(`${API}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ telephone, password, acceptedTerms: true })
+  });
+  const data = await res.json();
+  if (res.ok && data.success) {
+    localStorage.setItem("nia_user_id", data.user.id);
+    localStorage.setItem("nia_standard_telephone", data.user.telephone);
+    document.getElementById("modal-auth").style.display = "none";
+    alert("Compte créé !");
+  } else { alert(data.error); }
 }
 
 async function executerConnexion() {
   const telephone = val("login-tel");
   const password = val("login-pass");
-  if (!telephone || !password) return alert("Champs vides.");
-
-  try {
-    const res = await fetch(`${API}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ telephone, password })
-    });
-    const data = await res.json();
-    if (res.ok && data.success) {
-      localStorage.setItem("nia_user_id", data.user.id);
-      localStorage.setItem("nia_standard_telephone", data.user.telephone);
-      if (data.user.is_admin) localStorage.setItem("nia_is_admin", "true");
-      fermerModal('auth');
-      verifierMenuOptionsVisibles();
-      loadFeed();
-    } else { alert(data.error); }
-  } catch (e) { alert("Erreur serveur."); }
+  const res = await fetch(`${API}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ telephone, password })
+  });
+  const data = await res.json();
+  if (res.ok && data.success) {
+    localStorage.setItem("nia_user_id", data.user.id);
+    localStorage.setItem("nia_standard_telephone", data.user.telephone);
+    if(data.user.is_admin) localStorage.setItem("nia_admin_access", "true");
+    document.getElementById("modal-auth").style.display = "none";
+    loadFeed();
+  } else { alert(data.error); }
 }
 
 function toggleLeftDropdown() {
@@ -169,273 +93,255 @@ function toggleLeftDropdown() {
   dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
 }
 
-function ouvrirModalLegal(charteType) {
-  const modal = document.getElementById("modal-legal");
-  const title = document.getElementById("legal-title-display");
-  const body = document.getElementById("legal-body-display");
-  const closeBtn = document.getElementById("legal-close-btn");
-  const actionBtn = document.getElementById("legal-action-btn");
-
-  closeBtn.style.display = "block";
-  actionBtn.style.display = "none";
-
-  if (charteType === 'conditions') {
-    title.textContent = "Conditions d'utilisation de NIA RDC";
-    body.textContent = CHARTE_CONDITIONS;
-  } else if (charteType === 'apropos') {
-    title.textContent = "À propos de NIA RDC";
-    body.textContent = CHARTE_APROPOS;
-  } else if (charteType === 'confidentialite') {
-    title.textContent = "Politique de confidentialité";
-    body.textContent = CHARTE_PRIVACY;
-  } else if (charteType === 'conditions-forced') {
-    title.textContent = "Conditions Obligatoires de Sécurité";
-    body.textContent = CHARTE_CONDITIONS;
-    closeBtn.style.display = "none";
-    actionBtn.style.display = "block";
-    actionBtn.onclick = () => {
-      if(document.getElementById("auth-accept-rules")) document.getElementById("auth-accept-rules").checked = true;
-      fermerModal('legal');
-    };
-  }
-  modal.style.display = "flex";
+function ouvrirModalLegal(type) {
+  document.getElementById("legal-title-display").textContent = type === 'apropos' ? "À propos de NIA RDC" : "Politique de Confidentialité";
+  document.getElementById("legal-body-display").textContent = type === 'apropos' ? CHARTE_APROPOS : CHARTE_PRIVACY;
+  document.getElementById("modal-legal").style.display = "flex";
 }
 
-// PARRAINAGE / INVITATION WHATSAPP
-function partagerApplicationWhatsApp() {
-  const lienApp = "https://nia-rdc.vercel.app"; 
-  const texteMessage = encodeURIComponent(`Bonjour ! Je t'invite à me rejoindre sur NIA RDC pour louer, proposer ou rechercher rapidement des appartements, véhicules et services en RDC. Clique ici : ${lienApp}`);
-  window.open(`https://api.whatsapp.com/send?text=${texteMessage}`, '_blank');
-}
-
-// DESCRIPTIONS CLICK UNIQUE MODALE
-function afficherFenetreDescriptionComplete(titre, texte) {
-  document.getElementById("desc-modal-title").textContent = titre;
-  document.getElementById("desc-modal-body").textContent = texte;
-  document.getElementById("modal-description").style.display = "flex";
-}
-
-// BANNÈRE ADSENSE ROTATIVE SPONSORISÉE
+// MESSAGES PUBLICITAIRES BAS DE PAGE CONTINUS
 const TEXTES_PUB = [
-  "⚡ Louez vos appartements et entrepôts chez NIA RDC au meilleur prix !",
-  "🏢 VIP : Multipliez vos clients en créant votre vitrine de location !",
-  "🚀 Propulsez vos affaires en devenant membre vérifié NIA Premium !",
-  "📞 Besoin d'équipements ? Utilisez notre recherche intelligente !"
+  "⚡ Besoin de matériel ? Effectuez une recherche rapide par commune sur NIA RDC !",
+  "🏢 Multipliez vos transactions immobilières en ouvrant votre Boutique VIP !",
+  "📢 Passez votre annonce en quelques secondes et touchez des milliers de clients locaux.",
+  "👑 Devenez membre VIP pour placer vos annonces en tête d'affiche sur tous les écrans !"
 ];
 let indexPub = 0;
 function lancerBanniereAdsenseRotative() {
-  const banner = document.getElementById("adsense-rotative-banner");
-  if(banner) banner.textContent = TEXTES_PUB[indexPub];
   setInterval(() => {
     indexPub = (indexPub + 1) % TEXTES_PUB.length;
-    if(banner) banner.textContent = TEXTES_PUB[indexPub];
-  }, 10000);
-}
-
-function declencherPubliciteInterstitielle(actionSuivante, messageSpecifique = "") {
-  ACTION_POST_INTERSTITIELLE = actionSuivante;
-  document.getElementById("interstitial-body").textContent = messageSpecifique || "Mise en relation immédiate sécurisée.";
-  document.getElementById("interstitial-ad").style.display = "flex";
-}
-function fermerPubliciteInterstitielle() {
-  document.getElementById("interstitial-ad").style.display = "none";
-  if (ACTION_POST_INTERSTITIELLE) { ACTION_POST_INTERSTITIELLE(); ACTION_POST_INTERSTITIELLE = null; }
+    document.getElementById("adsense-rotative-banner").textContent = TEXTES_PUB[indexPub];
+  }, 15000);
 }
 
 function val(id) { return document.getElementById(id)?.value?.trim() || ""; }
 
-function optimiserEtCompresserImage(file, maxWidth = 800, maxHeight = 800, quality = 0.65) {
+function optimiserEtCompresserImage(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = (event) => {
+    reader.onload = (e) => {
       const img = new Image();
-      img.src = event.target.result;
+      img.src = e.target.result;
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        let width = img.width; let height = img.height;
-        if (width > height) {
-          if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
-        } else {
-          if (height > maxHeight) { width = Math.round((width * maxHeight) / height); height = maxHeight; }
-        }
-        canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL("image/jpeg", quality));
+        let w = img.width, h = img.height;
+        if (w > 600) { h = Math.round((h * 600) / w); w = 600; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.6));
       };
     };
   });
 }
 
-// DETECTEUR GESTE SECRET ADMIN
+// CAPTEUR SECRET SUPERVISION ADMINISTRATEUR (10 secondes d'appui + balayage vers le haut)
 function startAdminTouch() { tempsValide = false; adminTimer = setTimeout(() => { tempsValide = true; }, 10000); }
 function stopAdminTouch() { clearTimeout(adminTimer); }
 window.addEventListener("touchstart", e => { yStart = e.touches[0].clientY; });
 window.addEventListener("touchend", e => {
-  let yEnd = e.changedTouches[0].clientY;
-  if (tempsValide && (yStart - yEnd > 80)) {
+  if (tempsValide && (yStart - e.changedTouches[0].clientY > 60)) {
     tempsValide = false;
-    const code = prompt("Code secret Superviseur Admin :");
-    if (code === "BEN4002ET4200") ouvrirModal("admin");
+    if (prompt("Saisir le code d'accès de sécurité Administrateur :") === "BEN4002ET4200") {
+      ouvrirModal("admin");
+      appliquerFiltrageSupervisionAdmin();
+    }
   }
 });
 
-// RECHERCHE ALGORITHMIQUE
+function inviterUtilisateurWhatsApp() {
+  const lienApp = window.location.href;
+  const message = encodeURIComponent(`Bonjour ! Je t'invite à découvrir NIA RDC, l'application idéale pour louer et trouver des biens ou services rapidement en RDC. Rejoins-nous ici : ${lienApp}`);
+  window.open(`https://api.whatsapp.com/send?text=${message}`, '_blank');
+}
+
+async function chargerMessagesAdministratifsPrives() {
+  const userId = localStorage.getItem("nia_user_id");
+  if(!userId) return;
+  try {
+    const res = await fetch(`${API}/user/${userId}/messages`);
+    const msgs = await res.json();
+    const box = document.getElementById("admin-messages-box-container");
+    if(msgs.length === 0) { box.innerHTML = "Aucun message reçu."; return; }
+    box.innerHTML = msgs.map(m => `<div class="admin-msg-box"><b>[Admin]</b>: ${m.message} <br><small style="color:gray;">${new Date(m.created_at).toLocaleDateString()}</small></div>`).join("");
+  } catch(e){}
+}
+
+// RECHERCHE INTELLIGENTE ET SYNONYMES
+const SYNONYMES = {
+  "groupe": ["generator", "generateur", "dynamo", "courant", "electricite"],
+  "voiture": ["auto", "vehicule", "taxi", "jeep", "camionnette", "moteur"],
+  "maison": ["appartement", "chambre", "studio", "villa", "salon", "parcelle"]
+};
+function verifierMatchIntelligent(titre, query) {
+  let t = titre.toLowerCase(), q = query.toLowerCase();
+  if (t.includes(q)) return true;
+  for (let key in SYNONYMES) {
+    if (q.includes(key)) {
+      for (let syn of SYNONYMES[key]) { if (t.includes(syn)) return true; }
+    }
+  }
+  return false;
+}
+
 function rechercher() {
-  const qTitre = val("search-titre");
-  const qVille = val("search-ville");
-  const qCommune = val("search-commune");
-  const qQuartier = val("search-quartier");
-
-  let resultats = toutesLesAnnonces.filter(a => {
-    let matchTitre = qTitre === "" || a.titre.toLowerCase().includes(qTitre.toLowerCase()) || (a.description && a.description.toLowerCase().includes(qTitre.toLowerCase()));
-    let matchVille = a.ville.toLowerCase().includes(qVille.toLowerCase());
-    let matchCommune = qCommune === "" || a.commune?.toLowerCase().includes(qCommune.toLowerCase());
-    let matchQuartier = qQuartier === "" || a.quartier?.toLowerCase().includes(qQuartier.toLowerCase());
-    return matchTitre && matchVille && matchCommune && matchQuartier;
+  const qTitre = val("search-titre"), qVille = val("search-ville"), qCommune = val("search-commune"), qQuartier = val("search-quartier");
+  let res = toutesLesAnnonces.filter(a => {
+    let mTitle = qTitre === "" || verifierMatchIntelligent(a.titre, qTitre) || verifierMatchIntelligent(a.description || "", qTitre);
+    let mVille = a.ville.toLowerCase().includes(qVille.toLowerCase());
+    let mCommune = qCommune === "" || a.commune?.toLowerCase().includes(qCommune.toLowerCase());
+    let mQuartier = qQuartier === "" || a.quartier?.toLowerCase().includes(qQuartier.toLowerCase());
+    return mTitle && mVille && mCommune && mQuartier;
   });
-
   fermerModal("rechercher");
-  document.getElementById("feed-title").textContent = `Filtre (${resultats.length})`;
-  filtrerEtAfficherFlux(resultats, true);
+  document.getElementById("feed-title").textContent = `Résultats (${res.length})`;
+  afficherFlux(res, true);
 }
 
 function annulerRecherche() {
   document.getElementById("feed-title").textContent = "Annonces récentes";
-  filtrerEtAfficherFlux(toutesLesAnnonces, false);
+  afficherFlux(toutesLesAnnonces, false);
 }
 
-// DISPATCH SIGNALEMENT
-function ouvrirBoiteSignalement(annonceId) {
-  const uid = localStorage.getItem("nia_user_id");
-  if(!uid) return alert("Vous devez vous connecter pour signaler une annonce.");
-  document.getElementById("report-annonce-id").value = annonceId;
-  document.getElementById("modal-report").style.display = "flex";
-}
-
-async function soumettreSignalement() {
-  const aid = document.getElementById("report-annonce-id").value;
-  const raison = document.getElementById("report-reason").value;
-  const uid = localStorage.getItem("nia_user_id");
-
-  const res = await fetch(`${API}/annonces/${aid}/report`, {
+// FONCTIONS DE L'ADMINISTRATEUR
+async function envoyerMessageAdminDirect() {
+  const target_tel = val("admin-msg-target");
+  const message = val("admin-msg-text");
+  if (!message) return alert("Saisir un texte.");
+  const res = await fetch(`${API}/admin/message`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id: uid, raison })
+    body: JSON.stringify({ target_tel, message, is_global: target_tel === "" })
   });
-  if(res.ok) {
-    alert("Merci, le signalement a été transmis à l'administration.");
-    fermerModal("report");
+  if(res.ok) { alert("Transmis !"); document.getElementById("admin-msg-text").value = ""; }
+  else { alert("Erreur, vérifiez le numéro."); }
+}
+
+function appliquerFiltrageSupervisionAdmin() {
+  const villeFiltre = val("admin-filter-ville").toLowerCase();
+  const typeFiltre = document.getElementById("admin-filter-type").value;
+  let filtre = toutesLesAnnonces.filter(a => {
+    let mVille = villeFiltre === "" || a.ville.toLowerCase().includes(villeFiltre);
+    let mType = typeFiltre === "all" || (typeFiltre === "vip" ? a.is_vip : !a.is_vip);
+    return mVille && mType;
+  });
+  const list = document.getElementById("admin-flux-supervision-list");
+  list.innerHTML = filtre.map(a => `
+    <div style="background:#1e293b; padding:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
+      <span><b>[${a.is_vip?'VIP':'STD'}]</b> ${a.titre} (${a.ville}) - <span style="color:orange;">Signaux: ${a.signaux_count || 0}</span></span>
+      <div style="display:flex; gap:4px;">
+        <button style="background:orange; color:white; border:none; padding:3px 6px; border-radius:4px; cursor:pointer;" onclick="avertirAnnonceurAdmin('${a.telephone}')">Avertir</button>
+        <button style="background:red; color:white; border:none; padding:3px 6px; border-radius:4px; cursor:pointer;" onclick="supprimerAnnonceAdmin(${a.id})">Supprimer</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function avertirAnnonceurAdmin(tel) {
+  document.getElementById("admin-msg-target").value = tel;
+  document.getElementById("admin-msg-text").value = "AVERTISSEMENT : Votre annonce ne respecte pas nos directives de communauté. Veuillez la modifier au plus vite sous peine de suppression.";
+  alert("Numéro chargé dans le champ message. Cliquez sur Transmettre.");
+}
+
+async function supprimerAnnonceAdmin(id) {
+  if (confirm("Supprimer cette annonce en tant qu'administrateur ?")) {
+    await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" });
+    loadFeed();
+    setTimeout(() => appliquerFiltrageSupervisionAdmin(), 600);
   }
 }
 
+// INTERFACES ET AFFICHAGES DU FLUX DE DONNÉES
 async function loadFeed() {
   try {
     const res = await fetch(`${API}/feed`);
     toutesLesAnnonces = await res.json();
-    filtrerEtAfficherFlux(toutesLesAnnonces);
-    chargerAlertesAdministratives();
-  } catch (e) {
-    document.getElementById("feed").innerHTML = "Erreur de chargement du flux.";
-  }
+    const resetBtn = document.getElementById("reset-btn");
+    if (resetBtn && resetBtn.style.display !== "block") {
+      afficherFlux(toutesLesAnnonces, false);
+    }
+  } catch (e) { document.getElementById("feed").innerHTML = "Erreur de connexion."; }
 }
 
-function filtrerEtAfficherFlux(listeAnnonces, modeRechercheActive = false) {
+function afficherFlux(liste, modeRecherche = false) {
   const feed = document.getElementById("feed");
   if (!feed) return;
   feed.innerHTML = "";
-  document.getElementById("reset-btn").style.display = modeRechercheActive ? "block" : "none";
+  document.getElementById("reset-btn").style.display = modeRecherche ? "block" : "none";
+  if(liste.length === 0) { feed.innerHTML = "<p style='text-align:center; color:gray;'>Aucune annonce.</p>"; return; }
 
-  if(listeAnnonces.length === 0) {
-    feed.innerHTML = "<p style='text-align:center; color:gray; font-size:0.9rem; padding:20px;'>Aucune offre trouvée pour cette recherche.</p>";
-    return;
-  }
-
-  listeAnnonces.forEach(a => {
-    let galleryHtml = "";
+  liste.forEach(a => {
+    let imagesHtml = "";
     if (a.images && a.images.length > 0) {
-      galleryHtml = `<div class="gallery">`;
-      a.images.forEach(url => { galleryHtml += `<img src="${url}" class="gallery-item">`; });
-      galleryHtml += `</div>`;
+      imagesHtml = `<div class="gallery">${a.images.map(u => `<img src="${u}" class="gallery-item">`).join("")}</div>`;
     }
-    let statutHtml = a.statut === "occupe" 
-      ? `<span class="badge-status status-occupe">🔴 Occupé</span>` 
-      : `<span class="badge-status status-disponible">🟢 Disponible</span>`;
-
-    // Échappement des descriptions pour injection modale sécurisée
-    const descSecurisee = (a.description || "Aucune description.").replace(/['"`]/g, " ");
-
     feed.innerHTML += `
       <div class="${a.is_vip ? 'annonce-card vip-premium' : 'annonce-card'}">
         ${a.is_vip ? `<div class="vip-badge-tag">👑 VIP</div>` : ""}
         <h3 style="margin:0 0 5px 0; font-size:1.1rem;">${a.titre}</h3>
         <div class="annonce-price">${a.prix} ${a.devise} / ${a.periode}</div>
         <div class="annonce-meta">📍 ${a.ville} - ${a.commune || ""}, ${a.quartier || ""}</div>
-        <div class="annonce-desc-trigger" onclick="afficherFenetreDescriptionComplete('${a.titre.replace(/['"`]/g, " ")}', '${descSecurisee}')">
-          ${a.description || "Cliquez pour lire la description..."}
-        </div>
-        ${galleryHtml}
+        
+        <div class="annonce-description" onclick="this.classList.toggle('deployee')">${a.description || "Aucune description."}</div>
+        
+        ${imagesHtml}
         <div class="annonce-footer">
-          ${statutHtml}
+          ${a.statut === "occupe" ? `<span class="badge-status status-occupe">🔴 Occupé</span>` : `<span class="badge-status status-disponible">🟢 Disponible</span>`}
           <div style="display:flex; gap:6px;">
-            <button class="btn-report" onclick="ouvrirBoiteSignalement(${a.id})">⚠️ Signaler</button>
-            <button class="btn-contact" onclick="declencherPubliciteInterstitielle(() => { window.location.href='tel:${a.telephone}'; }, 'Contact direct.');">📞 Appeler</button>
+            <button class="btn-report" onclick="signalerAnnonce(${a.id})">⚠️ Signaler</button>
+            <button class="btn-contact" onclick="window.location.href='tel:${a.telephone}'">📞 Appeler (${a.telephone})</button>
           </div>
         </div>
-      </div>
-    `;
+      </div>`;
   });
 }
 
-async function publierAnnonceStandard() {
+async function signalerAnnonce(id) {
+  const res = await fetch(`${API}/annonces/${id}/signaler`, { method: "POST" });
+  if (res.ok) alert("Merci, l'annonce a été signalée à la modération.");
+}
+
+async function publier() {
   const files = document.getElementById("image")?.files;
   if (!val("titre") || !val("telephone")) return alert("Veuillez remplir le titre et le téléphone.");
-
   let images_base64 = [];
   if(files) { for(let f of files) { images_base64.push(await optimiserEtCompresserImage(f)); } }
   localStorage.setItem("nia_standard_telephone", val("telephone"));
 
-  const res = await fetch(`${API}/annonces`, {
+  await fetch(`${API}/annonces`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       user_id: localStorage.getItem("nia_user_id"),
-      titre: val("titre"), prix: val("prix"), devise: val("devise"),
-      periode: val("periode"), telephone: val("telephone"), description: val("description"),
-      ville: val("ville"), commune: val("commune"), quartier: val("quartier"),
-      statut: val("statut"), is_vip: false, images_base64
+      titre: val("titre"), prix: val("prix"), devise: val("devise"), periode: val("periode"),
+      telephone: val("telephone"), description: val("description"), ville: val("ville"),
+      commune: val("commune"), quartier: val("quartier"), statut: val("statut"), is_vip: false, images_base64
     })
   });
-  if(res.ok) { fermerModal("publier"); loadFeed(); }
+  fermerModal("publier"); loadFeed();
 }
 
+// VITRINE MULTI-VIP
 function rafraichirEspaceVip() {
   const body = document.getElementById("vip-form-body");
   const nomBoutique = localStorage.getItem("nia_vip_nom");
-
   if (!nomBoutique) {
     body.innerHTML = `
-      <div class="form-group full-width"><label>Nom de votre vitrine commerciale VIP</label><input id="reg-vip-nom" placeholder="Ex: Agence Express Immo"></div>
-      <div class="form-group full-width"><label>Téléphone par défaut</label><input id="reg-vip-tel" type="tel" placeholder="Ex: 0820000000"></div>
-      <button class="modal-submit-btn" style="background:var(--vip-gold);" onclick="creerBoutiqueVIP()">Générer ma vitrine Premium 👑</button>
-    `;
+      <div class="form-group full-width"><label>Nom commercial de la vitrine VIP</label><input id="reg-vip-nom" placeholder="Ex: Agence Immobilière Express"></div>
+      <div class="form-group full-width"><label>Téléphone de contact par défaut</label><input id="reg-vip-tel" type="tel" placeholder="Ex: 0820000000"></div>
+      <button class="modal-submit-btn" style="background:var(--vip-gold);" onclick="creerBoutiqueVIP()">Créer ma vitrine VIP 👑</button>`;
   } else {
     body.innerHTML = `
-      <div style="background:var(--vip-bg); padding:10px; border-radius:8px; margin-bottom:12px; font-weight:bold; color:var(--vip-gold); text-align:center; font-size:0.85rem;">
-        👑 CATALOGUE EN LIGNE : ${nomBoutique}
-      </div>
+      <div style="background:var(--vip-bg); padding:10px; border-radius:8px; margin-bottom:12px; font-weight:bold; color:var(--vip-gold); text-align:center; font-size:0.85rem;">👑 VITRINE ACTIVE : ${nomBoutique}</div>
       <div id="conteneur-blocs-annonces-vip"></div>
-      <button class="btn-add-block" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; cursor:pointer;" onclick="ajouterNouveauBlocFormulaireVip()">➕ Ajouter une autre annonce distincte</button>
-      <button id="btn-submit-multi-vip" class="modal-submit-btn" style="background:var(--vip-gold);" onclick="soumettreToutesLesAnnoncesVip()">🚀 Diffuser tout le catalogue</button>
-    `;
-    BLOCS_VIP_COUNT = 0;
-    ajouterNouveauBlocFormulaireVip();
+      <button class="btn-add-block" style="width:100%; margin-bottom:10px; padding:10px; font-weight:bold;" onclick="ajouterNouveauBlocFormulaireVip()">➕ Ajouter un produit/service au catalogue</button>
+      <button class="modal-submit-btn" style="background:var(--vip-gold);" onclick="soumettreToutesLesAnnoncesVip()">🚀 Diffuser le catalogue complet</button>`;
+    BLOCS_VIP_COUNT = 0; ajouterNouveauBlocFormulaireVip();
   }
 }
 
 function creerBoutiqueVIP() {
-  if(!val("reg-vip-nom") || !val("reg-vip-tel")) return alert("Veuillez remplir les cases.");
+  if(!val("reg-vip-nom") || !val("reg-vip-tel")) return alert("Complétez les cases.");
   localStorage.setItem("nia_vip_nom", val("reg-vip-nom"));
   localStorage.setItem("nia_vip_telephone", val("reg-vip-tel"));
   rafraichirEspaceVip();
@@ -444,41 +350,38 @@ function creerBoutiqueVIP() {
 function ajouterNouveauBlocFormulaireVip() {
   BLOCS_VIP_COUNT++;
   const conteneur = document.getElementById("conteneur-blocs-annonces-vip");
-  const idUnique = BLOCS_VIP_COUNT;
-
-  const blocHtml = document.createElement("div");
-  blocHtml.className = "vip-block-annonce";
-  blocHtml.id = `vip-block-${idUnique}`;
-  blocHtml.innerHTML = `
-    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem; font-weight:bold;">
-      <span>📦 Bien VIP N°${idUnique}</span>
-      ${idUnique > 1 ? `<button style="background:none; border:none; color:var(--danger); cursor:pointer;" onclick="document.getElementById('vip-block-${idUnique}').remove()">Supprimer ✕</button>` : ""}
+  const div = document.createElement("div");
+  div.className = "vip-block-annonce";
+  div.id = `vip-block-${BLOCS_VIP_COUNT}`;
+  div.style = "background:#f8fafc; border:1px dashed #cbd5e1; padding:12px; border-radius:8px; margin-bottom:12px;";
+  div.innerHTML = `
+    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem; font-weight:bold; color:var(--vip-gold)">
+      <span>📦 Article VIP N°${BLOCS_VIP_COUNT}</span>
+      <button style="color:red; background:none; border:none; cursor:pointer;" onclick="document.getElementById('${div.id}').remove()">Supprimer</button>
     </div>
     <div class="form-grid">
-      <div class="form-group full-width"><label>Nom du bien</label><input class="vip-in-titre" placeholder="Ex: Villa duplex"></div>
+      <div class="form-group full-width"><label>Nom de l'objet</label><input class="vip-in-titre" required></div>
       <div class="form-group"><label>Prix</label>
-        <div style="display:flex; gap:4px;">
-          <input class="vip-in-prix" type="number" placeholder="500" style="flex:2;">
-          <select class="vip-in-devise" style="flex:1;"><option value="$">$</option><option value="FC">FC</option></select>
-        </div>
+        <div style="display:flex; gap:4px;"><input class="vip-in-prix" type="number" style="flex:2;"><select class="vip-in-devise" style="flex:1;"><option value="$">$</option><option value="FC">FC</option></select></div>
       </div>
-      <div class="form-group"><label>Période</label><select class="vip-in-periode"><option value="mois">par mois</option><option value="jour">par jour</option></select></div>
-      <div class="form-group"><label>Statut</label><select class="vip-in-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div>
-      <div class="form-group"><label>Téléphone</label><input class="vip-in-tel" value="${localStorage.getItem("nia_vip_telephone")}"></div>
-      <div class="form-group full-width"><label>Description</label><textarea class="vip-in-desc" placeholder="Détails du bien..."></textarea></div>
-      <div class="form-group"><label>Commune</label><input class="vip-in-commune" placeholder="Ex: Lubumbashi"></div>
-      <div class="form-group"><label>Quartier</label><input class="vip-in-quartier" placeholder="Ex: Golf"></div>
-      <div class="form-group full-width"><label>Photos</label><input type="file" class="vip-in-photos" multiple accept="image/*"></div>
-    </div>
-  `;
-  conteneur.appendChild(blocHtml);
+      <div class="form-group"><label>Période</label><select class="vip-in-periode"><option value="jour">par jour</option><option value="heure">par heure</option></select></div>
+      <div class="form-group"><label>Coordonnées</label><input class="vip-in-tel" value="${localStorage.getItem("nia_vip_telephone")}"></div>
+      <div class="form-group"><label>Commune</label><input class="vip-in-commune"></div>
+      <div class="form-group full-width"><label>Description</label><textarea class="vip-in-desc"></textarea></div>
+    </div>`;
+  conteneur.appendChild(div);
 }
 
 async function soumettreToutesLesAnnoncesVip() {
   const blocs = document.querySelectorAll(".vip-block-annonce");
   for (let b of blocs) {
-    const titre = b.querySelector(".vip-in-titre").value;
-    const telephone = b.querySelector(".vip-in-tel").value;
+    const titre = b.querySelector(".vip-in-titre").value.trim();
+    const prix = b.querySelector(".vip-in-prix").value.trim();
+    const devise = b.querySelector(".vip-in-devise").value;
+    const periode = b.querySelector(".vip-in-periode").value;
+    const telephone = b.querySelector(".vip-in-tel").value.trim();
+    const description = b.querySelector(".vip-in-desc").value.trim();
+    const commune = b.querySelector(".vip-in-commune").value.trim();
     if (!titre || !telephone) continue;
 
     await fetch(`${API}/annonces`, {
@@ -486,193 +389,89 @@ async function soumettreToutesLesAnnoncesVip() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         user_id: localStorage.getItem("nia_user_id"),
-        titre, prix: b.querySelector(".vip-in-prix").value, devise: b.querySelector(".vip-in-devise").value,
-        periode: b.querySelector(".vip-in-periode").value, telephone, description: b.querySelector(".vip-in-desc").value,
-        ville: "Lubumbashi", commune: b.querySelector(".vip-in-commune").value, quartier: b.querySelector(".vip-in-quartier").value,
-        statut: b.querySelector(".vip-in-statut").value, is_vip: true, images_base64: []
+        titre, prix, devise, periode, telephone, description, ville: "Lubumbashi", commune, is_vip: true
       })
     });
   }
-  alert("Catalogue VIP publié avec succès !");
-  fermerModal("vip");
-  loadFeed();
+  alert("Catalogue complet transmis !");
+  fermerModal("vip"); loadFeed();
 }
 
-// MESSAGES DE L'ADMINISTRATION & GESTION PROFIL UTILISATEUR
-async function chargerMessagesBoiteProfil() {
-  const uid = localStorage.getItem("nia_user_id");
-  if(!uid) return;
-  try {
-    const res = await fetch(`${API}/users/${uid}/messages`);
-    const msgs = await res.json();
-    const conteneur = document.getElementById("admin-messages-box-container");
-    if(msgs.length > 0) {
-      conteneur.innerHTML = "";
-      msgs.forEach(m => {
-        conteneur.innerHTML += `<div class="message-box-admin"><b>📩 Service Modération NIA :</b> ${m.message}</div>`;
-      });
-    }
-  } catch(e) {}
+function ouvrirModal(id) {
+  document.getElementById(`modal-${id}`).style.display = "flex";
+  if (id === "vip") rafraichirEspaceVip();
+  if (id === "profil") { changerOngletProfil(ONGLE_PROFIL_ACTIF); chargerMessagesAdministratifsPrives(); }
 }
+function fermerModal(id) { document.getElementById(`modal-${id}`).style.display = "none"; }
 
+// GESTION ET MODIFICATION PAR L'UTILISATEUR (ESPACE MON PROFIL)
 function changerOngletProfil(type) {
   ONGLE_PROFIL_ACTIF = type;
   document.getElementById("tab-standard-btn").style.background = type === "standard" ? "#cbd5e1" : "#f1f5f9";
   document.getElementById("tab-vip-btn").style.background = type === "vip" ? "#fde68a" : "#f1f5f9";
-
   const tel = type === "vip" ? localStorage.getItem("nia_vip_telephone") : localStorage.getItem("nia_standard_telephone");
   const content = document.getElementById("profil-view-content");
-  if(!tel) { content.innerHTML = "<p style='color:gray;text-align:center;font-size:0.8rem;'>Aucune offre active.</p>"; return; }
+  if(!tel) { content.innerHTML = "<p style='color:gray;text-align:center;font-size:0.8rem;'>Aucune annonce.</p>"; return; }
 
   const mesAnnonces = toutesLesAnnonces.filter(a => a.telephone === tel && a.is_vip === (type === "vip"));
-  let html = "";
-  
-  mesAnnonces.forEach(a => {
-    html += `
-      <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <b style="font-size:0.85rem;">${a.titre}</b>
-          <div style="font-size:0.75rem; color:var(--text-light);">${a.prix} ${a.devise} / ${a.periode}</div>
-        </div>
-        <div style="display:flex; gap:4px;">
-          <button style="background:#475569; color:white; border:none; padding:5px 8px; font-size:0.75rem; border-radius:4px; cursor:pointer;" onclick="ouvrirModificationFormulaireAnnonce(${JSON.stringify(a).replace(/'/g, "&apos;")})">✏️ Modifier</button>
-          <button style="background:var(--danger); color:white; border:none; padding:5px 8px; font-size:0.75rem; border-radius:4px; cursor:pointer;" onclick="supprimerAnnonce(${a.id})">🗑️</button>
-        </div>
-      </div>`;
-  });
-  content.innerHTML = html || "<p style='color:gray;text-align:center;font-size:0.8rem;'>Aucune annonce trouvée.</p>";
+  if(mesAnnonces.length === 0) { content.innerHTML = "<p style='color:gray;text-align:center;font-size:0.8rem;'>Aucune annonce trouvée.</p>"; return; }
+
+  content.innerHTML = mesAnnonces.map(a => `
+    <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <b style="font-size:0.9rem;">${a.titre}</b>
+        <div style="font-size:0.75rem; color:var(--text-light);">${a.prix} ${a.devise} / ${a.periode}</div>
+      </div>
+      <div style="display:flex; gap:4px;">
+        <button class="btn-edit" style="padding:4px 8px; font-size:0.75rem;" onclick="ouvrirFormulaireModificationAnnonce(${JSON.stringify(a).replace(/"/g, '&quot;')})">✏️ Modifier</button>
+        <button class="btn-delete" style="padding:4px 8px; font-size:0.75rem;" onclick="supprimerAnnonce(${a.id})">🗑️</button>
+      </div>
+    </div>`).join("");
 }
 
-function ouvrirModificationFormulaireAnnonce(annonceObj) {
-  document.getElementById("edit-id").value = annonceObj.id;
-  document.getElementById("edit-titre").value = annonceObj.titre;
-  document.getElementById("edit-prix").value = annonceObj.prix;
-  document.getElementById("edit-devise").value = annonceObj.devise;
-  document.getElementById("edit-periode").value = annonceObj.periode;
-  document.getElementById("edit-statut").value = annonceObj.statut;
-  document.getElementById("edit-description").value = annonceObj.description || "";
-  document.getElementById("modal-modifier-annonce").style.display = "flex";
+function ouvrirFormulaireModificationAnnonce(annonce) {
+  document.getElementById("edit-id").value = annonce.id;
+  document.getElementById("edit-titre").value = annonce.titre;
+  document.getElementById("edit-prix").value = annonce.prix;
+  document.getElementById("edit-devise").value = annonce.devise;
+  document.getElementById("edit-periode").value = annonce.periode;
+  document.getElementById("edit-statut").value = annonce.statut;
+  document.getElementById("edit-telephone").value = annonce.telephone;
+  document.getElementById("edit-ville").value = annonce.ville;
+  document.getElementById("edit-commune").value = annonce.commune || "";
+  document.getElementById("edit-quartier").value = annonce.quartier || "";
+  document.getElementById("edit-description").value = annonce.description || "";
+  ouvrirModal("modifier-annonce");
 }
 
 async function sauvegarderModificationAnnonce() {
   const id = document.getElementById("edit-id").value;
-  const res = await fetch(`${API}/annonces/${id}`, {
+  await fetch(`${API}/annonces/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       titre: val("edit-titre"), prix: val("edit-prix"), devise: val("edit-devise"),
-      periode: val("edit-periode"), description: val("edit-description"), statut: val("edit-statut")
+      periode: val("edit-periode"), statut: val("edit-statut"), telephone: val("edit-telephone"),
+      ville: val("edit-ville"), commune: val("edit-commune"), quartier: val("edit-quartier"),
+      description: val("edit-description")
     })
   });
-  if(res.ok) {
-    alert("Modification enregistrée !");
-    fermerModal("modifier-annonce");
-    loadFeed();
-    changerOngletProfil(ONGLE_PROFIL_ACTIF);
-  }
+  fermerModal("modifier-annonce");
+  fermerModal("profil");
+  loadFeed();
 }
 
 async function supprimerAnnonce(id) {
-  if(confirm("Confirmez-vous la suppression définitive ?")) {
+  if(confirm("Confirmer la suppression de cette annonce ?")) {
     await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" });
-    loadFeed();
-    changerOngletProfil(ONGLE_PROFIL_ACTIF);
+    fermerModal("profil"); loadFeed();
   }
 }
 
-/* ================= ACTIONS CONSOLE LOGS ADMINISTRATION ================= */
-
-async function chargerDonneesConsoleAdmin() {
-  try {
-    const res = await fetch(`${API}/admin/annonces`);
-    adminAnnoncesCache = await res.json();
-    filtrerAdminLogs('all');
-  } catch(e) {}
-}
-
-function filtrerAdminLogs(mode) {
-  const conteneur = document.getElementById("admin-listings-view");
-  conteneur.innerHTML = "";
-  let filtres = adminAnnoncesCache;
-  if(mode === 'standard') filtres = adminAnnoncesCache.filter(a => !a.is_vip);
-  if(mode === 'vip') filtres = adminAnnoncesCache.filter(a => a.is_vip);
-
-  filtres.forEach(a => {
-    conteneur.innerHTML += `
-      <div style="padding:6px; border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
-        <span>[ID: ${a.id}] [Proprio UID: ${a.user_id || 'N/A'}] ${a.titre} (${a.ville}) - <b>${a.is_vip ? 'VIP':'STD'}</b></span>
-        <button style="background:var(--danger); border:none; color:white; font-size:0.7rem; padding:3px 6px; border-radius:3px; cursor:pointer;" onclick="adminSupprimerAnnonceDirect(${a.id})">Supprimer / Avertir</button>
-      </div>`;
-  });
-}
-
-async function adminSupprimerAnnonceDirect(id) {
-  if(confirm("Action modérateur : Supprimer cette annonce et avertir l'utilisateur ?")) {
-    await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" });
-    alert("Annonce retirée de l'index.");
-    chargerDonneesConsoleAdmin();
-    loadFeed();
-  }
-}
-
-async function adminEnvoyerMessageNotification(globalMode) {
-  const target = val("admin-msg-target");
-  const message = val("admin-msg-text");
-  if(!message) return alert("Message vide.");
-
-  const res = await fetch(`${API}/admin/send-message`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ target_user_id: target || null, message, is_global: globalMode })
-  });
-  if(res.ok) {
-    alert("Notification transmise à l'utilisateur.");
-    document.getElementById("admin-msg-text").value = "";
-  }
-}
-
-async function envoyerAlerteGlobaleAdmin() {
-  const msg = val("admin-alerte-msg");
-  if (!msg) return alert("Veuillez saisir un message.");
-  const res = await fetch(`${API}/admin/alerte`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: msg })
-  });
-  if(res.ok) {
-    alert("Alerte diffusée !");
-    document.getElementById("admin-alerte-msg").value = "";
-    chargerAlertesAdministratives();
-  }
-}
-
-async function chargerAlertesAdministratives() {
-  try {
-    const res = await fetch(`${API}/notifications/globales`);
-    const alertes = await res.json();
-    const conteneur = document.getElementById("alert-bar-container");
-    if(!conteneur) return;
-    conteneur.innerHTML = "";
-    alertes.forEach(a => {
-      conteneur.innerHTML += `<div class="admin-global-alert">📢 ALERTE : ${a.message}</div>`;
-    });
-  } catch(e) {}
-}
-
-function ouvrirModal(id) {
-  const m = document.getElementById(`modal-${id}`);
-  if(m) {
-    m.style.display = "flex";
-    if (id === "vip") rafraichirEspaceVip();
-    if (id === "profil") { changerOngletProfil(ONGLE_PROFIL_ACTIF); chargerMessagesBoiteProfil(); }
-    if (id === "admin") chargerDonneesConsoleAdmin();
-  }
-}
-function fermerModal(id) { document.getElementById(`modal-${id}`).style.display = "none"; }
+// INTERVALL AUTO-REFRESH SANS RECOUPER LA PAGE (15 secondes)
+setInterval(() => { loadFeed(); }, 15000);
 
 document.addEventListener("DOMContentLoaded", () => {
-  verifierMenuOptionsVisibles();
   loadFeed();
   lancerBanniereAdsenseRotative();
-  initialiserMiseAJourAutomatique();
 });

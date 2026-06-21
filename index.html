@@ -70,6 +70,7 @@
     input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; outline: none; }
     
     .modal-submit-btn { background: var(--primary); color: white; border: none; padding: 12px; font-size: 0.95rem; font-weight: 700; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 5px; }
+    .modal-submit-btn:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
     
     .bottom-area { position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--card-bg); border-top: 1px solid var(--border); z-index: 1500; display: flex; flex-direction: column; }
     .bottom-nav { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; }
@@ -78,7 +79,7 @@
     
     .adsense-space { background-color: #0f172a; height: 50px; display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 0.75rem; font-weight: bold; width: 100%; text-align: center; }
     .admin-msg-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.85rem; }
-    .cgu-scroll-box { height: 110px; overflow-y: scroll; border: 1px solid #cbd5e1; padding: 8px; font-size: 0.75rem; border-radius: 6px; background: #fff; }
+    .cgu-scroll-box { height: 130px; overflow-y: scroll; border: 1px solid #cbd5e1; padding: 10px; font-size: 0.8rem; border-radius: 6px; background: #fff; line-height: 1.4; }
     
     .admin-big-btn { padding: 12px 6px; font-size: 0.8rem; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 4px; }
     .admin-big-btn.primary { background: var(--primary); color: white; }
@@ -118,33 +119,42 @@
     <div id="feed">Chargement de la plateforme...</div>
   </main>
 
-  <!-- INTERSTITIEL PUBLICITAIRE ESPACE RESERVÉ -->
+  <!-- MODAL PUBLICITÉ INTERSTITIELLE (BOOST POSITION) -->
   <div class="modal" id="modal-interstitiel" style="background-color: rgba(0,0,0,0.95); z-index:9999;">
     <div class="modal-content" style="max-width:400px; text-align:center; background:#111827; color:white; border:2px solid #ff9800;">
       <h2 style="color:#ff9800; font-size:1.3rem;">📢 SPONSOR NIA RDC</h2>
       <div style="padding:30px 10px; background:#1f2937; border-radius:8px; margin:15px 0; font-weight:bold; color:#cbd5e1;" id="interstitiel-countdown-txt">
-        [ESPACE PUBLICITAIRE INTERSTITIEL]<br><br>Votre annonce va être boostée automatiquement après cette courte publicité...
+        [ESPACE PUBLICITAIRE INTERSTITIEL]<br><br>Votre annonce va être boostée après cette courte publicité obligatoire...
       </div>
-      <p style="font-size:0.8rem; color:gray;">Chargement du script AdSense...</p>
+      <p style="font-size:0.8rem; color:gray;">Intégration AdSense en attente...</p>
     </div>
   </div>
 
+  <!-- MODAL AUTHENTIFICATION (INSCRIPTION / CONNEXION CORRIGÉE) -->
   <div class="modal" id="modal-auth">
     <div class="modal-content" style="max-width: 420px;">
       <div class="modal-header"><h2 id="auth-title" style="font-size: 1.2rem; margin:0;">Créer un compte</h2><button class="close-modal" onclick="fermerModal('auth')">✕</button></div>
+      
+      <!-- FORMULAIRE INSCRIPTION -->
       <div class="form-grid" id="auth-form-register">
         <div class="form-group full-width">
-          <label style="color: var(--danger);">📜 Charte de Sécurité Complète (Faites défiler pour activer) :</label>
-          <div class="cgu-scroll-box" id="cgu-text-box" onscroll="detecterLectureConditionscomplet()">Chargement des conditions...</div>
+          <label style="color: var(--danger);">📜 Charte de Sécurité et Conditions d'Utilisation (Défilez vers le bas pour débloquer) :</label>
+          <div class="cgu-scroll-box" id="cgu-text-box">Chargement de la charte...</div>
         </div>
-        <div class="form-group full-width"><label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="auth-accept-rules" style="width:auto;" disabled> J'ai lu et j'accepte les conditions.</label></div>
-        <div class="form-group full-width"><label>Numéro de Téléphone</label><input id="auth-tel" type="tel" placeholder="0820000000"></div>
+        <div class="form-group full-width">
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="auth-accept-rules" style="width:auto;" disabled> J'ai lu et j'accepte sans réserve les conditions.
+          </label>
+        </div>
+        <div class="form-group full-width"><label>Numéro de Téléphone</label><input id="auth-tel" type="tel" placeholder="Ex: 0825551234"></div>
         <div class="form-group full-width"><label>Mot de passe</label><input id="auth-pass" type="password" placeholder="••••••••"></div>
         <div class="form-group full-width"><button class="modal-submit-btn" id="register-submit-btn" onclick="executerInscription()" disabled>Créer mon compte</button></div>
         <div class="form-group full-width" style="text-align:center;"><a href="#" style="color:var(--primary); font-size:0.8rem;" onclick="basculerModeAuth(false)">Déjà inscrit ? Connexion</a></div>
       </div>
+      
+      <!-- FORMULAIRE CONNEXION -->
       <div class="form-grid" id="auth-form-login" style="display:none;">
-        <div class="form-group full-width"><label>Numéro de Téléphone</label><input id="login-tel" type="tel" placeholder="0820000000"></div>
+        <div class="form-group full-width"><label>Numéro de Téléphone</label><input id="login-tel" type="tel" placeholder="Ex: 0825551234"></div>
         <div class="form-group full-width"><label>Mot de passe</label><input id="login-pass" type="password" placeholder="••••••••"></div>
         <div class="form-group full-width"><button class="modal-submit-btn" onclick="executerConnexion()">Se connecter</button></div>
         <div class="form-grid full-width" style="text-align:center;"><a href="#" style="color:var(--primary); font-size:0.8rem;" onclick="basculerModeAuth(true)">Besoin d'un compte ? Inscription</a></div>
@@ -153,7 +163,7 @@
   </div>
 
   <div class="modal" id="modal-legal"><div class="modal-content" style="max-width:650px;"><div class="modal-header"><h2 id="legal-title-display" style="font-size:1.1rem; margin:0;">Document</h2><button class="close-modal" onclick="fermerModal('legal')">✕</button></div><div class="cgu-scroll-box" id="legal-body-display" style="height:400px; white-space:pre-wrap;"></div></div></div>
-  <div class="modal" id="modal-publier"><div class="modal-content"><div class="modal-header"><h2 style="font-size:1.1rem; margin:0;">📢 Déposer une annonce</h2><button class="close-modal" onclick="fermerModal('publier')">✕</button></div><div class="form-grid"><div class="form-group full-width"><label>Nom de l'objet / service</label><input id="titre" placeholder="Ex: Groupe électrogène"></div><div class="form-group"><label>Prix</label><div style="display:flex; gap:6px;"><input id="prix" type="number" placeholder="50" style="flex:2;"><select id="devise" style="flex:1;"><option value="$">$</option><option value="FC">FC</option></select></div></div><div class="form-group"><label>Période</label><select id="periode"><option value="jour">par jour</option><option value="heure">par heure</option></select></div><div class="form-group"><label>Disponibilité</label><select id="statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div><div class="form-group"><label>Téléphone de contact</label><input id="telephone" type="tel"></div><div class="form-group full-width"><label>Description complète</label><textarea id="description"></textarea></div><div class="form-group"><label>Ville</label><input id="ville" value="Lubumbashi"></div><div class="form-group"><label>Commune</label><input id="commune"></div><div class="form-group"><label>Quartier</label><input id="quartier"></div><div class="form-group full-width"><label>Images</label><input id="image" type="file" multiple accept="image/*"></div><div class="form-group full-width"><button class="modal-submit-btn" onclick="publier()">Mettre en ligne</button></div></div></div></div>
+  <div class="modal" id="modal-publier"><div class="modal-content"><div class="modal-header"><h2 style="font-size:1.1rem; margin:0;">📢 Déposer une annonce</h2><button class="close-modal" onclick="fermerModal('publier')">✕</button></div><div class="form-grid"><div class="form-group full-width"><label>Nom de l'objet / service</label><input id="titre" placeholder="Ex: Studio à louer"></div><div class="form-group"><label>Prix</label><div style="display:flex; gap:6px;"><input id="prix" type="number" placeholder="100" style="flex:2;"><select id="devise" style="flex:1;"><option value="$">$</option><option value="FC">FC</option></select></div></div><div class="form-group"><label>Période</label><select id="periode"><option value="jour">par jour</option><option value="heure">par heure</option></select></div><div class="form-group"><label>Disponibilité</label><select id="statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div><div class="form-group"><label>Téléphone de contact</label><input id="telephone" type="tel"></div><div class="form-group full-width"><label>Description complète</label><textarea id="description"></textarea></div><div class="form-group"><label>Ville</label><input id="ville" value="Lubumbashi"></div><div class="form-group"><label>Commune</label><input id="commune"></div><div class="form-group"><label>Quartier</label><input id="quartier"></div><div class="form-group full-width"><label>Images</label><input id="image" type="file" multiple accept="image/*"></div><div class="form-group full-width"><button class="modal-submit-btn" onclick="publier()">Mettre en ligne</button></div></div></div></div>
   <div class="modal" id="modal-rechercher"><div class="modal-content"><div class="modal-header"><h2 style="font-size:1.1rem; margin:0;">🔍 Filtrer</h2><button class="close-modal" onclick="fermerModal('rechercher')">✕</button></div><div class="form-grid"><div class="form-group full-width"><label>Recherche par mot-clé</label><input id="search-titre"></div><div class="form-group full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div><div class="form-group full-width"><button class="modal-submit-btn" onclick="rechercher()">Rechercher</button></div></div></div></div>
   <div class="modal" id="modal-vip"><div class="modal-content" style="max-width:580px;"><div class="modal-header"><h2 style="font-size:1.1rem; margin:0;">👑 Catalogue Multi-VIP</h2><button class="close-modal" onclick="fermerModal('vip')">✕</button></div><div id="vip-form-body"></div></div></div>
   
@@ -161,7 +171,7 @@
     <div class="modal-content">
       <div class="modal-header"><h2 style="font-size:1.1rem; margin:0;">👤 Mon Profil & Notifications</h2><button class="close-modal" onclick="fermerModal('profil')">✕</button></div>
       <div style="margin-bottom:15px;">
-        <h4 style="margin:0 0 8px 0; font-size:0.85rem; text-transform:uppercase; color:var(--primary);">📥 Boîte de réception Administration</h4>
+        <h4 style="margin:0 0 8px 0; font-size:0.85rem; text-transform:uppercase; color:var(--primary);">📥 Messages Reçus de l'Administration</h4>
         <div id="admin-messages-box-container" style="max-height:180px; overflow-y:auto; border:1px solid var(--border); padding:8px; border-radius:8px; background:#fafafa;">Aucun message.</div>
       </div>
       <div style="display:flex; gap:8px; margin-bottom:15px;"><button id="tab-standard-btn" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('standard')">Standards</button><button id="tab-vip-btn" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="changerOngletProfil('vip')">Catalogue VIP 👑</button></div>
@@ -169,12 +179,11 @@
     </div>
   </div>
   
-  <div class="modal" id="modal-modifier-annonce"><div class="modal-content"><div class="modal-header"><h2 style="font-size:1.1rem; margin:0;">✏️ Modifier</h2><button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button></div><input type="hidden" id="edit-id"><div class="form-grid"><div class="form-group full-width"><label>Titre</label><input id="edit-titre"></div><div class="form-group"><label>Prix</label><input id="edit-prix" type="number"></div><div class="form-group"><label>Devise</label><select id="edit-devise"><option value="$">$</option><option value="FC">FC</option></select></div><div class="form-group"><label>Période</label><select id="edit-periode"><option value="jour">jour</option><option value="heure">heure</option></select></div><div class="form-group"><label>Disponibilité</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div><div class="form-group"><label>Téléphone</label><input id="edit-telephone" type="tel"></div><div class="form-group"><label>Ville</label><input id="edit-ville"><input id="edit-commune" type="hidden"><input id="edit-quartier" type="hidden"><input id="edit-description" type="hidden"></div><div class="form-group full-width"><button class="modal-submit-btn" onclick="sauvegarderModificationAnnonce()">Sauvegarder</button></div></div></div></div>
+  <div class="modal" id="modal-modifier-annonce"><div class="modal-content"><div class="modal-header"><h2 style="font-size:1.1rem; margin:0;">✏️ Modifier l'annonce</h2><button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button></div><input type="hidden" id="edit-id"><div class="form-grid"><div class="form-group full-width"><label>Titre</label><input id="edit-titre"></div><div class="form-group"><label>Prix</label><input id="edit-prix" type="number"></div><div class="form-group"><label>Devise</label><select id="edit-devise"><option value="$">$</option><option value="FC">FC</option></select></div><div class="form-group"><label>Période</label><select id="edit-periode"><option value="jour">jour</option><option value="heure">heure</option></select></div><div class="form-group"><label>Disponibilité</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div><div class="form-group"><label>Téléphone</label><input id="edit-telephone" type="tel"></div><div class="form-group"><label>Ville</label><input id="edit-ville"><input id="edit-commune" type="hidden"><input id="edit-quartier" type="hidden"><input id="edit-description" type="hidden"></div><div class="form-group full-width"><button class="modal-submit-btn" onclick="sauvegarderModificationAnnonce()">Sauvegarder</button></div></div></div></div>
 
-  <!-- CONSOLE D'ADMINISTRATION MAJEURE CORRIGÉE -->
+  <!-- CONSOLE D'ADMINISTRATION GÉNÉRALE -->
   <div class="modal" id="modal-admin"><div class="modal-content" style="background:#0f172a; color:white; max-width:650px;"><div class="modal-header" style="border-bottom:1px solid #334155;"><h2 style="color:#ef4444; font-size:1.1rem; margin:0;">Super-Console Administrateur</h2><button class="close-modal" style="background:#1e293b; color:white;" onclick="fermerModal('admin')">✕</button></div>
     
-    <!-- Grille de Navigation Admin à 4 boutons -->
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin: 12px 0;">
       <button class="admin-big-btn primary" onclick="basculerVueAdmin('flux')">📢 Annonces</button>
       <button class="admin-big-btn danger" onclick="basculerVueAdmin('signaux')">⚠️ Signalées</button>
@@ -183,7 +192,7 @@
     </div>
 
     <div style="background:#1e293b; padding:10px; border-radius:8px; margin-bottom:12px; font-size:0.8rem;">
-      <b style="color:var(--vip-gold)">Filtres d'affichage rapides :</b>
+      <b style="color:var(--vip-gold)">Filtres rapides :</b>
       <div style="display:flex; gap:5px; margin-top:5px;">
         <input id="admin-filter-ville" placeholder="Lubumbashi" style="padding:6px; font-size:0.8rem; background:#0f172a; color:white; border:1px solid #334155;">
         <select id="admin-filter-type" style="padding:6px; font-size:0.8rem; background:#0f172a; color:white; border:1px solid #334155;">
@@ -194,7 +203,7 @@
     </div>
 
     <div style="background:#1e293b; padding:10px; border-radius:8px; margin-bottom:12px;">
-      <b style="color:#38bdf8; font-size:0.8rem;">📢 Diffusion Globale Obligatoire (Impossible de répondre) :</b>
+      <b style="color:#38bdf8; font-size:0.8rem;">📢 Message Global d'Annonce (Impossible de répondre) :</b>
       <textarea id="admin-msg-global-text" placeholder="Écrire la notification générale reçue par tous..." style="background:#0f172a; color:white; border:1px solid #334155; margin-top:5px; height:50px; font-size:0.85rem;"></textarea>
       <button class="modal-submit-btn" style="background:#2563eb; margin-top:5px; padding:8px;" onclick="envoyerMessageGlobalTousComptes()">Diffuser à tout le monde 🚀</button>
     </div>

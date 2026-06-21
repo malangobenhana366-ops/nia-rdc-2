@@ -29,13 +29,14 @@ async function uploadImage(base64){
   } catch (e) { return ""; }
 }
 
-// COUCHE AUTHENTIFICATION
+// AUTHENTIFICATION APIS
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password, acceptedTerms } = req.body;
     if (!telephone || !password) return res.status(400).json({ error: "Champs incomplets." });
+    
     const userExist = await pool.query("SELECT id FROM users WHERE telephone = $1", [telephone]);
-    if (userExist.rows.length > 0) return res.status(400).json({ error: "Numéro déjà existant." });
+    if (userExist.rows.length > 0) return res.status(400).json({ error: "Ce numéro possède déjà un compte." });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await pool.query(
@@ -67,7 +68,7 @@ app.delete("/auth/delete-account", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// FLUX PRINCIPAL
+// FLUX PRINCIPAL DES ANNONCES
 app.get("/feed", async (req, res) => {
   try {
     const query = `
@@ -82,7 +83,6 @@ app.get("/feed", async (req, res) => {
   } catch (e) { res.json([]); }
 });
 
-// SUBMISSIONS
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
@@ -115,7 +115,7 @@ app.put("/annonces/:id", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// SYSTÈME DE BOOST POUR REMONTER L'ANNONCE
+// ACTION DE BOOST (REMONTER LA DATE DE CRÉATION DE L'ANNONCE)
 app.post("/annonces/:id/boost", async (req, res) => {
   try {
     await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [req.params.id]);
@@ -138,18 +138,16 @@ app.post("/annonces/:id/signaler", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ROUTE CORRIGÉE D'ENVOI DE MESSAGES ADMIN CIBLÉS OU GLOBAUX
+// ENVOI DE MESSAGES ADMIN CIBLÉS OU GLOBAUX
 app.post("/admin/message", async (req, res) => {
   try {
     const { target_tel, message, is_global, provenance_contexte } = req.body;
     if (is_global) {
       await pool.query("INSERT INTO messages_admin (user_id, message, is_global, provenance_contexte) VALUES (NULL, $1, TRUE, 'normal')", [message]);
     } else {
-      // Trouver l'utilisateur d'après le numéro de téléphone de l'annonce
       const userRes = await pool.query("SELECT id FROM users WHERE telephone = $1", [target_tel]);
       let uid = userRes.rows.length > 0 ? userRes.rows[0].id : null;
       
-      // Enregistrement du message ciblé même si l'utilisateur utilise un numéro invité
       await pool.query(
         "INSERT INTO messages_admin (user_id, message, is_global, provenance_contexte) VALUES ($1, $2, FALSE, $3)", 
         [uid, `[Destinataire Tel: ${target_tel}] - ` + message, false, provenance_contexte || 'normal']
@@ -159,7 +157,7 @@ app.post("/admin/message", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// PERMETTRE À L'UTILISATEUR DE RÉPONDRE À UN MESSAGE CIBLÉ
+// ENREGISTRER LA RÉPONSE À UN MESSAGE DE L'ADMINISTRATION
 app.post("/user/reply-message/:id", async (req, res) => {
   try {
     const { reponse } = req.body;
@@ -168,7 +166,7 @@ app.post("/user/reply-message/:id", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// EXTRACTION DES MESSAGES CIBLÉS PAR UTILISATEUR OU SMS FLUX
+// MESSAGES DE L'ESPACE PRIVÉ UTILISATEUR
 app.get("/user/:id/messages", async (req, res) => {
   try {
     const userRes = await pool.query("SELECT telephone FROM users WHERE id = $1", [req.params.id]);
@@ -183,7 +181,7 @@ app.get("/user/:id/messages", async (req, res) => {
   } catch (e) { res.json([]); }
 });
 
-// ROUTES ADMIN POUR LES DEUX NOUVEAUX BOUTONS DE SUPERVISION
+// ROUTES DES NOUVEAUX BOUTONS ADMIN : TRAITEMENT FILTRÉ DES RÉPONSES ET JUSTIFICATIONS
 app.get("/admin/replied-messages/:context", async (req, res) => {
   try {
     const result = await pool.query(

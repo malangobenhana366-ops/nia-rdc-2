@@ -66,14 +66,13 @@ app.delete("/auth/delete-account", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// FLUX D'ANNONCES COMPLET (Uniquement les annonces permanentes actives sur le flux)
+// FLUX D'ANNONCES COMPLET
 app.get("/feed", async (req, res) => {
   try {
     const query = `
       SELECT a.*, COALESCE(JSON_AGG(JSON_BUILD_OBJECT('id', ai.id, 'url', ai.image_url)) FILTER (WHERE ai.id IS NOT NULL), '[]') as images
       FROM annonces a
       LEFT JOIN annonce_images ai ON a.id = ai.annonce_id
-      WHERE a.permanent = TRUE
       GROUP BY a.id
       ORDER BY a.is_vip DESC, a.created_at DESC;
     `;
@@ -82,29 +81,13 @@ app.get("/feed", async (req, res) => {
   } catch (e) { res.json([]); }
 });
 
-// Récupération de TOUTES les annonces d'un utilisateur (y compris celles retirées du flux public)
-app.get("/user/:id/annonces-all", async (req, res) => {
-  try {
-    const query = `
-      SELECT a.*, COALESCE(JSON_AGG(JSON_BUILD_OBJECT('id', ai.id, 'url', ai.image_url)) FILTER (WHERE ai.id IS NOT NULL), '[]') as images
-      FROM annonces a
-      LEFT JOIN annonce_images ai ON a.id = ai.annonce_id
-      WHERE a.user_id = $1
-      GROUP BY a.id
-      ORDER BY a.created_at DESC;
-    `;
-    const result = await pool.query(query, [req.params.id]);
-    res.json(result.rows);
-  } catch (e) { res.json([]); }
-});
-
-// CRÉATION STANDARD ET VIP AVEC TOUS LES SÉLECTEURS REQUIS
+// CRÉATION STANDARD ET VIP
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
     const fields = await pool.query(
-      `INSERT INTO annonces (user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, permanent, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, TRUE, NOW()) RETURNING id`,
+      `INSERT INTO annonces (user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()) RETURNING id`,
       [user_id || null, titre, description, prix || 0, devise || '$', periode || 'jour', ville || 'Lubumbashi', commune || '', quartier || '', telephone, statut || 'disponible', is_vip || false]
     );
     const id = fields.rows[0].id;
@@ -151,10 +134,9 @@ app.post("/annonces/:id/boost", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Rendre l'annonce invisible au public tout en la gardant permanente dans l'espace privé
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
-    await pool.query("UPDATE annonces SET permanent = FALSE WHERE id = $1", [req.params.id]);
+    await pool.query("DELETE FROM annonces WHERE id = $1", [req.params.id]);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -177,7 +159,7 @@ app.post("/admin/message", async (req, res) => {
       let uid = userRes.rows.length > 0 ? userRes.rows[0].id : null;
       await pool.query(
         "INSERT INTO messages_admin (user_id, message, is_global, provenance_contexte) VALUES ($1, $2, FALSE, $3)", 
-        [uid, `[Destinataire Tel: ${target_tel}] - ` + message, false, provenance_contexte || 'normal']
+        [uid, message, false, provenance_contexte || 'normal']
       );
     }
     res.json({ success: true });
@@ -196,8 +178,8 @@ app.get("/user/:id/messages", async (req, res) => {
     const userRes = await pool.query("SELECT telephone FROM users WHERE id = $1", [req.params.id]);
     let tel = userRes.rows.length > 0 ? userRes.rows[0].telephone : '';
     const result = await pool.query(
-      `SELECT * FROM messages_admin WHERE user_id = $1 OR is_global = TRUE OR message LIKE $2 ORDER BY created_at DESC`, 
-      [req.params.id, `%[Destinataire Tel: ${tel}]%`]
+      `SELECT * FROM messages_admin WHERE user_id = $1 OR is_global = TRUE ORDER BY created_at DESC`, 
+      [req.params.id]
     );
     res.json(result.rows);
   } catch (e) { res.json([]); }
@@ -205,7 +187,7 @@ app.get("/user/:id/messages", async (req, res) => {
 
 app.get("/admin/replied-messages/:context", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM messages_admin WHERE provenance_contexte = $1 AND reponse_utilisateur IS NOT NULL ORDER BY created_at DESC", [req.params.context]);
+    const result = await pool.query("SELECT m.*, u.telephone as user_tel FROM messages_admin m LEFT JOIN users u ON m.user_id = u.id WHERE m.provenance_contexte = $1 AND m.reponse_utilisateur IS NOT NULL ORDER BY m.created_at DESC", [req.params.context]);
     res.json(result.rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -225,7 +207,7 @@ app.get("/admin/reports", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ================= GESTION MESSAGERIE PRIVÉE REPARÉE (STYLE 2EMEMAIN) =================
+// MESSAGERIE PRIVÉE SÉCURISÉE (STYLE 2EMEMAIN INTER-UTILISATEURS)
 app.post("/chat/send", async (req, res) => {
   try {
     const { annonce_id, expediteur_id, contenu } = req.body;
@@ -233,6 +215,8 @@ app.post("/chat/send", async (req, res) => {
     if(ownerRes.rows.length === 0) return res.status(404).json({ error: "Annonce introuvable." });
     
     const destinataire_id = ownerRes.rows[0].user_id;
+    if(!destinataire_id) return res.status(400).json({ error: "Le propriétaire de l'annonce n'a pas de compte utilisateur lié." });
+    
     await pool.query(
       "INSERT INTO messages_priveis (annonce_id, expediteur_id, destinataire_id, contenu) VALUES ($1, $2, $3, $4)",
       [annonce_id, expediteur_id, destinataire_id, contenu]

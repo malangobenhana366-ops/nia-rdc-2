@@ -88,6 +88,23 @@ app.get("/feed", async (req, res) => {
   } catch (e) { res.json([]); }
 });
 
+// LISTE DES SIGNALEMENTS POUR L'ADMIN
+app.get("/admin/reports", async (req, res) => {
+  try {
+    const query = `
+      SELECT r.id as report_id, r.raison, r.created_at as reported_at, a.*,
+             COALESCE(JSON_AGG(ai.image_url) FILTER (WHERE ai.image_url IS NOT NULL), '[]') as images
+      FROM annonce_reports r
+      JOIN annonces a ON r.annonce_id = a.id
+      LEFT JOIN annonce_images ai ON a.id = ai.annonce_id
+      GROUP BY r.id, a.id
+      ORDER BY r.created_at DESC;
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // PUBLICATION
 app.post("/annonces", async (req,res)=>{
   try {
@@ -131,7 +148,9 @@ app.delete("/annonces/:id/delete", async (req, res) => {
 
 app.post("/annonces/:id/signaler", async (req, res) => {
   try {
+    const { raison } = req.body;
     await pool.query("UPDATE annonces SET signaux_count = signaux_count + 1 WHERE id = $1", [req.params.id]);
+    await pool.query("INSERT INTO annonce_reports (annonce_id, raison) VALUES ($1, $2)", [req.params.id, raison || "Aucun motif fourni"]);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -143,7 +162,7 @@ app.post("/admin/message", async (req, res) => {
       await pool.query("INSERT INTO messages_admin (user_id, message, is_global) VALUES (NULL, $1, TRUE)", [message]);
     } else {
       const userRes = await pool.query("SELECT id FROM users WHERE telephone = $1", [target_tel]);
-      if(userRes.rows.length === 0) return res.status(404).json({ error: "Introuvable" });
+      if(userRes.rows.length === 0) return res.status(404).json({ error: "Numéro introuvable sur la plateforme." });
       await pool.query("INSERT INTO messages_admin (user_id, message, is_global) VALUES ($1, $2, FALSE)", [userRes.rows[0].id, message]);
     }
     res.json({ success: true });

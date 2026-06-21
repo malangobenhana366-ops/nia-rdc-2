@@ -58,17 +58,9 @@ app.post("/auth/login", async (req, res) => {
     if (result.rows.length === 0) return res.status(400).json({ error: "Utilisateur introuvable." });
 
     const user = result.rows[0];
-    if (user.lock_until && new Date(user.lock_until) > new Date()) {
-      return res.status(403).json({ error: "Compte bloqué temporairement. Réessayez plus tard." });
-    }
-
     const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      await pool.query("UPDATE users SET login_attempts = login_attempts + 1 WHERE id = $1", [user.id]);
-      return res.status(400).json({ error: "Mot de passe incorrect." });
-    }
+    if (!match) return res.status(400).json({ error: "Mot de passe incorrect." });
 
-    await pool.query("UPDATE users SET login_attempts = 0, lock_until = NULL WHERE id = $1", [user.id]);
     res.json({ success: true, user: { id: user.id, telephone: user.telephone, is_admin: user.is_admin } });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -81,7 +73,7 @@ app.delete("/auth/delete-account", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// FLUX GÉNÉRAL D'ANNONCES
+// FLUX GÉNÉRAL
 app.get("/feed", async (req, res) => {
   try {
     const query = `
@@ -96,7 +88,7 @@ app.get("/feed", async (req, res) => {
   } catch (e) { res.json([]); }
 });
 
-// PUBLICATION D'ANNONCE (VIP & STANDARD UNIFIÉE)
+// PUBLICATION
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;

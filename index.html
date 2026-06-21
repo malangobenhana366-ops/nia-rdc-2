@@ -88,11 +88,17 @@
     .nav-btn.vip-btn { color: var(--vip-gold); }
     
     .adsense-space { background-color: #0f172a; height: 50px; display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 0.75rem; font-weight: bold; text-align: center; border-top: 1px solid #1e293b; width: 100%; padding: 0 10px; }
-    .legal-text-container { max-height: 350px; overflow-y: auto; background: #f8fafc; border: 1px solid var(--border); padding: 12px; font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px; }
+    .legal-text-container { max-height: 400px; overflow-y: auto; background: #f8fafc; border: 1px solid var(--border); padding: 15px; font-size: 0.9rem; line-height: 1.6; margin-bottom: 12px; color: var(--text); border-radius: 8px; }
     .admin-msg-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 10px; border-radius: 8px; margin-bottom: 8px; font-size: 0.85rem; }
     
     /* Zone de lecture des conditions obligatoire */
     .cgu-scroll-box { height: 110px; overflow-y: scroll; border: 1px solid #cbd5e1; background: #fff; padding: 8px; font-size: 0.75rem; font-weight: normal; border-radius: 6px; color: #334155; }
+    
+    /* Boutons de la console d'administration */
+    .admin-big-btn { padding: 15px; font-size: 1rem; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .admin-big-btn.primary { background: var(--primary); color: white; }
+    .admin-big-btn.danger { background: var(--danger); color: white; }
+    .admin-card-row { background: #1e293b; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #334155; }
   </style>
 </head>
 <body>
@@ -138,11 +144,7 @@
           <label style="color: var(--danger);">📜 Conditions d'utilisation et sécurité (Faites défiler tout en bas pour valider) :</label>
           <div class="cgu-scroll-box" id="cgu-text-box" onscroll="detecterLectureConditionscomplet()">
             <b>NIA RDC - RÈGLEMENT DE SÉCURITÉ ET CONFIANCE MULTI-VITRINE</b><br><br>
-            1. En vous inscrivant sur NIA RDC, vous certifiez l'exactitude de vos coordonnées téléphoniques et des offres publiées.<br>
-            2. Les publications à caractère frauduleux ou trompeur feront l'objet d'un bannissement immédiat par l'administration.<br>
-            3. Les espaces VIP doivent correspondre à des vitrines commerciales réelles et vérifiables.<br>
-            4. Vos données d'authentification sont cryptées et ne seront jamais partagées avec des tiers.<br>
-            5. L'utilisateur s'engage à maintenir à jour la disponibilité des produits (Disponible / Occupé).
+            En vous inscrivant sur NIA RDC, vous certifiez l'exactitude de vos coordonnées téléphoniques et acceptez l'intégralité de la charte de confiance locale.
           </div>
         </div>
         <div class="form-group full-width">
@@ -165,13 +167,44 @@
     </div>
   </div>
 
-  <div class="modal" id="modal-legal"><div class="modal-content"><div class="modal-header"><h2 id="legal-title-display" style="font-size:1.1rem; margin:0;">Document Officiel</h2><button class="close-modal" onclick="fermerModal('legal')">✕</button></div><div class="legal-text-container" id="legal-body-display" style="white-space: pre-wrap;"></div></div></div>
+  <div class="modal" id="modal-legal"><div class="modal-content" style="max-width: 650px;"><div class="modal-header"><h2 id="legal-title-display" style="font-size:1.1rem; margin:0;">Document Officiel</h2><button class="close-modal" onclick="fermerModal('legal')">✕</button></div><div class="legal-text-container" id="legal-body-display" style="white-space: pre-wrap;"></div></div></div>
   <div class="modal" id="modal-publier"><div class="modal-content"><div class="modal-header"><h2 style="font-size:1.1rem; margin:0;">📢 Déposer une annonce</h2><button class="close-modal" onclick="fermerModal('publier')">✕</button></div><div class="form-grid"><div class="form-group full-width"><label>Nom de l'objet / service</label><input id="titre" placeholder="Ex: Groupe électrogène 10KVA"></div><div class="form-group"><label>Prix</label><div style="display:flex; gap:6px;"><input id="prix" type="number" placeholder="Ex: 50" style="flex:2;"><select id="devise" style="flex:1;"><option value="$">$</option><option value="FC">FC</option></select></div></div><div class="form-group"><label>Période</label><select id="periode"><option value="jour">par jour</option><option value="heure">par heure</option><option value="semaine">par semaine</option></select></div><div class="form-group"><label>Statut initial</label><select id="statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div><div class="form-group"><label>Téléphone de contact</label><input id="telephone" type="tel" placeholder="Ex: 0820000000"></div><div class="form-group full-width"><label>Description exhaustive</label><textarea id="description" placeholder="Détails techniques..."></textarea></div><div class="form-group"><label>Ville</label><input id="ville" value="Lubumbashi"></div><div class="form-group"><label>Commune</label><input id="commune" placeholder="Ex: Lubumbashi"></div><div class="form-group"><label>Quartier</label><input id="quartier" placeholder="Ex: Golf"></div><div class="form-group full-width"><label>Images</label><input id="image" type="file" multiple accept="image/*"></div><div class="form-group full-width"><button class="modal-submit-btn" onclick="publier()">Mettre en ligne</button></div></div></div></div>
   <div class="modal" id="modal-rechercher"><div class="modal-content"><div class="modal-header"><h2 style="font-size:1.1rem; margin:0;">🔍 Recherche Avancée</h2><button class="close-modal" onclick="fermerModal('rechercher')">✕</button></div><div class="form-grid"><div class="form-group full-width"><label>Que cherchez-vous ?</label><input id="search-titre" placeholder="Mots-clés (ex: voiture, appartement...)"></div><div class="form-group full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div><div class="form-group"><label>Commune</label><input id="search-commune" placeholder="Toutes"></div><div class="form-group"><label>Quartier</label><input id="search-quartier" placeholder="Tous"></div><div class="form-group full-width"><button class="modal-submit-btn" style="background:#0f172a;" onclick="rechercher()">Rechercher</button></div></div></div></div>
   <div class="modal" id="modal-vip"><div class="modal-content" style="max-width:580px;"><div class="modal-header"><h2 style="font-size:1.1rem; margin:0;">👑 Espace Catalogue Multi-VIP</h2><button class="close-modal" onclick="fermerModal('vip')">✕</button></div><div id="vip-form-body"></div></div></div>
   <div class="modal" id="modal-profil"><div class="modal-content"><div class="modal-header"><h2 style="font-size:1.1rem; margin:0;">👤 Mon Profil & Messagerie</h2><button class="close-modal" onclick="fermerModal('profil')">✕</button></div><div style="background:#f1f5f9; padding:12px; border-radius:10px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;"><span style="font-size:0.8rem; font-weight:bold; color:#334155;">Recommander l'application :</span><button class="btn-contact" style="background:#25d366; padding:6px 12px;" onclick="inviterUtilisateurWhatsApp()">🔗 WhatsApp</button></div><div style="margin-bottom:15px;"><h4 style="margin:0 0 8px 0; font-size:0.85rem; text-transform:uppercase; color:var(--primary);">📥 Boîte de réception Administration</h4><div id="admin-messages-box-container" style="max-height:120px; overflow-y:auto; border:1px solid var(--border); padding:8px; border-radius:8px; background:#fafafa;">Aucun message reçu.</div></div><div style="display:flex; gap:8px; margin-bottom:15px;"><button id="tab-standard-btn" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.8rem;" onclick="changerOngletProfil('standard')">Offres Standards</button><button id="tab-vip-btn" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.8rem;" onclick="changerOngletProfil('vip')">Offres VIP 👑</button></div><div id="profil-view-content"></div></div></div>
   <div class="modal" id="modal-modifier-annonce"><div class="modal-content"><div class="modal-header"><h2 style="font-size:1.1rem; margin:0;">✏️ Modifier mon annonce</h2><button class="close-modal" onclick="fermerModal('modifier-annonce')">✕</button></div><input type="hidden" id="edit-id"><div class="form-grid"><div class="form-group full-width"><label>Nom de l'objet</label><input id="edit-titre"></div><div class="form-group"><label>Prix</label><input id="edit-prix" type="number"></div><div class="form-group"><label>Devise</label><select id="edit-devise"><option value="$">$</option><option value="FC">FC</option></select></div><div class="form-group"><label>Période</label><select id="edit-periode"><option value="jour">par jour</option><option value="heure">par heure</option><option value="semaine">par semaine</option></select></div><div class="form-group"><label>Disponibilité</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div><div class="form-group"><label>Téléphone</label><input id="edit-telephone" type="tel"></div><div class="form-group"><label>Ville</label><input id="edit-ville"></div><div class="form-group"><label>Commune</label><input id="edit-commune"></div><div class="form-group"><label>Quartier</label><input id="edit-quartier"></div><div class="form-group full-width"><label>Description</label><textarea id="edit-description"></textarea></div><div class="form-group full-width"><button class="modal-submit-btn" onclick="sauvegarderModificationAnnonce()">Sauvegarder les modifications</button></div></div></div></div>
-  <div class="modal" id="modal-admin"><div class="modal-content" style="background:#0f172a; color:white; max-width:600px;"><div class="modal-header" style="border-bottom:1px solid #334155;"><h2 style="color:#ef4444; font-size:1.1rem; margin:0;">🛠️ Super-Console Administrateur</h2><button class="close-modal" style="background:#1e293b; color:white;" onclick="fermerModal('admin')">✕</button></div><div style="background:#1e293b; padding:10px; border-radius:8px; margin: 10px 0; font-size:0.8rem;"><b style="color:var(--vip-gold)">Filtres Généraux :</b><div style="display:flex; gap:5px; margin-top:5px;"><input id="admin-filter-ville" placeholder="Lubumbashi" style="padding:6px; font-size:0.8rem;"><select id="admin-filter-type" style="padding:6px; font-size:0.8rem;"><option value="all">Tous types</option><option value="standard">Standards</option><option value="vip">VIP</option></select><button class="btn-contact" style="padding:4px 10px;" onclick="appliquerFiltrageSupervisionAdmin()">Filtrer</button></div></div><div class="form-group full-width" style="margin-bottom:10px;"><label style="color:#94a3b8;">Téléphone abonné (vide pour message GLOBAL) :</label><input id="admin-msg-target" placeholder="Ex: 0825555555" style="background:#1e293b; color:white; border:1px solid #334155;"></div><div class="form-group full-width" style="margin-bottom:10px;"><label style="color:#94a3b8;">Contenu de la notification administrative :</label><textarea id="admin-msg-text" style="background:#1e293b; color:white; border:1px solid #334155ピー;"></textarea></div><button class="modal-submit-btn" style="background:var(--danger); margin-bottom:15px;" onclick="envoyerMessageAdminDirect()">Transmettre</button><div style="border-top:1px solid #334155; padding-top:10px;"><h4 style="margin:0 0 10px 0; color:var(--vip-gold)">Modération directe du Flux</h4><div id="admin-flux-supervision-list" style="max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div></div></div></div>
+
+  <div class="modal" id="modal-admin"><div class="modal-content" style="background:#0f172a; color:white; max-width:650px;"><div class="modal-header" style="border-bottom:1px solid #334155;"><h2 style="color:#ef4444; font-size:1.1rem; margin:0;">🛠️ Super-Console Administrateur</h2><button class="close-modal" style="background:#1e293b; color:white;" onclick="fermerModal('admin')">✕</button></div>
+    
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin: 15px 0;">
+      <button class="admin-big-btn primary" onclick="basculerVueAdmin('flux')">📢 Annonces</button>
+      <button class="admin-big-btn danger" onclick="basculerVueAdmin('signaux')">⚠️ Annonces Signalées</button>
+    </div>
+
+    <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:12px; font-size:0.8rem;">
+      <b style="color:var(--vip-gold)">Filtres d'affichage (Ville / Type) :</b>
+      <div style="display:flex; gap:5px; margin-top:5px;">
+        <input id="admin-filter-ville" placeholder="Ex: Lubumbashi" style="padding:6px; font-size:0.8rem; background:#0f172a; color:white; border:1px solid #334155;">
+        <select id="admin-filter-type" style="padding:6px; font-size:0.8rem; background:#0f172a; color:white; border:1px solid #334155;">
+          <option value="all">Tous les standards & VIP</option>
+          <option value="standard">Standard uniquement</option>
+          <option value="vip">VIP uniquement</option>
+        </select>
+        <button class="btn-contact" style="padding:4px 12px;" onclick="appliquerFiltrageSupervisionAdmin()">Filtrer 🔍</button>
+      </div>
+    </div>
+
+    <div style="background:#1e293b; padding:12px; border-radius:10px; margin-bottom:12px; border:1px solid #334155;">
+      <b style="color:#38bdf8;">📢 Message Général (Envoyer à tous les utilisateurs) :</b>
+      <textarea id="admin-msg-global-text" placeholder="Écrivez le message de notification globale ici..." style="background:#0f172a; color:white; border:1px solid #334155; margin-top:6px; height:60px;"></textarea>
+      <button class="modal-submit-btn" style="background:#2563eb; margin-top:6px;" onclick="envoyerMessageGlobalTousComptes()">Diffuser à tout le monde 🚀</button>
+    </div>
+
+    <div style="border-top:1px solid #334155; padding-top:10px;">
+      <h4 id="admin-list-title" style="margin:0 0 10px 0; color:var(--vip-gold)">Gestion du Flux d'Annonces</h4>
+      <div id="admin-flux-supervision-list" style="max-height:250px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+  </div></div>
 
   <div class="bottom-area">
     <nav class="bottom-nav">

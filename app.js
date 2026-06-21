@@ -1,17 +1,14 @@
-// CONFIGURATION DE L'ENVIRONNEMENT DE DEPLOIEMENT
-const API = "https://rdc-maison-et-appart-rapide.onrender.com"; // Modifiable selon ton endpoint Render backend
+const API = "https://rdc-maison-et-appart-rapide.onrender.com";
 
 let toutesLesAnnonces = [];
 let COMPTE_ACTUEL = null;
 let VUE_ADMIN_ACTIVE = "flux";
 
-// CHARGEMENT INITIAL DES DONNÉES
 document.addEventListener("DOMContentLoaded", () => {
   chargerCatalogueGeneral();
-  setInterval(verifierMessagesFlashEtAlertes, 8000); // Polling automatique des notifications
+  setInterval(verifierMessagesFlashEtAlertes, 8000);
 });
 
-// COMMUNICATON BACKEND : RECUPERATION DES ANNONCES
 async function chargerCatalogueGeneral() {
   try {
     const res = await fetch(`${API}/annonces`);
@@ -20,11 +17,10 @@ async function chargerCatalogueGeneral() {
       afficherAnnoncesDansGrille(toutesLesAnnonces);
     }
   } catch (err) {
-    console.error("Erreur de synchronisation réseau avec Render : ", err);
+    console.error("Erreur réseau : ", err);
   }
 }
 
-// AFFICHAGE DES ANNONCES DANS LA GRILLE SANS PERTE DE LAYOUT
 function afficherAnnoncesDansGrille(liste) {
   const box = document.getElementById("catalogue-box");
   if(liste.length === 0) {
@@ -50,7 +46,6 @@ function afficherAnnoncesDansGrille(liste) {
   `).join("");
 }
 
-// RECHERCHES & FILTRES DU CATALOGUE
 function filtrerCatalogue() {
   const commune = document.getElementById("filtre-commune").value.toLowerCase().trim();
   const type = document.getElementById("filtre-type").value;
@@ -66,7 +61,6 @@ function filtrerCatalogue() {
   afficherAnnoncesDansGrille(res);
 }
 
-// MANAGEMENT DES CODES PRIVÉS ET AUTHENTIFICATION
 function ouvrirModal(id) { document.getElementById(`modal-${id}`).classList.add("active"); }
 function fermerModal(id) { document.getElementById(`modal-${id}`).classList.remove("active"); }
 
@@ -96,7 +90,6 @@ async function authentifierBailleur() {
   }
 }
 
-// INGESTION ET VALIDATION STRICTE CONTRE LA FRAUDE DE LOGEMENT
 async function creerNouvelleAnnonce() {
   if(!COMPTE_ACTUEL) return alert("Veuillez vous identifier avant d'exécuter cette action.");
 
@@ -111,7 +104,6 @@ async function creerNouvelleAnnonce() {
     return alert("Veuillez remplir tous les critères obligatoires avant publication.");
   }
 
-  // Filtrage d'adresses invalides ou trop floues
   if(adresse.length < 8) return alert("L'adresse est trop imprécise pour éviter les fraudes. Veuillez détailler (N°, Référence, Quartier).");
 
   try {
@@ -137,7 +129,6 @@ async function creerNouvelleAnnonce() {
   }
 }
 
-// SIGNALER UNE OFFRE FRAUDULEUSE
 async function signalerUneAnnonceMalveillante(id, titre) {
   const raison = prompt(`Pourquoi signalez-vous l'annonce "${titre}" ? (Arnaque, fausse adresse, faux prix...)`);
   if(!raison || !raison.trim()) return;
@@ -150,7 +141,6 @@ async function signalerUneAnnonceMalveillante(id, titre) {
   alert("Merci, votre signalement a été transmis à la supervision centrale pour examen.");
 }
 
-// RESTAURATION INTELLIGENTE ET SCROLLABLE DU LIEN TEXTES LÉGAUX / À PROPOS
 function chargerTextesLegaux(type) {
   const titreBox = document.getElementById("legal-header-title");
   const corpsBox = document.getElementById("legal-body-content");
@@ -167,7 +157,6 @@ function chargerTextesLegaux(type) {
   ouvrirModal('legal-display');
 }
 
-// INTERFACE ADMIN CORRIGÉE (ENVOI STRUCTURÉ SANS CRASH VIA SÉLECTEUR ID NUMÉRIQUE)
 async function definirVueAdmin(mode) {
   VUE_ADMIN_ACTIVE = mode; 
   const box = document.getElementById("admin-main-render-box"); 
@@ -216,7 +205,6 @@ async function definirVueAdmin(mode) {
   }
 }
 
-// CORRIGÉE ET SÉCURISÉE CONTRE LES ESPACES/POINTS DANS LES IDENTIFIANTS STRING
 async function envoyerMessageAvertissementCible(domId, tel, ctx) {
   const inputTarget = document.getElementById(`adm-input-${domId}`);
   if(!inputTarget) return alert("Erreur interne de ciblage du champ texte.");
@@ -243,7 +231,6 @@ async function envoyerMessageAvertissementCible(domId, tel, ctx) {
   }
 }
 
-// SUPPRESSION DE FORCE PAR L'ADMINISTRATEUR
 async function supprimerAnnonceParAdmin(id) {
   if(!confirm("Êtes-vous sûr de vouloir supprimer définitivement cette annonce du catalogue ?")) return;
   try {
@@ -256,7 +243,6 @@ async function supprimerAnnonceParAdmin(id) {
   } catch(e) { alert("Erreur réseau pendant la suppression."); }
 }
 
-// DIFFUSION GLOBALE D'URGENCE DE L'ADMINISTRATEUR
 async function diffuserNotificationGlobale() {
   const txt = document.getElementById("admin-global-txt").value.trim();
   if(!txt) return alert("Écrivez un message flash.");
@@ -273,7 +259,6 @@ async function diffuserNotificationGlobale() {
   }
 }
 
-// VERIFICATION EN TEMPS RÉEL DES ALERTES RECUES POUR LE BAILLEUR CONNECTÉ
 async function verifierMessagesFlashEtAlertes() {
   const boxAlertes = document.getElementById("boite-alertes-globales");
   
@@ -300,7 +285,6 @@ async function verifierMessagesFlashEtAlertes() {
   } catch(e) { console.log("Erreur silencieuse lors de la vérification des alertes."); }
 }
 
-// ENVOI DE JUSTIFICATION EN RETOUR PAR LE BAILLEUR
 async function repondreAlerteAdmin(notificationId, contexte) {
   const reponse = prompt("Saisissez votre réponse ou justification claire à destination de l'administrateur :");
   if(!reponse || !reponse.trim()) return;

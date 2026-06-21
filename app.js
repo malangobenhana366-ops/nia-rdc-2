@@ -1,4 +1,4 @@
-const API = "https://nia-rdc-2.onrender.com"; // Remplacer par l'URL de votre backend final de production
+const API = "https://nia-rdc-2.onrender.com"; // Correspond bien à votre instance Render active
 
 let toutesLesAnnonces = [];
 let ONGLE_PROFIL_ACTIF = "standard";
@@ -10,7 +10,30 @@ let yStart = 0;
 const CHARTE_APROPOS = `À propos de NIA RDC\n\nWelcome sur NIA RDC. NIA RDC est une plateforme numérique conçue pour faciliter la mise en relation entre les personnes souhaitant louer, proposer ou rechercher des biens et des services en République Démocratique du Congo.`;
 const CHARTE_PRIVACY = `Politique de confidentialité de NIA RDC\n\nMise à jour : Juin 2026.\n\nLa protection de vos données privées est assurée selon les standards chiffrés récents de l'application.`;
 
-// GESTION DU CYCLE D'AFFICHAGE AUTH DYNAMIQUE
+// FORCE L'UTILISATEUR À LIRE LES CGU EN FAISANT DÉFILER LE BLOC
+function detecterLectureConditionscomplet() {
+  const box = document.getElementById("cgu-text-box");
+  const checkbox = document.getElementById("auth-accept-rules");
+  const btnSubmit = document.getElementById("register-submit-btn");
+  
+  // Si l'utilisateur atteint le bas du défilement (marge de 5px tolérée)
+  if (box.scrollHeight - box.scrollTop <= box.clientHeight + 5) {
+    checkbox.removeAttribute("disabled");
+  }
+}
+
+// Écouteur pour activer le bouton uniquement quand la case est cochée
+document.addEventListener("change", (e) => {
+  if (e.target && e.target.id === "auth-accept-rules") {
+    const btnSubmit = document.getElementById("register-submit-btn");
+    if (e.target.checked) {
+      btnSubmit.removeAttribute("disabled");
+    } else {
+      btnSubmit.setAttribute("disabled", "true");
+    }
+  }
+});
+
 function verifierStatutAuthentificationHeader() {
   const userId = localStorage.getItem("nia_user_id");
   const anonBlock = document.getElementById("anonymous-header-actions");
@@ -31,6 +54,16 @@ function verifierStatutAuthentificationHeader() {
 function declencherAuthentificationDynamique(versInscription = true) {
   basculerModeAuth(versInscription);
   document.getElementById("modal-auth").style.display = "flex";
+  
+  // Reset de la boîte des conditions si on ouvre l'inscription
+  if(versInscription) {
+    const checkbox = document.getElementById("auth-accept-rules");
+    const btnSubmit = document.getElementById("register-submit-btn");
+    if(checkbox) { checkbox.checked = false; checkbox.setAttribute("disabled", "true"); }
+    if(btnSubmit) btnSubmit.setAttribute("disabled", "true");
+    const box = document.getElementById("cgu-text-box");
+    if(box) box.scrollTop = 0;
+  }
 }
 
 function ouvrirModalSeccurisee(modalId) {
@@ -85,6 +118,7 @@ async function executerInscription() {
     document.getElementById("modal-auth").style.display = "none";
     verifierStatutAuthentificationHeader();
     alert("Compte activé !");
+    loadFeed();
   } else { alert(data.error); }
 }
 
@@ -241,14 +275,22 @@ async function signalerAnnonce(id) {
   alert("Annonce signalée avec succès.");
 }
 
+// CORRECTION IMPORTANTE : FORCE LA SOUUMISSION ET L'ENVOI DIRECT EN LIGNE POUR LES STANDARD
 async function publier() {
   if (!val("titre") || !val("telephone")) return alert("Le titre et le téléphone sont obligatoires.");
+  
   const files = document.getElementById("image")?.files;
   let images_base64 = [];
-  if(files) { for(let f of files) { images_base64.push(await optimiserEtCompresserImage(f)); } }
+  if(files && files.length > 0) { 
+    for(let i=0; i<files.length; i++) { 
+      const b64 = await optimiserEtCompresserImage(files[i]);
+      images_base64.push(b64);
+    } 
+  }
+  
   localStorage.setItem("nia_standard_telephone", val("telephone"));
 
-  await fetch(`${API}/annonces`, {
+  const res = await fetch(`${API}/annonces`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -258,10 +300,16 @@ async function publier() {
       commune: val("commune"), quartier: val("quartier"), statut: val("statut"), is_vip: false, images_base64
     })
   });
-  fermerModal("publier"); loadFeed();
+
+  if (res.ok) {
+    alert("Votre annonce a bien été mise en ligne !");
+    fermerModal("publier"); 
+    loadFeed();
+  } else {
+    alert("Erreur lors de la mise en ligne.");
+  }
 }
 
-// MANAGEMENT INTEGRAL DU CATALOGUE MULTI-VIP AVEC EXTRACTION SÉLECTIVE DES SÉLECTEURS DE FICHIERS
 function rafraichirEspaceVip() {
   const body = document.getElementById("vip-form-body");
   const nomBoutique = localStorage.getItem("nia_vip_nom");
@@ -300,24 +348,25 @@ function ajouterNouveauBlocFormulaireVip() {
       <button style="color:red; background:none; border:none; cursor:pointer;" onclick="document.getElementById('${div.id}').remove()">Supprimer</button>
     </div>
     <div class="form-grid">
-      <div class="form-group full-width"><label>Nom de l'objet / service</label><input class="vip-in-titre" required></div>
+      <div class="form-group full-width"><label>Nom de l'objet / service *</label><input class="vip-in-titre" required></div>
       <div class="form-group"><label>Prix</label>
         <div style="display:flex; gap:4px;"><input class="vip-in-prix" type="number" style="flex:2;"><select class="vip-in-devise" style="flex:1;"><option value="$">$</option><option value="FC">FC</option></select></div>
       </div>
       <div class="form-group"><label>Période</label><select class="vip-in-periode"><option value="jour">par jour</option><option value="heure">par heure</option></select></div>
-      <div class="form-group"><label>Téléphone de contact</label><input class="vip-in-tel" value="${localStorage.getItem("nia_vip_telephone")}"></div>
+      <div class="form-group"><label>Téléphone de contact *</label><input class="vip-in-tel" value="${localStorage.getItem("nia_vip_telephone")}"></div>
       <div class="form-group"><label>Commune</label><input class="vip-in-commune"></div>
       <div class="form-group full-width"><label>Description</label><textarea class="vip-in-desc"></textarea></div>
-      <!-- NOUVEAU SÉLECTEUR DE PHOTOS AJOUTÉ ICI POUR CHAQUE BLOC VIP -->
       <div class="form-group full-width"><label>Sélectionner les Photos de cet article</label><input type="file" class="vip-in-photos" multiple accept="image/*"></div>
     </div>`;
   conteneur.appendChild(div);
 }
 
+// CORRECTION ASSURÉE DU COUPLAGE PHOTOS + TRANSMISSION EN LIGNE SANS FERMETURE INTEMPESTIVE
 async function soumettreToutesLesAnnoncesVip() {
   const blocs = document.querySelectorAll(".vip-block-annonce");
-  if(blocs.length === 0) return alert("Ajoutez au moins un produit.");
+  if(blocs.length === 0) return alert("Ajoutez au moins un produit au catalogue.");
 
+  let reussiteCount = 0;
   for (let b of blocs) {
     const titre = b.querySelector(".vip-in-titre").value.trim();
     const prix = b.querySelector(".vip-in-prix").value.trim();
@@ -330,15 +379,15 @@ async function soumettreToutesLesAnnoncesVip() {
 
     if (!titre || !telephone) continue;
 
-    // Récupération et conversion asynchrone des photos spécifiques de ce bloc
     let images_base64 = [];
     if(photoInput && photoInput.files.length > 0) {
-      for(let f of photoInput.files) {
-        images_base64.push(await optimiserEtCompresserImage(f));
+      for(let i=0; i<photoInput.files.length; i++) {
+        const dataB64 = await optimiserEtCompresserImage(photoInput.files[i]);
+        images_base64.push(dataB64);
       }
     }
 
-    await fetch(`${API}/annonces`, {
+    const res = await fetch(`${API}/annonces`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -346,9 +395,16 @@ async function soumettreToutesLesAnnoncesVip() {
         titre, prix, devise, periode, telephone, description, ville: "Lubumbashi", commune, is_vip: true, images_base64
       })
     });
+    if(res.ok) reussiteCount++;
   }
-  alert("Votre catalogue VIP complet a été envoyé avec succès !");
-  fermerModal("vip"); loadFeed();
+  
+  if(reussiteCount > 0){
+    alert("Votre catalogue VIP complet a été envoyé avec succès !");
+    fermerModal("vip"); 
+    loadFeed();
+  } else {
+    alert("Remplissez le titre et le numéro des produits ajoutés.");
+  }
 }
 
 function ouvrirModal(id) {
@@ -415,7 +471,6 @@ async function supprimerAnnonce(id) {
   }
 }
 
-// FONCTIONS DE SUPERVISION DE L'ADMINISTRATION
 async function envoyerMessageAdminDirect() {
   const target_tel = val("admin-msg-target");
   const message = val("admin-msg-text");

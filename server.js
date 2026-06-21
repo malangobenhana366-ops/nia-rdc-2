@@ -59,15 +59,12 @@ app.post("/auth/login", async (req, res) => {
 
     const user = result.rows[0];
     if (user.lock_until && new Date(user.lock_until) > new Date()) {
-      return res.status(403).json({ error: "Compte bloqué temporairement (protection brute-force). Réessayez plus tard." });
+      return res.status(403).json({ error: "Compte bloqué temporairement. Réessayez plus tard." });
     }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       await pool.query("UPDATE users SET login_attempts = login_attempts + 1 WHERE id = $1", [user.id]);
-      if (user.login_attempts + 1 >= 5) {
-        await pool.query("UPDATE users SET lock_until = NOW() + INTERVAL '15 minutes', login_attempts = 0 WHERE id = $1", [user.id]);
-      }
       return res.status(400).json({ error: "Mot de passe incorrect." });
     }
 
@@ -79,9 +76,8 @@ app.post("/auth/login", async (req, res) => {
 app.delete("/auth/delete-account", async (req, res) => {
   try {
     const { user_id } = req.body;
-    if(!user_id) return res.status(400).json({ error: "ID Utilisateur requis." });
     await pool.query("DELETE FROM users WHERE id = $1", [user_id]);
-    res.json({ success: true, message: "Compte supprimé définitivement." });
+    res.json({ success: true, message: "Compte supprimé." });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -100,7 +96,7 @@ app.get("/feed", async (req, res) => {
   } catch (e) { res.json([]); }
 });
 
-// PUBLICATION D'ANNONCE
+// PUBLICATION D'ANNONCE (VIP & STANDARD UNIFIÉE)
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
@@ -122,7 +118,6 @@ app.post("/annonces", async (req,res)=>{
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// MODIFICATION COMPLETE D'UNE ANNONCE PAR L'UTILISATEUR OU ADMIN
 app.put("/annonces/:id", async (req, res) => {
   try {
     const { titre, prix, devise, periode, description, statut, ville, commune, quartier, telephone } = req.body;
@@ -134,7 +129,6 @@ app.put("/annonces/:id", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// SUPPRESSION D'ANNONCE
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
     await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
@@ -143,15 +137,13 @@ app.delete("/annonces/:id/delete", async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Erreur" }); }
 });
 
-// SIGNALEMENT D'UNE ANNONCE
 app.post("/annonces/:id/signaler", async (req, res) => {
   try {
     await pool.query("UPDATE annonces SET signaux_count = signaux_count + 1 WHERE id = $1", [req.params.id]);
-    res.json({ success: true, message: "Annonce signalée avec succès." });
+    res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// SYSTEME DE MESSAGERIE ADMINISTRATIVE ET ALERTES
 app.post("/admin/message", async (req, res) => {
   try {
     const { target_tel, message, is_global } = req.body;
@@ -159,7 +151,7 @@ app.post("/admin/message", async (req, res) => {
       await pool.query("INSERT INTO messages_admin (user_id, message, is_global) VALUES (NULL, $1, TRUE)", [message]);
     } else {
       const userRes = await pool.query("SELECT id FROM users WHERE telephone = $1", [target_tel]);
-      if(userRes.rows.length === 0) return res.status(404).json({ error: "Utilisateur ciblé introuvable." });
+      if(userRes.rows.length === 0) return res.status(404).json({ error: "Introuvable" });
       await pool.query("INSERT INTO messages_admin (user_id, message, is_global) VALUES ($1, $2, FALSE)", [userRes.rows[0].id, message]);
     }
     res.json({ success: true });
@@ -168,13 +160,10 @@ app.post("/admin/message", async (req, res) => {
 
 app.get("/user/:id/messages", async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT * FROM messages_admin WHERE user_id = $1 OR is_global = TRUE ORDER BY created_at DESC", 
-      [req.params.id]
-    );
+    const result = await pool.query("SELECT * FROM messages_admin WHERE user_id = $1 OR is_global = TRUE ORDER BY created_at DESC", [req.params.id]);
     res.json(result.rows);
   } catch (e) { res.json([]); }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log(`NIA ENGINE OPERATIONAL ON PORT ${PORT}`));
+app.listen(PORT, ()=>console.log(`OPERATIONAL ON PORT ${PORT}`));

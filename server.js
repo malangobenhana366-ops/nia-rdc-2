@@ -26,21 +26,16 @@ async function uploadImage(base64){
     if (!base64 || !base64.startsWith("data:image")) return "";
     const res = await cloudinary.uploader.upload(base64, { folder: "nia_rdc" });
     return res.secure_url;
-  } catch (e) { 
-    console.error("Erreur Cloudinary:", e);
-    return ""; 
-  }
+  } catch (e) { return ""; }
 }
 
-// AUTHENTIFICATION
+// COUCHE AUTHENTIFICATION
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password, acceptedTerms } = req.body;
-    if (!telephone || !password) return res.status(400).json({ error: "Téléphone et mot de passe requis." });
-    if (!acceptedTerms) return res.status(400).json({ error: "Vous devez accepter les conditions." });
-
+    if (!telephone || !password) return res.status(400).json({ error: "Champs incomplets." });
     const userExist = await pool.query("SELECT id FROM users WHERE telephone = $1", [telephone]);
-    if (userExist.rows.length > 0) return res.status(400).json({ error: "Ce numéro est déjà enregistré." });
+    if (userExist.rows.length > 0) return res.status(400).json({ error: "Numéro déjà existant." });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await pool.query(
@@ -55,11 +50,11 @@ app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
     const result = await pool.query("SELECT * FROM users WHERE telephone = $1", [telephone]);
-    if (result.rows.length === 0) return res.status(400).json({ error: "Utilisateur introuvable." });
+    if (result.rows.length === 0) return res.status(400).json({ error: "Identifiants inconnus." });
 
     const user = result.rows[0];
     const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ error: "Mot de passe incorrect." });
+    if (!match) return res.status(400).json({ error: "Mot de passe erroné." });
 
     res.json({ success: true, user: { id: user.id, telephone: user.telephone, is_admin: user.is_admin } });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -67,13 +62,12 @@ app.post("/auth/login", async (req, res) => {
 
 app.delete("/auth/delete-account", async (req, res) => {
   try {
-    const { user_id } = req.body;
-    await pool.query("DELETE FROM users WHERE id = $1", [user_id]);
-    res.json({ success: true, message: "Compte supprimé." });
+    await pool.query("DELETE FROM users WHERE id = $1", [req.body.user_id]);
+    res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// FLUX GÉNÉRAL
+// FLUX PRINCIPAL
 app.get("/feed", async (req, res) => {
   try {
     const query = `
@@ -88,24 +82,7 @@ app.get("/feed", async (req, res) => {
   } catch (e) { res.json([]); }
 });
 
-// LISTE DES SIGNALEMENTS POUR L'ADMIN
-app.get("/admin/reports", async (req, res) => {
-  try {
-    const query = `
-      SELECT r.id as report_id, r.raison, r.created_at as reported_at, a.*,
-             COALESCE(JSON_AGG(ai.image_url) FILTER (WHERE ai.image_url IS NOT NULL), '[]') as images
-      FROM annonce_reports r
-      JOIN annonces a ON r.annonce_id = a.id
-      LEFT JOIN annonce_images ai ON a.id = ai.annonce_id
-      GROUP BY r.id, a.id
-      ORDER BY r.created_at DESC;
-    `;
-    const result = await pool.query(query);
-    res.json(result.rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// PUBLICATION
+// SUBMISSIONS
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
@@ -132,49 +109,105 @@ app.put("/annonces/:id", async (req, res) => {
     const { titre, prix, devise, periode, description, statut, ville, commune, quartier, telephone } = req.body;
     await pool.query(
       `UPDATE annonces SET titre=$1, prix=$2, devise=$3, periode=$4, description=$5, statut=$6, ville=$7, commune=$8, quartier=$9, telephone=$10 WHERE id=$11`,
-      [titre, prix, devise, periode, description, statut, ville || 'Lubumbashi', commune, quartier, telephone, req.params.id]
+      [titre, prix, devise, periode, description, statut, ville, commune, quartier, telephone, req.params.id]
     );
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// SYSTÈME DE BOOST POUR REMONTER L'ANNONCE
+app.post("/annonces/:id/boost", async (req, res) => {
+  try {
+    await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [req.params.id]);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
-    await pool.query("DELETE FROM annonce_images WHERE annonce_id = $1", [req.params.id]);
     await pool.query("DELETE FROM annonces WHERE id = $1", [req.params.id]);
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: "Erreur" }); }
-});
-
-app.post("/annonces/:id/signaler", async (req, res) => {
-  try {
-    const { raison } = req.body;
-    await pool.query("UPDATE annonces SET signaux_count = signaux_count + 1 WHERE id = $1", [req.params.id]);
-    await pool.query("INSERT INTO annonce_reports (annonce_id, raison) VALUES ($1, $2)", [req.params.id, raison || "Aucun motif fourni"]);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.post("/annonces/:id/signaler", async (req, res) => {
+  try {
+    await pool.query("UPDATE annonces SET signaux_count = signaux_count + 1 WHERE id = $1", [req.params.id]);
+    await pool.query("INSERT INTO annonce_reports (annonce_id, raison) VALUES ($1, $2)", [req.params.id, req.body.raison || "Sans motif"]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ROUTE CORRIGÉE D'ENVOI DE MESSAGES ADMIN CIBLÉS OU GLOBAUX
 app.post("/admin/message", async (req, res) => {
   try {
-    const { target_tel, message, is_global } = req.body;
+    const { target_tel, message, is_global, provenance_contexte } = req.body;
     if (is_global) {
-      await pool.query("INSERT INTO messages_admin (user_id, message, is_global) VALUES (NULL, $1, TRUE)", [message]);
+      await pool.query("INSERT INTO messages_admin (user_id, message, is_global, provenance_contexte) VALUES (NULL, $1, TRUE, 'normal')", [message]);
     } else {
+      // Trouver l'utilisateur d'après le numéro de téléphone de l'annonce
       const userRes = await pool.query("SELECT id FROM users WHERE telephone = $1", [target_tel]);
-      if(userRes.rows.length === 0) return res.status(404).json({ error: "Numéro introuvable sur la plateforme." });
-      await pool.query("INSERT INTO messages_admin (user_id, message, is_global) VALUES ($1, $2, FALSE)", [userRes.rows[0].id, message]);
+      let uid = userRes.rows.length > 0 ? userRes.rows[0].id : null;
+      
+      // Enregistrement du message ciblé même si l'utilisateur utilise un numéro invité
+      await pool.query(
+        "INSERT INTO messages_admin (user_id, message, is_global, provenance_contexte) VALUES ($1, $2, FALSE, $3)", 
+        [uid, `[Destinataire Tel: ${target_tel}] - ` + message, false, provenance_contexte || 'normal']
+      );
     }
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// PERMETTRE À L'UTILISATEUR DE RÉPONDRE À UN MESSAGE CIBLÉ
+app.post("/user/reply-message/:id", async (req, res) => {
+  try {
+    const { reponse } = req.body;
+    await pool.query("UPDATE messages_admin SET reponse_utilisateur = $1 WHERE id = $2 AND is_global = FALSE", [reponse, req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// EXTRACTION DES MESSAGES CIBLÉS PAR UTILISATEUR OU SMS FLUX
 app.get("/user/:id/messages", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM messages_admin WHERE user_id = $1 OR is_global = TRUE ORDER BY created_at DESC", [req.params.id]);
+    const userRes = await pool.query("SELECT telephone FROM users WHERE id = $1", [req.params.id]);
+    let tel = userRes.rows.length > 0 ? userRes.rows[0].telephone : '';
+    const result = await pool.query(
+      `SELECT * FROM messages_admin 
+       WHERE user_id = $1 OR is_global = TRUE OR message LIKE $2 
+       ORDER BY created_at DESC`, 
+      [req.params.id, `%[Destinataire Tel: ${tel}]%`]
+    );
     res.json(result.rows);
   } catch (e) { res.json([]); }
 });
 
+// ROUTES ADMIN POUR LES DEUX NOUVEAUX BOUTONS DE SUPERVISION
+app.get("/admin/replied-messages/:context", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM messages_admin WHERE provenance_contexte = $1 AND reponse_utilisateur IS NOT NULL ORDER BY created_at DESC",
+      [req.params.context]
+    );
+    res.json(result.rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/admin/reports", async (req, res) => {
+  try {
+    const query = `
+      SELECT r.id as report_id, r.raison, r.created_at as reported_at, a.*,
+             COALESCE(JSON_AGG(ai.image_url) FILTER (WHERE ai.image_url IS NOT NULL), '[]') as images
+      FROM annonce_reports r
+      JOIN annonces a ON r.annonce_id = a.id
+      LEFT JOIN annonce_images ai ON a.id = ai.annonce_id
+      GROUP BY r.id, a.id ORDER BY r.created_at DESC;
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>console.log(`OPERATIONAL ON PORT ${PORT}`));
+app.listen(PORT, () => console.log(`OPERATIONAL ON PORT ${PORT}`));

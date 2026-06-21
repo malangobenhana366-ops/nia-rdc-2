@@ -1,36 +1,173 @@
-const API = "https://nia-rdc-2.onrender.com"; // Correspond bien à votre instance Render active
+const API = "https://nia-rdc-2.onrender.com"; 
 
 let toutesLesAnnonces = [];
+let tousLesSignalements = [];
+let VUE_ADMIN_ACTUELLE = "flux"; // "flux" ou "signaux"
 let ONGLE_PROFIL_ACTIF = "standard";
 let BLOCS_VIP_COUNT = 0;
 let adminTimer = null;
 let tempsValide = false;
 let yStart = 0;
 
-const CHARTE_APROPOS = `À propos de NIA RDC\n\nWelcome sur NIA RDC. NIA RDC est une plateforme numérique conçue pour faciliter la mise en relation entre les personnes souhaitant louer, proposer ou rechercher des biens et des services en République Démocratique du Congo.`;
-const CHARTE_PRIVACY = `Politique de confidentialité de NIA RDC\n\nMise à jour : Juin 2026.\n\nLa protection de vos données privées est assurée selon les standards chiffrés récents de l'application.`;
+// INJECTION INTÉGRALE DES TEXTES FOURNIS SANS MODIFICATION
+const CHARTE_APROPOS = `À propos de NIA RDC
 
-// FORCE L'UTILISATEUR À LIRE LES CGU EN FAISANT DÉFILER LE BLOC
+Bienvenue sur NIA RDC.
+
+NIA RDC est une plateforme numérique conçue pour faciliter la mise en relation entre les personnes souhaitant louer, proposer ou rechercher des biens et des services en République Démocratique du Congo.
+
+Notre objectif est de rendre les échanges plus simples, rapides et accessibles grâce à une plateforme facile à utiliser, adaptée aussi bien aux particuliers qu'aux professionnels.
+
+Notre mission
+Notre mission est de permettre à chacun de trouver ou de proposer des objets, équipements et services en toute simplicité, tout en favorisant les opportunités économiques locales.
+
+Ce que propose NIA RDC
+Les utilisateurs peuvent notamment :
+- publier des annonces ;
+- consulter les annonces disponibles ;
+- contacter les annonceurs ;
+- rechercher des biens et services selon leurs besoins.
+
+La plateforme évolue régulièrement afin d'offrir de nouvelles fonctionnalités et une meilleure expérience utilisateur.
+
+Nos valeurs
+NIA RDC s'appuie sur plusieurs principes :
+- simplicité ;
+- accessibilité ;
+- respect des utilisateurs ;
+- innovation ;
+- amélioration continue.
+
+Notre engagement
+Nous travaillons à maintenir une plateforme fiable et agréable à utiliser. Nous encourageons les utilisateurs à publier des informations exactes et à respecter les règles de la communauté.
+
+Notre vision
+Nous souhaitons contribuer au développement des échanges et des services numériques en République Démocratique du Congo en proposant une plateforme moderne et évolutive.
+
+Contact
+Pour toute question ou suggestion, les utilisateurs peuvent contacter l'équipe de NIA RDC par les moyens de communication disponibles sur la plateforme.
+
+Merci de votre confiance et de votre participation au développement de NIA RDC.`;
+
+const CHARTE_PRIVACY = `Politique de confidentialité de NIA RDC
+
+Dernière mise à jour : Juin 2026.
+
+Bienvenue sur NIA RDC.
+
+La protection des informations personnelles de nos utilisateurs est importante. Cette politique explique quelles informations sont collectées, pourquoi elles sont utilisées et les droits des utilisateurs.
+
+1. Informations collectées
+Lors de l'utilisation de NIA RDC, certaines informations peuvent être collectées, notamment :
+- le numéro de téléphone fourni lors de l'inscription ;
+- le mot de passe du compte, protégé par des mesures de sécurité ;
+- les annonces publiées ;
+- les photos et images ajoutées aux annonces ;
+- les informations de contact renseignées dans les annonces ;
+- les informations techniques nécessaires au fonctionnement de la plateforme.
+
+2. Utilisation des informations
+Les informations collectées servent à :
+- créer et gérer les comptes utilisateurs ;
+- publier et afficher les annonces ;
+- améliorer les services proposés ;
+- assurer la sécurité de la plateforme ;
+- prévenir les activités frauduleuses ;
+- répondre aux demandes des utilisateurs.
+
+3. Partage des informations
+NIA RDC ne vend pas les informations personnelles des utilisateurs.
+Certaines informations publiées volontairement dans les annonces, comme les photos ou les numéros de contact, peuvent être visibles par les autres utilisateurs de la plateforme.
+Les informations pourront être communiquées si la loi l'exige ou pour protéger les droits et la sécurité de NIA RDC et de ses utilisateurs.
+
+4. Conservation des données
+Les informations sont conservées aussi longtemps que nécessaire au fonctionnement de la plateforme et au respect des obligations légales.
+
+5. Sécurité
+NIA RDC met en œuvre des mesures raisonnables pour protéger les informations des utilisateurs contre les accès non autorisés, les pertes ou les utilisations abusives.
+Toutefois, aucune technologie ne peut garantir une sécurité absolue sur Internet.
+
+6. Cookies et technologies similaires
+NIA RDC peut utiliser des cookies et des technologies similaires afin d'améliorer l'expérience utilisateur, de mesurer les performances du service et d'afficher des contenus ou publicités adaptés.
+
+7. Publicités
+NIA RDC peut afficher des annonces publicitaires afin de financer le fonctionnement de la plateforme.
+Des partenaires publicitaires peuvent utiliser des technologies conformes à leurs propres politiques de confidentialité et aux lois applicables.
+
+8. Droits des utilisateurs
+Chaque utilisateur peut demander, dans les limites prévues par la loi :
+- l'accès à ses informations ;
+- la correction d'informations inexactes ;
+- la suppression de certaines données ;
+- la fermeture de son compte.
+
+9. Modifications
+Cette politique de confidentialité peut être mise à jour afin de suivre les évolutions de la plateforme ou des exigences légales.
+Les modifications prendront effet dès leur publication sur NIA RDC.
+
+10. Contact
+Pour toute question concernant cette politique de confidentialité ou le traitement des données personnelles, les utilisateurs peuvent contacter l'équipe de NIA RDC par les moyens de communication mis à disposition sur la plateforme.
+
+Acceptation
+En utilisant NIA RDC and en créant un compte, l'utilisateur reconnaît avoir pris connaissance de la présente Politique de confidentialité et accepte les conditions qui y sont décrites.`;
+
+const CHARTE_CGU = `Conditions de sécurité et d'utilisation de NIA RDC
+
+Bienvenue sur NIA RDC.
+Avant de créer un compte, veuillez lire les présentes conditions. En utilisant la plateforme, vous acceptez les règles suivantes.
+
+1. Utilisation de la plateforme
+NIA RDC est une plateforme destinée à faciliter la publication et la consultation d'annonces de location, de vente et de services. Les utilisateurs s'engagent à utiliser la plateforme de manière honnête et responsable.
+
+2. Exactitude des informations
+Chaque utilisateur est responsable des informations qu'il publie. Les annonces doivent être exactes et ne pas contenir d'informations trompeuses ou mensongères.
+
+3. Protection du compte
+L'utilisateur est responsable de la confidentialité de son numéro de téléphone, de son mot de passe et des activités réalisées depuis son compte.
+
+4. Contenus interdits
+Il est interdit de publier des contenus :
+- contraires aux lois en vigueur ;
+- frauduleux ou trompeurs ;
+- portant atteinte aux droits d'autrui ;
+- contenant des informations fausses ou usurpant l'identité d'une autre personne.
+NIA RDC se réserve le droit de supprimer tout contenu non conforme.
+
+5. Photos et annonces
+L'utilisateur garantit qu'il possède les droits nécessaires sur les photos et les informations publiées et autorise leur affichage sur la plateforme.
+
+6. Protection des données
+NIA RDC collecte uniquement les informations nécessaires au fonctionnement du service, notamment les informations de compte et les données liées aux annonces publiées.
+
+7. Sécurité
+NIA RDC met en œuvre des mesures techniques raisonnables pour protéger les données des utilisateurs. Toutefois, aucun système informatique ne peut garantir une sécurité absolue.
+
+8. Responsabilité
+NIA RDC agit comme plateforme de mise en relation et n'est pas partie aux accords conclus entre les utilisateurs. Chaque utilisateur est responsable des transactions et échanges qu'il réalise.
+
+9. Modération
+NIA RDC peut suspendre ou supprimer un compte ou une annonce en cas de non-respect des présentes conditions ou pour protéger la sécurité de la communauté.
+
+10. Évolution des conditions
+Ces conditions peuvent être mises à jour afin d'améliorer le fonctionnement et la sécurité de la plateforme. Les nouvelles versions prendront effet dès leur publication.
+
+Acceptation
+En créant un compte sur NIA RDC, je reconnais avoir lu les présentes conditions de sécurité et d'utilisation et j'accepte de les respecter.`;
+
 function detecterLectureConditionscomplet() {
   const box = document.getElementById("cgu-text-box");
   const checkbox = document.getElementById("auth-accept-rules");
   const btnSubmit = document.getElementById("register-submit-btn");
-  
-  // Si l'utilisateur atteint le bas du défilement (marge de 5px tolérée)
   if (box.scrollHeight - box.scrollTop <= box.clientHeight + 5) {
     checkbox.removeAttribute("disabled");
   }
 }
 
-// Écouteur pour activer le bouton uniquement quand la case est cochée
 document.addEventListener("change", (e) => {
   if (e.target && e.target.id === "auth-accept-rules") {
     const btnSubmit = document.getElementById("register-submit-btn");
-    if (e.target.checked) {
-      btnSubmit.removeAttribute("disabled");
-    } else {
-      btnSubmit.setAttribute("disabled", "true");
-    }
+    if (e.target.checked) btnSubmit.removeAttribute("disabled");
+    else btnSubmit.setAttribute("disabled", "true");
   }
 });
 
@@ -54,25 +191,22 @@ function verifierStatutAuthentificationHeader() {
 function declencherAuthentificationDynamique(versInscription = true) {
   basculerModeAuth(versInscription);
   document.getElementById("modal-auth").style.display = "flex";
-  
-  // Reset de la boîte des conditions si on ouvre l'inscription
   if(versInscription) {
     const checkbox = document.getElementById("auth-accept-rules");
     const btnSubmit = document.getElementById("register-submit-btn");
     if(checkbox) { checkbox.checked = false; checkbox.setAttribute("disabled", "true"); }
     if(btnSubmit) btnSubmit.setAttribute("disabled", "true");
     const box = document.getElementById("cgu-text-box");
-    if(box) box.scrollTop = 0;
+    if(box) {
+      box.innerHTML = CHARTE_CGU.replace(/\n/g, "<br>");
+      box.scrollTop = 0;
+    }
   }
 }
 
 function ouvrirModalSeccurisee(modalId) {
-  const userId = localStorage.getItem("nia_user_id");
-  if (!userId) {
-    declencherAuthentificationDynamique(false);
-  } else {
-    ouvrirModal(modalId);
-  }
+  if (!localStorage.getItem("nia_user_id")) declencherAuthentificationDynamique(false);
+  else ouvrirModal(modalId);
 }
 
 function deconnecterUtilisateur() {
@@ -146,8 +280,13 @@ function toggleLeftDropdown() {
 }
 
 function ouvrirModalLegal(type) {
-  document.getElementById("legal-title-display").textContent = type === 'apropos' ? "À propos de NIA RDC" : "Politique de Confidentialité";
-  document.getElementById("legal-body-display").textContent = type === 'apropos' ? CHARTE_APROPOS : CHARTE_PRIVACY;
+  if(type === 'apropos') {
+    document.getElementById("legal-title-display").textContent = "À propos de NIA RDC";
+    document.getElementById("legal-body-display").textContent = CHARTE_APROPOS;
+  } else {
+    document.getElementById("legal-title-display").textContent = "Politique de Confidentialité";
+    document.getElementById("legal-body-display").textContent = CHARTE_PRIVACY;
+  }
   document.getElementById("modal-legal").style.display = "flex";
 }
 
@@ -192,7 +331,8 @@ window.addEventListener("touchend", e => {
   if (tempsValide && (yStart - e.changedTouches[0].clientY > 60)) {
     tempsValide = false;
     if (prompt("Saisir le code d'accès de sécurité Administrateur :") === "BEN4002ET4200") {
-      ouvrirModal("admin"); appliquerFiltrageSupervisionAdmin();
+      ouvrirModal("admin"); 
+      basculerVueAdmin('flux');
     }
   }
 });
@@ -262,7 +402,7 @@ function afficherFlux(liste, modeRecherche = false) {
         <div class="annonce-footer">
           ${a.statut === "occupe" ? `<span class="badge-status status-occupe">🔴 Occupé</span>` : `<span class="badge-status status-disponible">🟢 Disponible</span>`}
           <div style="display:flex; gap:6px;">
-            <button class="btn-report" onclick="signalerAnnonce(${a.id})">⚠️ Signaler</button>
+            <button class="btn-report" onclick="signalerAnnonceAvecMotif(${a.id})">⚠️ Signaler</button>
             <button class="btn-contact" onclick="window.location.href='tel:${a.telephone}'">📞 Appeler</button>
           </div>
         </div>
@@ -270,15 +410,21 @@ function afficherFlux(liste, modeRecherche = false) {
   });
 }
 
-async function signalerAnnonce(id) {
-  await fetch(`${API}/annonces/${id}/signaler`, { method: "POST" });
-  alert("Annonce signalée avec succès.");
+// UTILISATEUR OBLIGÉ DE JUSTIFIER LE SIGNALEMENT DE L'ANNONCE
+async function signalerAnnonceAvecMotif(id) {
+  const raison = prompt("Pourquoi signalez-vous cette annonce ? Veuillez écrire un texte explicatif :");
+  if (!raison || raison.trim() === "") return alert("Le signalement a été annulé car aucun texte explicatif n'a été fourni.");
+  
+  const res = await fetch(`${API}/annonces/${id}/signaler`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ raison: raison.trim() })
+  });
+  if(res.ok) alert("Merci, l'annonce a été signalée à l'administration avec votre motif.");
 }
 
-// CORRECTION IMPORTANTE : FORCE LA SOUUMISSION ET L'ENVOI DIRECT EN LIGNE POUR LES STANDARD
 async function publier() {
   if (!val("titre") || !val("telephone")) return alert("Le titre et le téléphone sont obligatoires.");
-  
   const files = document.getElementById("image")?.files;
   let images_base64 = [];
   if(files && files.length > 0) { 
@@ -287,7 +433,6 @@ async function publier() {
       images_base64.push(b64);
     } 
   }
-  
   localStorage.setItem("nia_standard_telephone", val("telephone"));
 
   const res = await fetch(`${API}/annonces`, {
@@ -300,14 +445,7 @@ async function publier() {
       commune: val("commune"), quartier: val("quartier"), statut: val("statut"), is_vip: false, images_base64
     })
   });
-
-  if (res.ok) {
-    alert("Votre annonce a bien été mise en ligne !");
-    fermerModal("publier"); 
-    loadFeed();
-  } else {
-    alert("Erreur lors de la mise en ligne.");
-  }
+  if (res.ok) { alert("Annonce en ligne !"); fermerModal("publier"); loadFeed(); }
 }
 
 function rafraichirEspaceVip() {
@@ -356,16 +494,14 @@ function ajouterNouveauBlocFormulaireVip() {
       <div class="form-group"><label>Téléphone de contact *</label><input class="vip-in-tel" value="${localStorage.getItem("nia_vip_telephone")}"></div>
       <div class="form-group"><label>Commune</label><input class="vip-in-commune"></div>
       <div class="form-group full-width"><label>Description</label><textarea class="vip-in-desc"></textarea></div>
-      <div class="form-group full-width"><label>Sélectionner les Photos de cet article</label><input type="file" class="vip-in-photos" multiple accept="image/*"></div>
+      <div class="form-group full-width"><label>Photos de l'article</label><input type="file" class="vip-in-photos" multiple accept="image/*"></div>
     </div>`;
   conteneur.appendChild(div);
 }
 
-// CORRECTION ASSURÉE DU COUPLAGE PHOTOS + TRANSMISSION EN LIGNE SANS FERMETURE INTEMPESTIVE
 async function soumettreToutesLesAnnoncesVip() {
   const blocs = document.querySelectorAll(".vip-block-annonce");
   if(blocs.length === 0) return alert("Ajoutez au moins un produit au catalogue.");
-
   let reussiteCount = 0;
   for (let b of blocs) {
     const titre = b.querySelector(".vip-in-titre").value.trim();
@@ -378,7 +514,6 @@ async function soumettreToutesLesAnnoncesVip() {
     const photoInput = b.querySelector(".vip-in-photos");
 
     if (!titre || !telephone) continue;
-
     let images_base64 = [];
     if(photoInput && photoInput.files.length > 0) {
       for(let i=0; i<photoInput.files.length; i++) {
@@ -386,7 +521,6 @@ async function soumettreToutesLesAnnoncesVip() {
         images_base64.push(dataB64);
       }
     }
-
     const res = await fetch(`${API}/annonces`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -397,14 +531,7 @@ async function soumettreToutesLesAnnoncesVip() {
     });
     if(res.ok) reussiteCount++;
   }
-  
-  if(reussiteCount > 0){
-    alert("Votre catalogue VIP complet a été envoyé avec succès !");
-    fermerModal("vip"); 
-    loadFeed();
-  } else {
-    alert("Remplissez le titre et le numéro des produits ajoutés.");
-  }
+  if(reussiteCount > 0){ alert("Catalogue VIP synchronisé !"); fermerModal("vip"); loadFeed(); }
 }
 
 function ouvrirModal(id) {
@@ -471,39 +598,101 @@ async function supprimerAnnonce(id) {
   }
 }
 
-async function envoyerMessageAdminDirect() {
-  const target_tel = val("admin-msg-target");
-  const message = val("admin-msg-text");
-  if (!message) return alert("Saisir un texte.");
+// BASCULER ENTRE LES DEUX ONGLETS/BOUTONS DEMANDÉS PAR L'ADMINISTRATION
+function basculerVueAdmin(mode) {
+  VUE_ADMIN_ACTUELLE = mode;
+  document.getElementById("admin-list-title").textContent = mode === "flux" ? "Gestion globale des Annonces" : "Suivi des Annonces Signalées";
+  appliquerFiltrageSupervisionAdmin();
+}
+
+// TRANSMISSIONS PAR BOX INDIVIDUELLES ET FILTRAGE GLOBAL PAR VILLE/VIP/STANDARD
+async function envoyerMessageAdminDirect(telephoneDest) {
+  const message = val(`msg-text-node-${telephoneDest}`);
+  if (!message) return alert("Veuillez saisir un texte à transmettre.");
   const res = await fetch(`${API}/admin/message`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ target_tel, message, is_global: target_tel === "" })
+    body: JSON.stringify({ target_tel: telephoneDest, message, is_global: false })
   });
-  if(res.ok) { alert("Message transmis !"); document.getElementById("admin-msg-text").value = ""; }
+  if(res.ok) { alert("Message ciblé envoyé !"); document.getElementById(`msg-text-node-${telephoneDest}`).value = ""; }
+  else { alert("Erreur lors de la distribution."); }
 }
 
-function appliquerFiltrageSupervisionAdmin() {
+// ENVOYER UN MESSAGE À TOUS LES COMPTES SIMULTANÉMENT
+async function envoyerMessageGlobalTousComptes() {
+  const message = val("admin-msg-global-text");
+  if (!message) return alert("Saisir un texte pour l'envoi de masse.");
+  const res = await fetch(`${API}/admin/message`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ target_tel: "", message, is_global: true })
+  });
+  if(res.ok) { alert("Notification globale reçue par toute la plateforme !"); document.getElementById("admin-msg-global-text").value = ""; }
+}
+
+async function appliquerFiltrageSupervisionAdmin() {
+  const list = document.getElementById("admin-flux-supervision-list");
   const villeFiltre = val("admin-filter-ville").toLowerCase();
   const typeFiltre = document.getElementById("admin-filter-type").value;
-  let filtre = toutesLesAnnonces.filter(a => {
-    let mVille = villeFiltre === "" || a.ville.toLowerCase().includes(villeFiltre);
-    let mType = typeFiltre === "all" || (typeFiltre === "vip" ? a.is_vip : !a.is_vip);
-    return mVille && mType;
-  });
-  const list = document.getElementById("admin-flux-supervision-list");
-  list.innerHTML = filtre.map(a => `
-    <div style="background:#1e293b; padding:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
-      <span><b>[${a.is_vip?'VIP':'STD'}]</b> ${a.titre} - <span style="color:red;">Signaux: ${a.signaux_count || 0}</span></span>
-      <button style="background:red; color:white; border:none; padding:3px 6px; border-radius:4px;" onclick="supprimerAnnonceAdmin(${a.id})">Supprimer</button>
-    </div>
-  `).join("");
+
+  if (VUE_ADMIN_ACTUELLE === "flux") {
+    let filtre = toutesLesAnnonces.filter(a => {
+      let mVille = villeFiltre === "" || a.ville.toLowerCase().includes(villeFiltre);
+      let mType = typeFiltre === "all" || (typeFiltre === "vip" ? a.is_vip : !a.is_vip);
+      return mVille && mType;
+    });
+
+    list.innerHTML = filtre.map(a => `
+      <div class="admin-card-row">
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+          <span><b>[${a.is_vip ? 'VIP':'STD'}]</b> ${a.titre} (📍 ${a.ville})</span>
+          <button style="background:red; color:white; border:none; padding:3px 8px; border-radius:4px; cursor:pointer;" onclick="supprimerAnnonceAdmin(${a.id})">Supprimer 🗑️</button>
+        </div>
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <input id="msg-text-node-${a.telephone}" placeholder="Message spécifique à cet annonceur..." style="flex:1; padding:5px; font-size:0.8rem; border-radius:4px; border:none;">
+          <button style="background:#10b981; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.8rem; cursor:pointer;" onclick="envoyerMessageAdminDirect('${a.telephone}')">Envoyer 📨</button>
+        </div>
+      </div>
+    `).join("");
+  } else {
+    // AFFICHAGE DES CONTENUS DÉTAILLÉS + TEXTE DES RAPPORTS UTILISATEUR
+    try {
+      const res = await fetch(`${API}/admin/reports`);
+      tousLesSignalements = await res.json();
+      let filtre = tousLesSignalements.filter(a => {
+        let mVille = villeFiltre === "" || a.ville.toLowerCase().includes(villeFiltre);
+        let mType = typeFiltre === "all" || (typeFiltre === "vip" ? a.is_vip : !a.is_vip);
+        return mVille && mType;
+      });
+
+      list.innerHTML = filtre.map(a => `
+        <div class="admin-card-row" style="border-left: 4px solid red;">
+          <div style="background:#ef4444; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; margin-bottom:6px; font-weight:bold;">
+            ⚠️ RAISON DU SIGNALEMENT : "${a.raison}"
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:6px;">
+            <b>Contenu complet de l'annonce :</b><br>
+            Titre : ${a.titre} | Prix : ${a.prix} ${a.devise} | Description : ${a.description || 'aucune'}<br>
+            Contact : Tel: ${a.telephone}
+          </div>
+          <div style="display:flex; justify-content:space-between; gap:6px; align-items:center;">
+            <div style="display:flex; gap:4px; flex:1;">
+              <input id="msg-text-node-${a.telephone}" placeholder="Message spécifique..." style="flex:1; padding:5px; font-size:0.8rem; border-radius:4px; border:none;">
+              <button style="background:#10b981; color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.8rem; cursor:pointer;" onclick="envoyerMessageAdminDirect('${a.telephone}')">Envoyer 📨</button>
+            </div>
+            <button style="background:red; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem;" onclick="supprimerAnnonceAdmin(${a.id})">Supprimer 🗑️</button>
+          </div>
+        </div>
+      `).join("");
+    } catch(e) { list.innerHTML = "Erreur d'extraction des rapports."; }
+  }
 }
 
 async function supprimerAnnonceAdmin(id) {
-  if (confirm("Supprimer l'offre ?")) {
+  if (confirm("Supprimer définitivement cette offre ?")) {
     await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" });
-    loadFeed(); setTimeout(() => appliquerFiltrageSupervisionAdmin(), 500);
+    loadFeed(); 
+    setTimeout(() => appliquerFiltrageSupervisionAdmin(), 500);
   }
 }
 

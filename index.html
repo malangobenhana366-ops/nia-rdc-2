@@ -117,8 +117,7 @@
         <h2>👑 Vitrine & Catalogue Premium VIP</h2>
         <button class="close-modal" onclick="fermerModal('vip')">✕</button>
       </div>
-      <div class="form-scrollable-body" id="vip-setup-zone">
-        </div>
+      <div class="form-scrollable-body" id="vip-setup-zone"></div>
     </div>
   </div>
 
@@ -213,7 +212,7 @@
       </div>
 
       <div id="admin-filters-bar" class="admin-filters-container" style="display:none; padding:8px 0; gap:6px;">
-        <input id="admin-filter-ville" placeholder="Filtrer par Ville (ex: Lubumbashi)..." oninput="filtrerFluxAdminEnTempsReel()" style="background:#1e293b; color:white; border:1px solid #334155;">
+        <input id="admin-filter-ville" placeholder="Filtrer par Ville..." oninput="filtrerFluxAdminEnTempsReel()" style="background:#1e293b; color:white; border:1px solid #334155;">
         <select id="admin-filter-type" onchange="filtrerFluxAdminEnTempsReel()" style="background:#1e293b; color:white; border:1px solid #334155;">
           <option value="tous">Tous les formats</option>
           <option value="standard">Format Standard</option>
@@ -226,7 +225,7 @@
       <div class="admin-global-broadcast-zone">
         <h3>📢 Alerte Réseau Générale (Non-répondable)</h3>
         <div style="display:flex; gap:4px;">
-          <input id="admin-global-msg-input" placeholder="Écrire un message d'alerte global à tout le réseau..." style="background:#1e293b; color:white;">
+          <input id="admin-global-msg-input" placeholder="Écrire un message d'alerte global..." style="background:#1e293b; color:white;">
           <button onclick="envoyerNotificationGlobaleAdmin()" style="background:var(--vip-gold); color:black; font-weight:bold; border:none; padding:0 12px; border-radius:6px; cursor:pointer;">Diffuser</button>
         </div>
       </div>

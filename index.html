@@ -70,7 +70,6 @@
     .photo-edit-preview img { width: 80px; height: 60px; object-fit: cover; border-radius: 4px; }
     .photo-delete-overlay { position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 18px; cursor: pointer; font-size: 0.7rem; font-weight: bold; }
     
-    /* EN-TETE PROFIL NUP UNIQUE */
     .nup-badge-header { background: #eff6ff; border: 2px solid #3b82f6; color: #1d4ed8; padding: 12px; border-radius: 8px; text-align: center; font-size: 1.1rem; font-weight: 900; margin-bottom: 16px; letter-spacing: 1px; }
   </style>
 </head>
@@ -177,7 +176,10 @@
         <div class="form-box"><label>Disponibilité</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div>
         <div class="form-box"><label>Téléphone de Contact</label><input id="edit-telephone" type="tel"></div>
         <div class="form-box full-width"><label>Description</label><textarea id="edit-description" rows="3"></textarea></div>
-        <div class="form-box full-width"><label style="color:var(--primary)">🖼️ Galerie (Cliquez sur ✕ pour supprimer) :</label><div id="edit-photos-container" style="background:#f1f5f9; padding:8px; border-radius:6px; min-height:40px; display:flex; flex-wrap:wrap; gap:4px;"></div></div>
+        <div class="form-box full-width">
+          <label style="color:var(--primary)">🖼️ Photos actuelles (Cliquez sur ✕ pour supprimer définitivement) :</label>
+          <div id="edit-photos-container" style="background:#f1f5f9; padding:8px; border-radius:6px; min-height:40px; display:flex; flex-wrap:wrap; gap:4px;"></div>
+        </div>
         <div class="form-box full-width"><label>Ajouter de nouvelles photos</label><input id="edit-new-photos" type="file" multiple accept="image/*"></div>
         <div class="form-box full-width"><button class="btn-auth" style="padding:12px; background:var(--success);" onclick="sauvegarderChangementsAnnonce()">Enregistrer les modifications</button></div>
       </div>
@@ -195,12 +197,10 @@
     </div>
   </div>
 
-  <!-- ESPACE PRIVÉ : NUP AFFICHÉ EN HAUT + CONVERSATIONS CENTRALISÉES -->
   <div class="modal" id="modal-profil">
     <div class="modal-content" style="max-width:600px;">
       <div class="modal-header"><h3 style="margin:0">👤 Mon Espace Privé</h3><button onclick="fermerModal('profil')">✕</button></div>
       
-      <!-- INTEGRATION DYNAMIQUE DU NUP -->
       <div class="nup-badge-header" id="user-profile-nup-title">NUMÉRO DE PROFIL : CHARGEMENT...</div>
       
       <div style="margin-bottom:16px;">
@@ -216,14 +216,22 @@
     </div>
   </div>
 
-  <!-- PANEL ADMINISTRATION AVEC VISIBILITÉ DU NUP UNIQUE -->
   <div class="modal" id="modal-admin">
-    <div class="modal-content" style="background:#0f172a; color:white; max-width:600px;">
+    <div class="modal-content" style="background:#0f172a; color:white; max-width:650px;">
       <div class="modal-header" style="border-bottom:1px solid #334155;"><h3 style="margin:0; color:#ef4444;">Supervision Centrale</h3><button onclick="fermerModal('admin')" style="background:#1e293b; color:white; border:none; padding:4px 8px; border-radius:4px;">✕</button></div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:12px;">
+      
+      <div style="background:#1e293b; padding:12px; border-radius:8px; margin-bottom:12px; border: 1px solid #3b82f6;">
+         <h4 style="margin:0 0 6px 0; color:#60a5fa;">📢 Communiqué Impératif Global (Tous les Utilisateurs)</h4>
+         <div style="display:flex; gap:6px;">
+            <input id="admin-global-msg-input" placeholder="Écrire le message d'administration général sans possibilité de réponse..." style="flex:1; padding:8px; border-radius:4px; border:none; color:black;">
+            <button class="btn-auth" style="background:#3b82f6;" onclick="envoyerNotificationGlobaleAdmin()">Diffuser 🚀</button>
+         </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:12px;">
         <button class="btn-auth" onclick="definirVueAdmin('flux')">Annonces En Ligne</button>
-        <button class="btn-auth" style="background:var(--danger)" onclick="definirVueAdmin('signaux')">Signalements Actifs</button>
-        <button class="btn-auth" style="background:#854d0e" onclick="definirVueAdmin('justifications')">Justifications Reçues</button>
+        <button class="btn-auth" style="background:var(--danger)" onclick="definirVueAdmin('messages')">Messages Système</button>
+        <button class="btn-auth" style="background:#854d0e" onclick="definirVueAdmin('justifications')">Justifications</button>
       </div>
       <div id="admin-main-render-box" style="max-height:350px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
     </div>

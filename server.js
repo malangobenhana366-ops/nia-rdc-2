@@ -1,294 +1,350 @@
-import express from "express";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
-import { pool } from "./db.js";
-import { v2 as cloudinary } from "cloudinary";
-import bcrypt from "bcrypt";
+// =========================================================================
+// SERVEUR BACKEND COMPLET - NIA RDC (PRODUCTION ROBUSTE)
+// =========================================================================
+const express = require("express");
+const cors = require("cors");
+const bcrypt = require("bcrypt");
+const { Pool } = require("pg");
 
 const app = express();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 app.use(cors());
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
-app.use(express.static(__dirname));
+app.use(express.json({ limit: "50mb" })); // Protection et support pour transferts d'images Base64
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+// Configuration de la connexion à la base de données (PostgreSQL)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || "postgres://postgres:votre_mot_de_passe@localhost:5432/nia_rdc",
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
-async function uploadImage(base64){
-  try {
-    if (!base64 || !base64.startsWith("data:image")) return "";
-    const res = await cloudinary.uploader.upload(base64, { folder: "nia_rdc" });
-    return res.secure_url;
-  } catch (e) { return ""; }
-}
+// ================= ROUTE D'AUTHENTIFICATION =================
 
-// CRÉATION DE COMPTE
+// Inscription
 app.post("/auth/register", async (req, res) => {
+  const { telephone, password } = req.body;
   try {
-    const { telephone, password } = req.body;
-    if (!telephone || !password) return res.status(400).json({ error: "Champs manquants." });
-    
-    const userExist = await pool.query("SELECT id FROM users WHERE telephone = $1", [telephone]);
-    if (userExist.rows.length > 0) return res.status(400).json({ error: "Ce numéro est déjà utilisé." });
-
-    const nupAleatoire = "NUP-" + Math.floor(1000 + Math.random() * 9000);
+    const userExist = await pool.query("SELECT * FROM users WHERE telephone = $1", [telephone]);
+    if (userExist.rows.length > 0) {
+      return res.status(400).json({ success: false, error: "Ce numéro de téléphone est déjà utilisé." });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
-    
     const newUser = await pool.query(
-      "INSERT INTO users (telephone, password, nup, accepted_terms) VALUES ($1, $2, $3, TRUE) RETURNING id, telephone, nup",
-      [telephone, hashedPassword, nupAleatoire]
+      "INSERT INTO users (telephone, password) VALUES ($1, $2) RETURNING id, telephone, nup",
+      [telephone, hashedPassword]
     );
     res.json({ success: true, user: newUser.rows[0] });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (err) {
+    res.status(500).json({ success: false, error: "Erreur serveur lors de l'inscription." });
+  }
 });
 
+// Connexion
 app.post("/auth/login", async (req, res) => {
+  const { telephone, password } = req.body;
   try {
-    const { telephone, password } = req.body;
     const result = await pool.query("SELECT * FROM users WHERE telephone = $1", [telephone]);
-    if (result.rows.length === 0) return res.status(400).json({ error: "Utilisateur introuvable." });
-
-    const match = await bcrypt.compare(password, result.rows[0].password);
-    if (!match) return res.status(400).json({ error: "Mot de passe incorrect." });
-
-    res.json({ success: true, user: { id: result.rows[0].id, telephone: result.rows[0].telephone, nup: result.rows[0].nup, is_admin: result.rows[0].is_admin } });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+    if (result.rows.length === 0) {
+      return res.status(400).json({ success: false, error: "Identifiants incorrects." });
+    }
+    const user = result.rows[0];
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(400).json({ success: false, error: "Identifiants incorrects." });
+    
+    res.json({ success: true, user: { id: user.id, telephone: user.telephone, nup: user.nup } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: "Erreur serveur lors de la connexion." });
+  }
 });
 
+// Suppression définitive de compte par l'utilisateur
 app.delete("/auth/delete-account", async (req, res) => {
+  const { user_id } = req.body;
   try {
-    await pool.query("DELETE FROM users WHERE id = $1", [req.body.user_id]);
+    await pool.query("DELETE FROM users WHERE id = $1", [user_id]);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (err) {
+    res.status(500).json({ success: false, error: "Erreur lors de la suppression du compte." });
+  }
 });
 
-// FLUX GÉNÉRAL
+// ================= GESTION DES ANNONCES =================
+
+// Récupération du flux principal unifié ordonné (Boosté -> VIP -> Standard)
 app.get("/feed", async (req, res) => {
   try {
-    const query = `
+    const queryText = `
       SELECT a.*, u.nup as proprietaire_nup,
-             COALESCE(JSON_AGG(JSON_BUILD_OBJECT('id', ai.id, 'url', ai.image_url)) FILTER (WHERE ai.id IS NOT NULL), '[]') as images
+             COALESCE(json_agg(json_build_object('id', i.id, 'url', i.url)) FILTER (WHERE i.id IS NOT NULL), '[]') as images
       FROM annonces a
       LEFT JOIN users u ON a.user_id = u.id
-      LEFT JOIN annonce_images ai ON a.id = ai.annonce_id
+      LEFT JOIN annonce_images i ON a.id = i.annonce_id
       GROUP BY a.id, u.nup
-      ORDER BY a.is_vip DESC, a.created_at DESC;
+      ORDER BY a.is_boosted DESC, a.is_vip DESC, a.created_at DESC;
     `;
-    const result = await pool.query(query);
+    const result = await pool.query(queryText);
     res.json(result.rows);
-  } catch (e) { res.json([]); }
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors de la récupération du flux." });
+  }
 });
 
-app.post("/annonces", async (req,res)=>{
+// Publication d'une annonce (Standard ou VIP)
+app.post("/annonces", async (req, res) => {
+  const { user_id, titre, prix, devise, periode, statut, telephone, description, ville, commune, is_vip, images_base64 } = req.body;
   try {
-    let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
-    const fields = await pool.query(
-      `INSERT INTO annonces (user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()) RETURNING id`,
-      [user_id || null, titre, description, prix || 0, devise || '$', periode || 'jour', ville || 'Lubumbashi', commune || '', quartier || '', telephone, statut || 'disponible', is_vip || false]
+    const newAnnonce = await pool.query(
+      `INSERT INTO annonces (user_id, titre, prix, devise, periode, statut, telephone, description, ville, commune, is_vip) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+      [user_id, titre, prix || 0, devise, periode, statut, telephone, description, ville, commune, is_vip || false]
     );
-    const id = fields.rows[0].id;
-    if(images_base64 && Array.isArray(images_base64)){
-      for(let b64 of images_base64){
-        const url = await uploadImage(b64);
-        if(url) await pool.query("INSERT INTO annonce_images (annonce_id, image_url) VALUES ($1, $2)", [id, url]);
+    
+    const annonceId = newAnnonce.rows[0].id;
+    if (images_base64 && images_base64.length > 0) {
+      for (let base64 of images_base64) {
+        await pool.query("INSERT INTO annonce_images (annonce_id, url) VALUES ($1, $2)", [annonceId, base64]);
       }
     }
-    res.json({ success: true, id });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+    res.json({ success: true, annonce: newAnnonce.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors de la création de la publication." });
+  }
 });
 
-// MODIFICATION COMPLETE ANNONCE (STANDARD ET VIP AVEC GESTION DYNAMIQUE DES IMAGES)
+// Modification d'une annonce
 app.put("/annonces/:id", async (req, res) => {
+  const { id } = req.params;
+  const { titre, prix, devise, periode, statut, telephone, description, nouvelles_images_base64 } = req.body;
   try {
-    const { titre, prix, devise, periode, description, statut, ville, commune, telephone, nouvelles_images_base64 } = req.body;
     await pool.query(
-      `UPDATE annonces SET titre=$1, prix=$2, devise=$3, periode=$4, description=$5, statut=$6, ville=$7, commune=$8, telephone=$9 WHERE id=$10`,
-      [titre, prix, devise, periode, description, statut, ville, commune, telephone, req.params.id]
+      `UPDATE annonces SET titre=$1, prix=$2, devise=$3, periode=$4, statut=$5, telephone=$6, description=$7 
+       WHERE id=$8`,
+      [titre, prix, font = devise, periode, statut, telephone, description, id]
     );
-    if(nouvelles_images_base64 && Array.isArray(nouvelles_images_base64)){
-      for(let b64 of nouvelles_images_base64){
-        const url = await uploadImage(b64);
-        if(url) await pool.query("INSERT INTO annonce_images (annonce_id, image_url) VALUES ($1, $2)", [req.params.id, url]);
+    if (nouvelles_images_base64 && nouvelles_images_base64.length > 0) {
+      for (let base64 of nouvelles_images_base64) {
+        await pool.query("INSERT INTO annonce_images (annonce_id, url) VALUES ($1, $2)", [id, base64]);
       }
     }
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors de la modification." });
+  }
 });
 
+// Processus Interstitiel de Boost d'une annonce
+app.post("/annonces/:id/boost", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query("UPDATE annonces SET is_boosted = true, boosted_at = NOW() WHERE id = $1", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors du traitement du boost." });
+  }
+});
+
+// Suppression d'une image en direct depuis l'édition du profil
 app.delete("/images/:id", async (req, res) => {
   try {
     await pool.query("DELETE FROM annonce_images WHERE id = $1", [req.params.id]);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors de la suppression de l'image." });
+  }
 });
 
-app.post("/annonces/:id/boost", async (req, res) => {
+// ================= MESSAGERIE PRIVÉE ET SIGNALEMENTS =================
+
+// Envoyer un message privé instantané
+app.post("/chat/send", async (req, res) => {
+  const { annonce_id, expediteur_id, contenu } = req.body;
   try {
-    await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [req.params.id]);
+    const targetAnnonce = await pool.query("SELECT user_id FROM annonces WHERE id = $1", [annonce_id]);
+    if(targetAnnonce.rows.length === 0) return res.status(404).json({ error: "Annonce introuvable." });
+    
+    const destinataire_id = targetAnnonce.rows[0].user_id;
+    await pool.query(
+      "INSERT INTO messages (annonce_id, expediteur_id, destinataire_id, contenu, provenance_contexte) VALUES ($1, $2, $3, $4, 'normal')",
+      [annonce_id, expediteur_id, destinataire_id, contenu]
+    );
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (err) {
+    res.status(500).json({ error: "Erreur d'envoi du message." });
+  }
 });
 
+// Charger la messagerie privée d'un utilisateur (gère l'affichage des alertes admin répondables)
+app.get("/chat/conversations/:uid", async (req, res) => {
+  try {
+    const queryText = `
+      SELECT m.*, a.titre as annonce_titre, u1.nup as expediteur_nup, u2.nup as destinataire_nup, sj.reponse_utilisateur
+      FROM messages m
+      LEFT JOIN annonces a ON m.annonce_id = a.id
+      LEFT JOIN users u1 ON m.expediteur_id = u1.id
+      LEFT JOIN users u2 ON m.destinataire_id = u2.id
+      LEFT JOIN signalements_justifications sj ON (sj.annonce_id = m.annonce_id AND sj.user_id_concerne = $1)
+      WHERE m.destinataire_id = $1 OR m.expediteur_id = $1
+      ORDER BY m.created_at DESC;
+    `;
+    const result = await pool.query(queryText, [req.uid]);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Erreur de chargement de la messagerie." });
+  }
+});
+
+// Soumission d'une réponse de justification vers l'administration globale
+app.post("/chat/reply-justification/:msgId", async (req, res) => {
+  const { msgId } = req.params;
+  const { reponse } = req.body;
+  try {
+    const msgData = await pool.query("SELECT * FROM messages WHERE id = $1", [msgId]);
+    if(msgData.rows.length > 0) {
+      const { annonce_id, destinataire_id, contenu } = msgData.rows[0];
+      // Vérifier si la ligne d'alerte existe dans la table centrale, sinon la créer
+      const exist = await pool.query("SELECT * FROM signalements_justifications WHERE annonce_id = $1", [annonce_id]);
+      if(exist.rows.length > 0) {
+        await pool.query("UPDATE signalements_justifications SET reponse_utilisateur = $1 WHERE annonce_id = $2", [reponse, annonce_id]);
+      } else {
+        await pool.query(
+          "INSERT INTO signalements_justifications (annonce_id, contexte_alerte, user_id_concerne, reponse_utilisateur) VALUES ($1, $2, $3, $4)",
+          [annonce_id, contenu, destinataire_id, reponse]
+        );
+      }
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors de la transmission de la justification." });
+  }
+});
+
+// Signaler une annonce
+app.post("/annonces/:id/signaler", async (req, res) => {
+  const { id } = req.params;
+  const { raison } = req.body;
+  try {
+    const annonce = await pool.query("SELECT user_id FROM annonces WHERE id = $1", [id]);
+    if(annonce.rows.length > 0) {
+      await pool.query(
+        "INSERT INTO signalements_justifications (annonce_id, contexte_alerte, user_id_concerne) VALUES ($1, $2, $3)",
+        [id, raison, annonce.rows[0].user_id]
+      );
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors du signalement." });
+  }
+});
+
+// ================= EXCLUSIVITÉS DU PANEL D'ADMINISTRATION =================
+
+// Liste de toutes les annonces pour l'admin
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
     await pool.query("DELETE FROM annonces WHERE id = $1", [req.params.id]);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors de la suppression." });
+  }
 });
 
-app.post("/annonces/:id/signaler", async (req, res) => {
+// Récupérer tous les messages échangés (Supervision suprême)
+app.get("/admin/all-messages", async (req, res) => {
   try {
-    await pool.query("INSERT INTO annonce_reports (annonce_id, raison) VALUES ($1, $2)", [req.params.id, req.body.raison || "Non spécifié"]);
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.get("/admin/reports", async (req, res) => {
-  try {
-    const query = `
-      SELECT r.id as report_id, r.raison, r.created_at as reported_at, a.*, u.nup as proprietaire_nup,
-             COALESCE(JSON_AGG(JSON_BUILD_OBJECT('id', ai.id, 'url', ai.image_url)) FILTER (WHERE ai.id IS NOT NULL), '[]') as images
-      FROM annonce_reports r
-      JOIN annonces a ON r.annonce_id = a.id
-      LEFT JOIN users u ON a.user_id = u.id
-      LEFT JOIN annonce_images ai ON a.id = ai.annonce_id
-      GROUP BY r.id, a.id, u.nup ORDER BY r.created_at DESC;
-    `;
-    const result = await pool.query(query);
+    const result = await pool.query(`
+      SELECT m.*, u1.nup as expediteur_nup, u2.nup as destinataire_nup 
+      FROM messages m
+      JOIN users u1 ON m.expediteur_id = u1.id
+      JOIN users u2 ON m.destinataire_id = u2.id
+      ORDER BY m.created_at DESC`);
     res.json(result.rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (err) {
+    res.status(500).json({ error: "Erreur de récupération." });
+  }
 });
 
-// ================= GESTION DES APPELS CHAT ET ALERTES ADMIN VIA MESSAGERIE PRIVÉE =================
-app.post("/chat/send", async (req, res) => {
+// Suppression d'un message par l'admin
+app.delete("/admin/messages/:id/delete", async (req, res) => {
   try {
-    const { annonce_id, expediteur_id, contenu, provenance_contexte } = req.body;
-    let destinataire_id = null;
-
-    if (annonce_id) {
-      const ownerRes = await pool.query("SELECT user_id FROM annonces WHERE id = $1", [annonce_id]);
-      if(ownerRes.rows.length > 0) destinataire_id = ownerRes.rows[0].user_id;
-    }
-
-    if (!destinataire_id) return res.status(404).json({ error: "Bénéficiaire introuvable." });
-    
-    await pool.query(
-      "INSERT INTO messages_priveis (annonce_id, expediteur_id, destinataire_id, contenu, provenance_contexte) VALUES ($1, $2, $3, $4, $5)",
-      [annonce_id || null, expediteur_id, destinataire_id, contenu, provenance_contexte || 'normal']
-    );
+    await pool.query("DELETE FROM messages WHERE id = $1", [req.params.id]);
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (err) {
+    res.status(500).json({ error: "Erreur suppression message." });
+  }
 });
 
-app.post("/admin/send-to-nup", async (req, res) => {
+// Récupérer la boîte unifiée de réception des justifications / signalements pour l'admin
+app.get("/admin/all-justifications/signale", async (req, res) => {
   try {
-    const { annonce_id, contenu, provenance_contexte } = req.body;
-    const adminRes = await pool.query("SELECT id FROM users WHERE is_admin = TRUE LIMIT 1");
-    const adminId = adminRes.rows[0].id;
-
-    const ownerRes = await pool.query("SELECT user_id FROM annonces WHERE id = $1", [annonce_id]);
-    if (ownerRes.rows.length === 0) return res.status(404).json({ error: "Annonce introuvable." });
-    const destinataire_id = ownerRes.rows[0].user_id;
-
-    await pool.query(
-      "INSERT INTO messages_priveis (annonce_id, expediteur_id, destinataire_id, contenu, provenance_contexte) VALUES ($1, $2, $3, $4, $5)",
-      [annonce_id, adminId, destinataire_id, contenu, provenance_contexte || 'normal']
-    );
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+    const result = await pool.query(`
+      SELECT sj.*, u.nup as user_nup, a.titre as annonce_titre
+      FROM signalements_justifications sj
+      LEFT JOIN users u ON sj.user_id_concerne = u.id
+      LEFT JOIN annonces a ON sj.annonce_id = a.id
+      ORDER BY sj.created_at DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Erreur de chargement." });
+  }
 });
 
-// MISSION 1: ENVOYER UN MESSAGE POUR TOUS LES UTILISATEURS (IMPOSSIBLE DE RÉPONDRE)
+// Supprimer une entrée de justification/signalement
+app.delete("/admin/justifications/:id/delete", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM signalements_justifications WHERE id = $1", [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors de la suppression." });
+  }
+});
+
+// Diffuser une notification globale (Non-répondable : provenance_contexte = 'global_noreply')
 app.post("/admin/send-global", async (req, res) => {
+  const { contenu } = req.body;
   try {
-    const { contenu } = req.body;
-    const adminRes = await pool.query("SELECT id FROM users WHERE is_admin = TRUE LIMIT 1");
-    if(adminRes.rows.length === 0) return res.status(404).json({ error: "Admin introuvable." });
-    const adminId = adminRes.rows[0].id;
-
-    const usersRes = await pool.query("SELECT id FROM users WHERE is_admin = FALSE");
+    const adminUser = await pool.query("SELECT id FROM users WHERE nup = 'NUP-ADMIN' LIMIT 1");
+    let adminId = adminUser.rows.length > 0 ? adminUser.rows[0].id : 1;
     
-    for(let row of usersRes.rows) {
+    const allUsers = await pool.query("SELECT id FROM users WHERE nup != 'NUP-ADMIN'");
+    for(let user of allUsers.rows) {
       await pool.query(
-        "INSERT INTO messages_priveis (annonce_id, expediteur_id, destinataire_id, contenu, provenance_contexte) VALUES (NULL, $1, $2, $3, 'global_noreply')",
-        [adminId, row.id, contenu]
+        "INSERT INTO messages (annonce_id, expediteur_id, destinataire_id, contenu, provenance_contexte) VALUES ($1, $2, $3, $4, 'global_noreply')",
+        [null, adminId, user.id, contenu]
       );
     }
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (err) {
+    res.status(500).json({ error: "Erreur de diffusion globale." });
+  }
 });
 
-// MISSION 1: SUPPRESSION DÉFINITIVE D'UN MESSAGE PAR L'ADMINISTRATEUR
-app.delete("/admin/messages/:id/delete", async (req, res) => {
+// Envoyer un message ciblé depuis l'admin à un créateur d'annonce spécifique (Répondable)
+app.post("/admin/send-to-nup", async (req, res) => {
+  const { annonce_id, contenu, provenance_contexte } = req.body;
   try {
-    await pool.query("DELETE FROM messages_priveis WHERE id = $1", [req.params.id]);
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+    const target = await pool.query("SELECT user_id FROM annonces WHERE id = $1", [annonce_id]);
+    if(target.rows.length === 0) return res.status(404).json({ error: "Annonce introuvable." });
+    
+    // ID fictif ou réel de l'admin
+    let adminId = 1; 
+    const destId = target.rows[0].user_id;
+    
+    const newMsg = await pool.query(
+      "INSERT INTO messages (annonce_id, expediteur_id, destinataire_id, contenu, provenance_contexte) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+      [annonce_id, adminId, destId, contenu, provenance_contexte || 'alerte_admin']
+    );
+    
+    // Insertion dans la table de suivi des signalements/justifications de l'admin
+    await pool.query(
+      "INSERT INTO signalements_justifications (annonce_id, contexte_alerte, user_id_concerne) VALUES ($1, $2, $3)",
+      [annonce_id, contenu, destId]
+    );
+
+    res.json({ success: true, messageId: newMsg.rows[0].id });
+  } catch (err) {
+    res.status(500).json({ error: "Erreur d'acheminement." });
+  }
 });
 
-// ROUTE POUR RÉCUPÉRER TOUS LES MESSAGES DANS L'ADMINISTRATION
-app.get("/admin/all-messages", async (req, res) => {
-  try {
-    const query = `
-      SELECT m.*, u1.nup as expediteur_nup, u2.nup as destinataire_nup, a.titre as annonce_titre
-      FROM messages_priveis m
-      JOIN users u1 ON m.expediteur_id = u1.id
-      JOIN users u2 ON m.destinataire_id = u2.id
-      LEFT JOIN annonces a ON m.annonce_id = a.id
-      ORDER BY m.created_at DESC;
-    `;
-    const result = await pool.query(query);
-    res.json(result.rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post("/chat/reply-justification/:msg_id", async (req, res) => {
-  try {
-    const { reponse } = req.body;
-    await pool.query("UPDATE messages_priveis SET reponse_utilisateur = $1 WHERE id = $2", [reponse, req.params.msg_id]);
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.get("/chat/conversations/:user_id", async (req, res) => {
-  try {
-    const uid = req.params.user_id;
-    const query = `
-      SELECT m.*, a.titre as annonce_titre, u1.nup as expediteur_nup, u2.nup as destinataire_nup
-      FROM messages_priveis m
-      LEFT JOIN annonces a ON m.annonce_id = a.id
-      JOIN users u1 ON m.expediteur_id = u1.id
-      JOIN users u2 ON m.destinataire_id = u2.id
-      WHERE m.expediteur_id = $1 OR m.destinataire_id = $1
-      ORDER BY m.created_at DESC;
-    `;
-    const result = await pool.query(query, [uid]);
-    res.json(result.rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.get("/admin/all-justifications/:context", async (req, res) => {
-  try {
-    const query = `
-      SELECT m.*, a.titre as annonce_titre, u.nup as user_nup
-      FROM messages_priveis m
-      LEFT JOIN annonces a ON m.annonce_id = a.id
-      JOIN users u ON m.destinataire_id = u.id
-      WHERE m.provenance_contexte = $1 AND m.reponse_utilisateur IS NOT NULL
-      ORDER BY m.created_at DESC;
-    `;
-    const result = await pool.query(query, [req.params.context]);
-    res.json(result.rows);
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Serveur opérationnel avec marquage NUP sur le port ${PORT}`));
+// Écoute du serveur
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 NIA RDC Backend actif sur le port ${PORT}`));

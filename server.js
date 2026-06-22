@@ -10,7 +10,7 @@ const { Pool } = pg;
 const app = express();
 
 app.use(cors());
-app.use(express.json({ limit: "50mb" })); // Protection et support pour transferts d'images Base64
+app.use(express.json({ limit: "50mb" }));
 
 // Configuration de la connexion à la base de données (PostgreSQL)
 const pool = new Pool({
@@ -20,7 +20,6 @@ const pool = new Pool({
 
 // ================= ROUTE D'AUTHENTIFICATION =================
 
-// Inscription
 app.post("/auth/register", async (req, res) => {
   const { telephone, password } = req.body;
   try {
@@ -39,7 +38,6 @@ app.post("/auth/register", async (req, res) => {
   }
 });
 
-// Connexion
 app.post("/auth/login", async (req, res) => {
   const { telephone, password } = req.body;
   try {
@@ -57,7 +55,6 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
-// Suppression définitive de compte par l'utilisateur
 app.delete("/auth/delete-account", async (req, res) => {
   const { user_id } = req.body;
   try {
@@ -70,7 +67,6 @@ app.delete("/auth/delete-account", async (req, res) => {
 
 // ================= GESTION DES ANNONCES =================
 
-// Récupération du flux principal unifié ordonné (Boosté -> VIP -> Standard)
 app.get("/feed", async (req, res) => {
   try {
     const queryText = `
@@ -89,7 +85,6 @@ app.get("/feed", async (req, res) => {
   }
 });
 
-// Publication d'une annonce (Standard ou VIP)
 app.post("/annonces", async (req, res) => {
   const { user_id, titre, prix, devise, periode, statut, telephone, description, ville, commune, is_vip, images_base64 } = req.body;
   try {
@@ -111,7 +106,6 @@ app.post("/annonces", async (req, res) => {
   }
 });
 
-// Modification d'une annonce (Correction de la coquille ici)
 app.put("/annonces/:id", async (req, res) => {
   const { id } = req.params;
   const { titre, prix, devise, periode, statut, telephone, description, nouvelles_images_base64 } = req.body;
@@ -132,7 +126,6 @@ app.put("/annonces/:id", async (req, res) => {
   }
 });
 
-// Processus Interstitiel de Boost d'une annonce
 app.post("/annonces/:id/boost", async (req, res) => {
   const { id } = req.params;
   try {
@@ -143,7 +136,6 @@ app.post("/annonces/:id/boost", async (req, res) => {
   }
 });
 
-// Suppression d'une image en direct depuis l'édition du profil
 app.delete("/images/:id", async (req, res) => {
   try {
     await pool.query("DELETE FROM annonce_images WHERE id = $1", [req.params.id]);
@@ -155,7 +147,6 @@ app.delete("/images/:id", async (req, res) => {
 
 // ================= MESSAGERIE PRIVÉE ET SIGNALEMENTS =================
 
-// Envoyer un message privé instantané
 app.post("/chat/send", async (req, res) => {
   const { annonce_id, expediteur_id, contenu } = req.body;
   try {
@@ -173,7 +164,6 @@ app.post("/chat/send", async (req, res) => {
   }
 });
 
-// Charger la messagerie privée d'un utilisateur
 app.get("/chat/conversations/:uid", async (req, res) => {
   try {
     const queryText = `
@@ -193,7 +183,6 @@ app.get("/chat/conversations/:uid", async (req, res) => {
   }
 });
 
-// Soumission d'une réponse de justification vers l'administration globale
 app.post("/chat/reply-justification/:msgId", async (req, res) => {
   const { msgId } = req.params;
   const { reponse } = req.body;
@@ -217,7 +206,6 @@ app.post("/chat/reply-justification/:msgId", async (req, res) => {
   }
 });
 
-// Signaler une annonce
 app.post("/annonces/:id/signaler", async (req, res) => {
   const { id } = req.params;
   const { raison } = req.body;
@@ -235,7 +223,7 @@ app.post("/annonces/:id/signaler", async (req, res) => {
   }
 });
 
-// ================= EXCLUSIVITÉS DU PANEL D'ADMINISTRATION =================
+-- ================= EXCLUSIVITÉS PANEL ADMIN =================
 
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
@@ -337,6 +325,5 @@ app.post("/admin/send-to-nup", async (req, res) => {
   }
 });
 
-// Écoute du serveur
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 NIA RDC Backend actif sur le port ${PORT}`));

@@ -5,12 +5,20 @@ import express from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import pg from "pg";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const { Pool } = pg;
 const app = express();
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
+
+// Rendre le dossier "public" accessible pour afficher le fichier HTML et le JS
+app.use(express.static(path.join(__dirname, "../public")));
 
 // Configuration de la connexion à la base de données (PostgreSQL)
 const pool = new Pool({
@@ -19,8 +27,9 @@ const pool = new Pool({
 });
 
 // ================= ROUTE D'ACCUEIL PRINCIPALE =================
+// Cette route envoie le fichier index.html automatiquement à la racine (/)
 app.get("/", (req, res) => {
-  res.send("🚀 Serveur NIA RDC fonctionnel et actif !");
+  res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
 // ================= ROUTE D'AUTHENTIFICATION =================

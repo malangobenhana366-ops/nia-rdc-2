@@ -29,7 +29,7 @@ async function uploadImage(base64){
   } catch (e) { return ""; }
 }
 
-// CRÉATION DE COMPTE AVEC GÉNÉRATION AUTOMATIQUE DE NUP
+// CRÉATION DE COMPTE
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -38,7 +38,6 @@ app.post("/auth/register", async (req, res) => {
     const userExist = await pool.query("SELECT id FROM users WHERE telephone = $1", [telephone]);
     if (userExist.rows.length > 0) return res.status(400).json({ error: "Ce numéro est déjà utilisé." });
 
-    // Génération d'un NUP unique aléatoire à 4 chiffres (ex: NUP-4819)
     const nupAleatoire = "NUP-" + Math.floor(1000 + Math.random() * 9000);
     const hashedPassword = await bcrypt.hash(password, 10);
     
@@ -70,7 +69,7 @@ app.delete("/auth/delete-account", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// REJOINDRE LE FLUX GENERAL INCLUANT LE NUP DU VENDEUR POUR L'ADMIN
+// FLUX GÉNÉRAL
 app.get("/feed", async (req, res) => {
   try {
     const query = `
@@ -106,6 +105,7 @@ app.post("/annonces", async (req,res)=>{
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// MODIFICATION COMPLETE ANNONCE (STANDARD ET VIP AVEC GESTION DYNAMIQUE DES IMAGES)
 app.put("/annonces/:id", async (req, res) => {
   try {
     const { titre, prix, devise, periode, description, statut, ville, commune, telephone, nouvelles_images_base64 } = req.body;
@@ -167,7 +167,7 @@ app.get("/admin/reports", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ================= GESTION DES APPELS CHAT ET ALERTES ADMIN VIA MESSAGERIE PRIVÉE RESTRUCTURÉE =================
+// ================= GESTION DES APPELS CHAT ET ALERTES ADMIN VIA MESSAGERIE PRIVÉE =================
 app.post("/chat/send", async (req, res) => {
   try {
     const { annonce_id, expediteur_id, contenu, provenance_contexte } = req.body;
@@ -188,16 +188,12 @@ app.post("/chat/send", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ROUTE SPECIALISEE POUR L'ADMINISTRATEUR ENVOYANT UN MESSAGE VIA LE NUP D'UNE ANNONCE SIGNALE ou STANDARD
 app.post("/admin/send-to-nup", async (req, res) => {
   try {
     const { annonce_id, contenu, provenance_contexte } = req.body;
-    
-    // Détecter le compte admin maître
     const adminRes = await pool.query("SELECT id FROM users WHERE is_admin = TRUE LIMIT 1");
     const adminId = adminRes.rows[0].id;
 
-    // Retrouver le propriétaire de l'annonce
     const ownerRes = await pool.query("SELECT user_id FROM annonces WHERE id = $1", [annonce_id]);
     if (ownerRes.rows.length === 0) return res.status(404).json({ error: "Annonce introuvable." });
     const destinataire_id = ownerRes.rows[0].user_id;
@@ -207,6 +203,50 @@ app.post("/admin/send-to-nup", async (req, res) => {
       [annonce_id, adminId, destinataire_id, contenu, provenance_contexte || 'normal']
     );
     res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// MISSION 1: ENVOYER UN MESSAGE POUR TOUS LES UTILISATEURS (IMPOSSIBLE DE RÉPONDRE)
+app.post("/admin/send-global", async (req, res) => {
+  try {
+    const { contenu } = req.body;
+    const adminRes = await pool.query("SELECT id FROM users WHERE is_admin = TRUE LIMIT 1");
+    if(adminRes.rows.length === 0) return res.status(404).json({ error: "Admin introuvable." });
+    const adminId = adminRes.rows[0].id;
+
+    const usersRes = await pool.query("SELECT id FROM users WHERE is_admin = FALSE");
+    
+    for(let row of usersRes.rows) {
+      await pool.query(
+        "INSERT INTO messages_priveis (annonce_id, expediteur_id, destinataire_id, contenu, provenance_contexte) VALUES (NULL, $1, $2, $3, 'global_noreply')",
+        [adminId, row.id, contenu]
+      );
+    }
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// MISSION 1: SUPPRESSION DÉFINITIVE D'UN MESSAGE PAR L'ADMINISTRATEUR
+app.delete("/admin/messages/:id/delete", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM messages_priveis WHERE id = $1", [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ROUTE POUR RÉCUPÉRER TOUS LES MESSAGES DANS L'ADMINISTRATION
+app.get("/admin/all-messages", async (req, res) => {
+  try {
+    const query = `
+      SELECT m.*, u1.nup as expediteur_nup, u2.nup as destinataire_nup, a.titre as annonce_titre
+      FROM messages_priveis m
+      JOIN users u1 ON m.expediteur_id = u1.id
+      JOIN users u2 ON m.destinataire_id = u2.id
+      LEFT JOIN annonces a ON m.annonce_id = a.id
+      ORDER BY m.created_at DESC;
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

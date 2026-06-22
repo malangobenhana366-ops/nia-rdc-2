@@ -10,7 +10,6 @@ let BLOCS_VIP_COMPTEUR = 0;
 let topAdminTimer = null;
 let validationAdminOk = false;
 
-// ================= COPIES EXACTES DU TEXTE DE SÉCURITÉ DEMANDÉ =================
 const TEXTES_DU_DROIT = {
   securite: `Conditions de sécurité et d'utilisation de NIA RDC
 
@@ -19,7 +18,7 @@ Bienvenue sur NIA RDC.
 Avant de créer un compte, veuillez lire les présentes conditions. En utilisant la plateforme, vous acceptez les règles suivantes.
 
 1. Utilisation de la plateforme
-NIA RDC est une plateforme destinée à faciliter la publication et la consultation d'annonces de location, de vente et de services. Les utilisateurs s'engagent à utiliser la plateforme de manière honnête et responsable.
+NIA RDC est une plateforme destinée à faciliter la publication et la consultation d'annonces de location, de vente et de services. Les utilisateurs s'engagent à utiliser la plateforme de manière honteuse et responsable.
 
 2. Exactitude des informations
 Chaque utilisateur est responsable des informations qu'il publie. Les annonces doivent être exactes et ne pas contenir d'informations trompeuses ou mensongères.
@@ -68,8 +67,6 @@ Dernière mise à jour : Juin 2026.
 La protection des informations personnelles de nos utilisateurs est importante pour notre équipe...`
 };
 
-// ================= BOUCLIER CYBER-SÉCURITÉ & MISES À JOUR AUTOMATIQUES =================
-
 function executerSecurisationEtMiseAJourAutomatique() {
   const cleDerniereMaj = "nia_security_cron_timestamp";
   const maintenant = Date.now();
@@ -77,7 +74,6 @@ function executerSecurisationEtMiseAJourAutomatique() {
 
   const derniereMaj = localStorage.getItem(cleDerniereMaj);
   if (!derniereMaj || (maintenant - parseInt(derniereMaj)) > d25JoursEnMillisecondes) {
-    // Forcer le nettoyage global de cache de l'application après 25 jours
     localStorage.removeItem("nia_user_id");
     localStorage.setItem(cleDerniereMaj, maintenant.toString());
     alert("🔄 NIA RDC : Une mise à jour automatique de sécurité obligatoire a été appliquée. Veuillez vous reconnecter.");
@@ -95,8 +91,6 @@ function nettoyerChaineAntiXSS(chaine) {
 
 function verifierFiltreStrictImmobilierEtContenusIllegaux(titre, description) {
   const texteComplet = `${titre.toLowerCase()} ${description.toLowerCase()}`;
-  
-  // 1. Détection et exclusion stricte du secteur immobilier
   const motsImmobilierInterdits = ["maison", "chambre", "appartement", "studio", "parcelle", "terrain", "villa", "immeuble", "logement", "hotel", "bureau"];
   for (let mot of motsImmobilierInterdits) {
     if (texteComplet.includes(mot)) {
@@ -104,8 +98,6 @@ function verifierFiltreStrictImmobilierEtContenusIllegaux(titre, description) {
       return false;
     }
   }
-
-  // 2. Filtre anti-fraude contre le piratage et les activités illicites
   const motsIllegaux = ["drogue", "faux billets", "arme", "piratage", "hack", "blanchiment", "munition", "volé", "fake", "achat de compte"];
   for (let mot of motsIllegaux) {
     if (texteComplet.includes(mot)) {
@@ -116,8 +108,6 @@ function verifierFiltreStrictImmobilierEtContenusIllegaux(titre, description) {
   return true;
 }
 
-// ================= GESTION DU PARCOURS D'INSCRIPTION ET DES MODALES =================
-
 function brancherEvenementScrollControle() {
   const box = document.getElementById("cgu-scroller-node");
   if (!box) return;
@@ -125,7 +115,6 @@ function brancherEvenementScrollControle() {
   const btnReg = document.getElementById("btn-register-action");
   
   box.addEventListener("scroll", () => {
-    // Force l'utilisateur à atteindre le bas des conditions de sécurité réelles avant d'activer la case
     if (box.scrollHeight - box.scrollTop <= box.clientHeight + 25) {
       if (chk && chk.hasAttribute("disabled")) {
         chk.removeAttribute("disabled");
@@ -276,7 +265,7 @@ async function soumettreAnnonceStandard() {
       description, 
       ville: nettoyerChaineAntiXSS(document.getElementById("ville").value.trim()), 
       commune: nettoyerChaineAntiXSS(document.getElementById("commune").value.trim()), 
-      quartier: "", is_vip: false, images_base64
+      is_vip: false, images_base64
     })
   });
   fermerModal("publier"); chargerFluxPrincipal();
@@ -342,14 +331,14 @@ async function chargerConversationsPrivees() {
     return `
     <div style="background:${estAdmin || estNoReply ? '#fff5f5' : 'white'}; padding:8px; border-radius:6px; border:1px solid ${estAdmin || estNoReply ? 'red' : 'var(--border)'}; font-size:0.85rem; margin-bottom:6px;">
       <div style="font-weight:bold; color:${estAdmin || estNoReply ? 'red' : 'var(--primary)'};">
-        ${estNoReply ? '📢 ANNONCE GÉNÉRALE DE L\'ADMINISTRATION' : estAdmin ? '🚨 ALERTE OFFICIELLE (Réponse requise)' : `Sujet : ${c.annonce_titre || 'Général'}`}
+        ${estNoReply ? '📢 ANNONCE GÉNÉRALE' : estAdmin ? '🚨 ALERTE OFFICIELLE (Réponse requise)' : `Sujet : ${c.annonce_titre || 'Général'}`}
       </div>
       <div style="color:var(--text-light); font-size:0.75rem;">De : ${c.expediteur_nup} ➔ À : ${c.destinataire_nup}</div>
       <div style="background:#f1f5f9; padding:6px; border-radius:4px; font-style:italic; margin-top:4px;">"${c.contenu}"</div>
       
-      ${estNoReply ? `<div style="color:var(--danger); font-size:0.75rem; margin-top:4px; font-weight:bold;">🚫 Réponse impossible à ce message global de l'administration.</div>` : 
-        c.reponse_utilisateur ? `<div style="color:var(--success); font-weight:bold; margin-top:4px;">✓ Votre justification a été transmise : "${c.reponse_utilisateur}"</div>` : 
-        estAdmin ? `<div style="margin-top:6px; display:flex; gap:4px;"><input id="justif-reply-to-${c.id}" placeholder="Écrire votre justification pour l'administrateur..." style="flex:1; padding:4px;"><button class="btn-auth" style="font-size:0.75rem; padding:4px 8px; width:auto;" onclick="soumettreJustificationVersAdmin(${c.id})">Envoyer</button></div>` : ''}
+      ${estNoReply ? `<div style="color:var(--danger); font-size:0.75rem; margin-top:4px; font-weight:bold;">🚫 Réponse impossible.</div>` : 
+        c.reponse_utilisateur ? `<div style="color:var(--success); font-weight:bold; margin-top:4px;">✓ Justification transmise : "${c.reponse_utilisateur}"</div>` : 
+        estAdmin ? `<div style="margin-top:6px; display:flex; gap:4px;"><input id="justif-reply-to-${c.id}" placeholder="Écrire votre justification..." style="flex:1; padding:4px;"><button class="btn-auth" style="font-size:0.75rem; padding:4px 8px; width:auto;" onclick="soumettreJustificationVersAdmin(${c.id})">Envoyer</button></div>` : ''}
     </div>`;
   }).join("");
 }
@@ -359,15 +348,15 @@ async function soumettreJustificationVersAdmin(msgId) {
   await fetch(`${API}/chat/reply-justification/${msgId}`, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reponse: nettoyerChaineAntiXSS(text) })
   });
-  alert("Votre justification a été consignée et envoyée au bureau d'administration."); chargerConversationsPrivees();
+  alert("Votre justification a été consignée."); chargerConversationsPrivees();
 }
 
-async function signalingAnnonce(id) {
+async function signalerAnnonce(id) {
   const raison = prompt("Motif précis du signalement :"); if(!raison) return;
   await fetch(`${API}/annonces/${id}/signaler`, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ raison: nettoyerChaineAntiXSS(raison) })
   });
-  alert("Signalement enregistré. L'admin vérifiera l'offre.");
+  alert("Signalement enregistré.");
 }
 
 function basculerOngletProfil(mode) {
@@ -379,7 +368,7 @@ function basculerOngletProfil(mode) {
   const listDiv = document.getElementById("profil-annonces-list"); listDiv.innerHTML = "";
   
   let userList = toutesLesAnnonces.filter(a => a.user_id == currentUserId && a.is_vip === (mode === "vip"));
-  if(userList.length === 0) { listDiv.innerHTML = "<p style='color:gray; text-align:center; padding:10px;'>Aucune publication dans cette catégorie.</p>"; return; }
+  if(userList.length === 0) { listDiv.innerHTML = "<p style='color:gray; text-align:center; padding:10px;'>Aucune publication.</p>"; return; }
 
   listDiv.innerHTML = userList.map(a => `
     <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:8px;">
@@ -455,8 +444,6 @@ async function sauvegarderChangementsAnnonce() {
   fermerModal("modifier"); fermerModal("profil"); chargerFluxPrincipal();
 }
 
-// ================= GESTION DU CATALOGUE ET FORMULAIRE VIP COMPLET =================
-
 function rafraichirVueVipFormulaire() {
   const s = document.getElementById("vip-setup-zone");
   s.innerHTML = `
@@ -481,7 +468,7 @@ function ajouterBlocObjetAuCatalogueVip() {
       <select class="vip-in-periode" style="flex:1.5;"><option value="total">/ Total</option><option value="jour">/ Jour</option></select>
     </div>
     <div style="display:flex; gap:4px;">
-      <input class="vip-in-ville" placeholder="Ville (ex: Lubumbashi)" value="Lubumbashi">
+      <input class="vip-in-ville" placeholder="Ville" value="Lubumbashi">
       <input class="vip-in-commune" placeholder="Commune">
     </div>
     <select class="vip-in-statut"><option value="disponible">🟢 En Stock / Disponible</option><option value="occupe">🔴 Indisponible</option></select>
@@ -522,8 +509,6 @@ async function sauvegarderEtPublierToutLeCatalogueVip() {
   fermerModal("vip"); chargerFluxPrincipal();
 }
 
-// ================= SYSTÈME DE FILTRATION ET DE SUPERVISION ADMIN =================
-
 function filtrerFluxAdminEnTempsReel() {
   const villeSaisie = document.getElementById("admin-filter-ville").value.toLowerCase();
   const formatSaisie = document.getElementById("admin-filter-type").value;
@@ -541,14 +526,14 @@ function filtrerFluxAdminEnTempsReel() {
 
 function injecterDonniesHtmlAdmin(liste) {
   const box = document.getElementById("admin-main-render-box");
-  if(liste.length === 0) { box.innerHTML = "<p style='color:gray; padding:10px;'>Aucune offre trouvée pour ces filtres.</p>"; return; }
+  if(liste.length === 0) { box.innerHTML = "<p style='color:gray; padding:10px;'>Aucune offre trouvée.</p>"; return; }
   
   box.innerHTML = liste.map(a => `
     <div style="background:#1e293b; padding:8px; border-radius:4px; font-size:0.85rem; margin-bottom:4px; border-left:3px solid ${a.is_vip ? 'var(--vip-gold)' : '#64748b'}">
       <span style="color:#38bdf8; font-weight:bold;">[${a.proprietaire_nup || 'SANS NUP'}]</span> <b>${a.titre}</b>
       <span style="font-size:0.7rem; background:#334155; padding:2px 4px; border-radius:3px; color:#cbd5e1; margin-left:6px;">📍 ${a.ville}</span>
       <div style="display:flex; gap:4px; margin-top:4px;">
-        <input id="adm-input-${a.id}" placeholder="Rédiger un avertissement privé (Alerte répondable)..." style="flex:1; color:black; padding:4px; border-radius:4px; border:none; font-size:0.8rem;">
+        <input id="adm-input-${a.id}" placeholder="Avertissement privé..." style="flex:1; color:black; padding:4px; border-radius:4px; border:none; font-size:0.8rem;">
         <button onclick="envoyerMessageDepuisAdminAuNup(${a.id}, 'alerte_admin')" style="background:var(--success); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem;">Avertir</button>
         <button onclick="supprimerAnnonceParAdmin(${a.id})" style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem;">🗑️ Supprimer</button>
       </div>
@@ -558,7 +543,7 @@ function injecterDonniesHtmlAdmin(liste) {
 async function definirVueAdmin(mode) {
   VUE_ADMIN_ACTIVE = mode; 
   const box = document.getElementById("admin-main-render-box"); 
-  box.innerHTML = "Chargement des métadonnées du réseau...";
+  box.innerHTML = "Chargement...";
   
   document.getElementById("admin-filters-bar").style.display = (mode === "flux") ? "flex" : "none";
   
@@ -567,43 +552,42 @@ async function definirVueAdmin(mode) {
   }
   else if(mode === "messages") {
     const res = await fetch(`${API}/admin/all-messages`); const data = await res.json();
-    if(data.length === 0) { box.innerHTML = "Aucun échange privé sur le serveur."; return; }
+    if(data.length === 0) { box.innerHTML = "Aucun échange privé."; return; }
     box.innerHTML = data.map(m => `
       <div style="background:#1e293b; padding:8px; border-radius:4px; font-size:0.85rem; margin-bottom:4px;">
         <span style="color:#eab308;"><b>De :</b> ${m.expediteur_nup} ➔ <b>À :</b> ${m.destinataire_nup}</span>
         <div style="margin:4px 0; color:#cbd5e1; font-style:italic;">"${m.contenu}"</div>
-        <button onclick="supprimerMessageParAdminDefinitif(${m.id})" style="background:var(--danger); color:white; border:none; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer;">🗑️ Supprimer pour tous</button>
+        <button onclick="supprimerMessageParAdminDefinitif(${m.id})" style="background:var(--danger); color:white; border:none; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer;">🗑️ Supprimer</button>
       </div>`).join("");
   }
   else if(mode === "justifications") {
-    // Affiche la boîte unifiée comprenant les signalements émis et les justifications reçues
     const res = await fetch(`${API}/admin/all-justifications/signale`); const data = await res.json();
-    if(data.length === 0) { box.innerHTML = "Aucun signalement ni justification en attente."; return; }
+    if(data.length === 0) { box.innerHTML = "Aucun signalement."; return; }
     box.innerHTML = data.map(m => `
       <div style="background:#1e293b; padding:10px; border-radius:6px; font-size:0.85rem; margin-bottom:6px; border-left:4px solid var(--danger);">
         <div style="display:flex; justify-content:between; font-weight:bold; color:#f87171;">
-          <span>🚨 ALERTES EN COURS SUR LE COMPTE [${m.user_nup || 'NUP'}]</span>
+          <span>🚨 ALERTES COMPTE [${m.user_nup || 'NUP'}]</span>
           <button onclick="supprimerJustificationParAdmin(${m.id})" style="background:none; border:none; color:#94a3b8; cursor:pointer;">🗑️ Effacer</button>
         </div>
         <div style="background:#0f172a; padding:6px; border-radius:4px; margin:4px 0; color:#cbd5e1;">
-          <b>Motif / Plainte initiale :</b> "${m.contexte_alerte}"
+          <b>Plainte initiale :</b> "${m.contexte_alerte}"
         </div>
         <div style="background:#022c22; padding:6px; border-radius:4px; color:#4ade80; font-weight:bold;">
-          <b>↩️ Justification reçue :</b> ${m.reponse_utilisateur ? `"${m.reponse_utilisateur}"` : `<span style='color:orange; font-weight:normal;'>En attente de réponse...</span>`}
+          <b>↩️ Justification :</b> ${m.reponse_utilisateur ? `"${m.reponse_utilisateur}"` : `<span style='color:orange; font-weight:normal;'>En attente...</span>`}
         </div>
       </div>`).join("");
   }
 }
 
 async function supprimerMessageParAdminDefinitif(msgId) {
-  if (confirm("Supprimer ce message de manière irréversible ?")) {
+  if (confirm("Supprimer ce message ?")) {
      await fetch(`${API}/admin/messages/${msgId}/delete`, { method: "DELETE" });
      definirVueAdmin("messages");
   }
 }
 
 async function supprimerJustificationParAdmin(id) {
-  if (confirm("Effacer cette fiche d'alerte ?")) {
+  if (confirm("Effacer cette fiche ?")) {
     await fetch(`${API}/admin/justifications/${id}/delete`, { method: "DELETE" });
     definirVueAdmin("justifications");
   }
@@ -612,12 +596,12 @@ async function supprimerJustificationParAdmin(id) {
 async function envoyerNotificationGlobaleAdmin() {
   const input = document.getElementById("admin-global-msg-input");
   const contenu = input.value.trim();
-  if(!contenu) return alert("Texte vide.");
+  if(!contents) return alert("Texte vide.");
   
   await fetch(`${API}/admin/send-global`, {
      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contenu: nettoyerChaineAntiXSS(contenu) })
   });
-  alert("Message global diffusé sur tout le réseau !");
+  alert("Message global diffusé !");
   input.value = "";
   definirVueAdmin(VUE_ADMIN_ACTIVE);
 }
@@ -628,7 +612,7 @@ async function envoyerMessageDepuisAdminAuNup(annonceId, ctx) {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ annonce_id: annonceId, contenu: nettoyerChaineAntiXSS(msg), provenance_contexte: ctx })
   });
-  alert("Avertissement envoyé. Le créateur peut y répondre.");
+  alert("Avertissement envoyé.");
   document.getElementById(`adm-input-${annonceId}`).value = "";
   definirVueAdmin(VUE_ADMIN_ACTIVE);
 }
@@ -637,6 +621,13 @@ async function supprimerAnnonceParAdmin(id) {
   if(confirm("Confirmer la suppression ?")) { 
     await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" }); chargerFluxPrincipal(); 
     setTimeout(() => definirVueAdmin(VUE_ADMIN_ACTIVE), 400); 
+  } 
+}
+
+async function supprimerAnnonceProfil(id) { 
+  if(confirm("Supprimer cette annonce définitivement ?")) { 
+    await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" }); chargerFluxPrincipal(); 
+    setTimeout(() => basculerOngletProfil(ONGLET_PROFIL_ACTIF), 400); 
   } 
 }
 

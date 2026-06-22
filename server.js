@@ -1,12 +1,14 @@
 // =========================================================================
-// SERVEUR BACKEND COMPLET - NIA RDC (PRODUCTION ROBUSTE)
+// SERVEUR BACKEND COMPLET - NIA RDC (CORRIGÉ & COMPATIBLE ES MODULES)
 // =========================================================================
-const express = require("express");
-const cors = require("cors");
-const bcrypt = require("bcrypt");
-const { Pool } = require("pg");
+import express from "express";
+import cors from "cors";
+import bcrypt from "bcrypt";
+import pg from "pg";
 
+const { Pool } = pg;
 const app = express();
+
 app.use(cors());
 app.use(express.json({ limit: "50mb" })); // Protection et support pour transferts d'images Base64
 
@@ -109,7 +111,7 @@ app.post("/annonces", async (req, res) => {
   }
 });
 
-// Modification d'une annonce
+// Modification d'une annonce (Correction de la coquille ici)
 app.put("/annonces/:id", async (req, res) => {
   const { id } = req.params;
   const { titre, prix, devise, periode, statut, telephone, description, nouvelles_images_base64 } = req.body;
@@ -117,7 +119,7 @@ app.put("/annonces/:id", async (req, res) => {
     await pool.query(
       `UPDATE annonces SET titre=$1, prix=$2, devise=$3, periode=$4, statut=$5, telephone=$6, description=$7 
        WHERE id=$8`,
-      [titre, prix, font = devise, periode, statut, telephone, description, id]
+      [titre, prix, devise, periode, statut, telephone, description, id]
     );
     if (nouvelles_images_base64 && nouvelles_images_base64.length > 0) {
       for (let base64 of nouvelles_images_base64) {
@@ -171,7 +173,7 @@ app.post("/chat/send", async (req, res) => {
   }
 });
 
-// Charger la messagerie privée d'un utilisateur (gère l'affichage des alertes admin répondables)
+// Charger la messagerie privée d'un utilisateur
 app.get("/chat/conversations/:uid", async (req, res) => {
   try {
     const queryText = `
@@ -184,7 +186,7 @@ app.get("/chat/conversations/:uid", async (req, res) => {
       WHERE m.destinataire_id = $1 OR m.expediteur_id = $1
       ORDER BY m.created_at DESC;
     `;
-    const result = await pool.query(queryText, [req.uid]);
+    const result = await pool.query(queryText, [req.params.uid]);
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: "Erreur de chargement de la messagerie." });
@@ -199,7 +201,6 @@ app.post("/chat/reply-justification/:msgId", async (req, res) => {
     const msgData = await pool.query("SELECT * FROM messages WHERE id = $1", [msgId]);
     if(msgData.rows.length > 0) {
       const { annonce_id, destinataire_id, contenu } = msgData.rows[0];
-      // Vérifier si la ligne d'alerte existe dans la table centrale, sinon la créer
       const exist = await pool.query("SELECT * FROM signalements_justifications WHERE annonce_id = $1", [annonce_id]);
       if(exist.rows.length > 0) {
         await pool.query("UPDATE signalements_justifications SET reponse_utilisateur = $1 WHERE annonce_id = $2", [reponse, annonce_id]);
@@ -236,7 +237,6 @@ app.post("/annonces/:id/signaler", async (req, res) => {
 
 // ================= EXCLUSIVITÉS DU PANEL D'ADMINISTRATION =================
 
-// Liste de toutes les annonces pour l'admin
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {
     await pool.query("DELETE FROM annonces WHERE id = $1", [req.params.id]);
@@ -246,7 +246,6 @@ app.delete("/annonces/:id/delete", async (req, res) => {
   }
 });
 
-// Récupérer tous les messages échangés (Supervision suprême)
 app.get("/admin/all-messages", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -261,7 +260,6 @@ app.get("/admin/all-messages", async (req, res) => {
   }
 });
 
-// Suppression d'un message par l'admin
 app.delete("/admin/messages/:id/delete", async (req, res) => {
   try {
     await pool.query("DELETE FROM messages WHERE id = $1", [req.params.id]);
@@ -271,7 +269,6 @@ app.delete("/admin/messages/:id/delete", async (req, res) => {
   }
 });
 
-// Récupérer la boîte unifiée de réception des justifications / signalements pour l'admin
 app.get("/admin/all-justifications/signale", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -287,7 +284,6 @@ app.get("/admin/all-justifications/signale", async (req, res) => {
   }
 });
 
-// Supprimer une entrée de justification/signalement
 app.delete("/admin/justifications/:id/delete", async (req, res) => {
   try {
     await pool.query("DELETE FROM signalements_justifications WHERE id = $1", [req.params.id]);
@@ -297,7 +293,6 @@ app.delete("/admin/justifications/:id/delete", async (req, res) => {
   }
 });
 
-// Diffuser une notification globale (Non-répondable : provenance_contexte = 'global_noreply')
 app.post("/admin/send-global", async (req, res) => {
   const { contenu } = req.body;
   try {
@@ -317,14 +312,12 @@ app.post("/admin/send-global", async (req, res) => {
   }
 });
 
-// Envoyer un message ciblé depuis l'admin à un créateur d'annonce spécifique (Répondable)
 app.post("/admin/send-to-nup", async (req, res) => {
   const { annonce_id, contenu, provenance_contexte } = req.body;
   try {
     const target = await pool.query("SELECT user_id FROM annonces WHERE id = $1", [annonce_id]);
     if(target.rows.length === 0) return res.status(404).json({ error: "Annonce introuvable." });
     
-    // ID fictif ou réel de l'admin
     let adminId = 1; 
     const destId = target.rows[0].user_id;
     
@@ -333,7 +326,6 @@ app.post("/admin/send-to-nup", async (req, res) => {
       [annonce_id, adminId, destId, contenu, provenance_contexte || 'alerte_admin']
     );
     
-    // Insertion dans la table de suivi des signalements/justifications de l'admin
     await pool.query(
       "INSERT INTO signalements_justifications (annonce_id, contexte_alerte, user_id_concerne) VALUES ($1, $2, $3)",
       [annonce_id, contenu, destId]

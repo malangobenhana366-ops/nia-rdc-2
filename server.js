@@ -18,6 +18,11 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
+// ================= ROUTE D'ACCUEIL PRINCIPALE =================
+app.get("/", (req, res) => {
+  res.send("🚀 Serveur NIA RDC fonctionnel et actif !");
+});
+
 // ================= ROUTE D'AUTHENTIFICATION =================
 
 app.post("/auth/register", async (req, res) => {

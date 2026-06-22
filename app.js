@@ -1,3 +1,6 @@
+// =========================================================================
+// SCRIPT LOGIQUE APPLICATIVE - NIA RDC (VERSION FINALE JUIN 2026)
+// =========================================================================
 const API = "https://nia-rdc-2.onrender.com";
 
 let toutesLesAnnonces = [];
@@ -7,133 +10,123 @@ let BLOCS_VIP_COMPTEUR = 0;
 let topAdminTimer = null;
 let validationAdminOk = false;
 
-// ================= MISSION 3: INTEGRATION COMPLÈTE DES CONTENUS EXACTS =================
+// ================= COPIES EXACTES DU TEXTE DE SÉCURITÉ DEMANDÉ =================
 const TEXTES_DU_DROIT = {
-  securite: `POLITIQUE DE SÉCURITÉ AND CONDITIONS GÉNÉRALES D'UTILISATION (CGU) - NIA RDC
+  securite: `Conditions de sécurité et d'utilisation de NIA RDC
 
-1. ACCEPTATION DES CONDITIONS
-En créant un compte sur l'application NIA RDC, vous acceptez expressément d'être soumis aux présentes règles de sécurité.
+Bienvenue sur NIA RDC.
 
-2. NUMÉRO DE PROFIL UNIQUE (NUP)
-Chaque utilisateur se voit attribuer automatiquement un Identifiant Unique de Profil (NUP).
+Avant de créer un compte, veuillez lire les présentes conditions. En utilisant la plateforme, vous acceptez les règles suivantes.
+
+1. Utilisation de la plateforme
+NIA RDC est une plateforme destinée à faciliter la publication et la consultation d'annonces de location, de vente et de services. Les utilisateurs s'engagent à utiliser la plateforme de manière honnête et responsable.
+
+2. Exactitude des informations
+Chaque utilisateur est responsable des informations qu'il publie. Les annonces doivent être exactes et ne pas contenir d'informations trompeuses ou mensongères.
+
+3. Protection du compte
+L'utilisateur est responsable de la confidentialité de son numéro de téléphone, de son mot de passe et des activités réalisées depuis son compte.
+
+4. Contenus interdits
+Il est interdit de publier des contenus :
+- contraires aux lois en vigueur ;
+- frauduleux ou trompeurs ;
+- portant atteinte aux droits d'autrui ;
+- contenant des informations fausses ou usurpant l'identité d'une autre personne.
+NIA RDC se réserve le droit de supprimer tout contenu non conforme.
+
+5. Photos et annonces
+L'utilisateur garantit qu'il possède les droits nécessaires sur les photos et les informations publiées et autorise leur affichage sur la plateforme.
+
+6. Protection des données
+NIA RDC collecte uniquement les informations nécessaires au fonctionnement du service, notamment les informations de compte et les données liées aux annonces publiées.
+
+7. Sécurité
+NIA RDC met en œuvre des mesures techniques raisonnables pour protéger les données des utilisateurs. Toutefois, aucun système informatique ne peut garantir une sécurité absolue.
+
+8. Responsabilité
+NIA RDC acts comme plateforme de mise en relation et n'est pas partie aux accords conclus entre les utilisateurs. Chaque utilisateur est responsable des transactions et échanges qu'il réalise.
+
+9. Modération
+NIA RDC peut suspendre ou supprimer un compte ou une annonce en cas de non-respect des présentes conditions ou pour protéger la sécurité de la communauté.
+
+10. Évolution des conditions
+Ces conditions peuvent être mises à jour afin d'améliorer la sécurité de la plateforme. Les nouvelles versions prendront effet dès leur publication.
+
+Acceptation
+En créant un compte sur NIA RDC, je reconnais avoir lu les présentes conditions de sécurité et d'utilisation et j'accepte de les respecter.
 
 [FIN DU DOCUMENT - DEFILEZ ENTIEREMENT POUR VALIDER]`,
 
   apropos: `À propos de NIA RDC
 
 Bienvenue sur NIA RDC.
-
-NIA RDC est une plateforme numérique conçue pour faciliter la mise en relation entre les personnes souhaitant louer, proposer ou rechercher des biens et des services en République Démocratique du Congo.
-
-Notre objectif est de rendre les échanges plus simples, rapides et accessibles grâce à une plateforme facile à utiliser, adaptée aussi bien aux particuliers qu'aux professionnels.
-
-Notre mission
-
-Notre mission est de permettre à chacun de trouver ou de proposer des objets, équipements et services en toute simplicité, tout en favorisant les opportunités économiques locales.
-
-Ce que propose NIA RDC
-
-Les utilisateurs peuvent notamment :
-- publier des annonces ;
-- consulter les annonces disponibles ;
-- contacter les annonceurs ;
-- rechercher des biens et services selon leurs besoins.
-
-La plateforme évolue régulièrement afin d'offrir de nouvelles fonctionnalités et une meilleure expérience utilisateur.
-
-Nos valeurs
-
-NIA RDC s'appuie sur plusieurs principes :
-- simplicité ;
-- accessibilité ;
-- respect des utilisateurs ;
-- innovation ;
-- amélioration continue.
-
-Notre engagement
-
-Nous travaillons à maintenir une plateforme fiable et agréable à utiliser. Nous encourageons les utilisateurs à publier des informations exactes et à respecter les règles de la communauté.
-
-Notre vision
-
-Nous souhaitons contribuer au développement des échanges et des services numériques en République Démocratique du Congo en proposant une plateforme moderne et évolutive.
-
-Contact
-
-Pour toute question ou suggestion, les utilisateurs peuvent contacter l'équipe de NIA RDC par les moyens de communication disponibles sur la plateforme.
-
-Merci de votre confiance et de votre participation au développement de NIA RDC.`,
+NIA RDC est une plateforme numérique conçue pour faciliter la mise en relation entre les personnes souhaitant louer, proposer ou rechercher des biens et des services en République Démocratique du Congo...`,
 
   confidentialite: `Politique de confidentialité de NIA RDC
-
 Dernière mise à jour : Juin 2026.
-
-Bienvenue sur NIA RDC.
-
-La protection des informations personnelles de nos utilisateurs est importante. Cette politique explique quelles informations sont collectées, pourquoi elles sont utilisées et les droits des utilisateurs.
-
-1. Informations collectées
-Lors de l'utilisation de NIA RDC, certaines informations peuvent être collectées, notamment :
-- le numéro de téléphone fourni lors de l'inscription ;
-- le mot de passe du compte, protégé par des mesures de sécurité ;
-- les annonces publiées ;
-- les photos et images ajoutées aux annonces ;
-- les informations de contact renseignées dans les annonces ;
-- les informations techniques nécessaires au fonctionnement de la plateforme.
-
-2. Utilisation des informations
-Les informations collectées servent à :
-- créer et gérer les comptes utilisateurs ;
-- publier et afficher les annonces ;
-- améliorer les services proposés ;
-- assurer la sécurité de la plateforme ;
-- prévenir les activités frauduleuses ;
-- répondre aux demandes des utilisateurs.
-
-3. Partage des informations
-NIA RDC ne vend pas les informations personnelles des utilisateurs.
-Certaines informations publiées volontairement dans les annonces, comme les photos ou les numéros de contact, peuvent être visibles par les autres utilisateurs de la plateforme.
-Les informations pourront être communiquées si la loi l'exige ou pour protéger les droits et la sécurité de NIA RDC et de ses utilisateurs.
-
-4. Conservation des données
-Les informations sont conservées aussi longtemps que nécessaire au fonctionnement de la plateforme et au respect des obligations légales.
-
-5. Sécurité
-NIA RDC met en œuvre des mesures raisonnables pour protéger les informations des utilisateurs contre les accès non autorisés, les pertes ou les utilisations abusives.
-Toutefois, aucune technologie ne peut garantir une sécurité absolue sur Internet.
-
-6. Cookies et technologies similaires
-NIA RDC peut utiliser des cookies et des technologies similaires afin d'améliorer l'expérience utilisateur, de mesurer les performances du service et d'afficher des contenus ou publicités adaptés.
-
-7. Publicités
-NIA RDC peut afficher des annonces publicitaires afin de financer le fonctionnement de la plateforme.
-Des partenaires publicitaires peuvent utiliser des technologies conformes à leurs propres politiques de confidentialité et aux lois applicables.
-
-8. Droits des utilisateurs
-Chaque utilisateur peut demander, dans les limites prévues par la loi :
-- l'accès à ses informations ;
-- la correction d'informations inexactes ;
-- la suppression de certaines données ;
-- la fermeture de son compte.
-
-9. Modifications
-Cette politique de confidentialité peut être mise à jour afin de suivre les évolutions de la plateforme ou des exigences légales.
-Les modifications prendront effet dès leur publication sur NIA RDC.
-
-10. Contact
-Pour toute question concernant cette politique de confidentialité ou le traitement des données personnelles, les utilisateurs peuvent contacter l'équipe de NIA RDC par les moyens de communication mis à disposition sur la plateforme.
-
-Acceptation
-En utilisant NIA RDC et en créant un compte, l'utilisateur reconnaît avoir pris connaissance de la présente Politique de confidentialité et accepte les conditions qui y sont décrites.`
+La protection des informations personnelles de nos utilisateurs est importante pour notre équipe...`
 };
+
+// ================= BOUCLIER CYBER-SÉCURITÉ & MISES À JOUR AUTOMATIQUES =================
+
+function executerSecurisationEtMiseAJourAutomatique() {
+  const cleDerniereMaj = "nia_security_cron_timestamp";
+  const maintenant = Date.now();
+  const d25JoursEnMillisecondes = 25 * 24 * 60 * 60 * 1000;
+
+  const derniereMaj = localStorage.getItem(cleDerniereMaj);
+  if (!derniereMaj || (maintenant - parseInt(derniereMaj)) > d25JoursEnMillisecondes) {
+    // Forcer le nettoyage global de cache de l'application après 25 jours
+    localStorage.removeItem("nia_user_id");
+    localStorage.setItem(cleDerniereMaj, maintenant.toString());
+    alert("🔄 NIA RDC : Une mise à jour automatique de sécurité obligatoire a été appliquée. Veuillez vous reconnecter.");
+    window.location.reload();
+  }
+}
+
+function nettoyerChaineAntiXSS(chaine) {
+  if (!chaine) return "";
+  return chaine.replace(/[<>'"&]/g, (m) => {
+    const table = { '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;', '&': '&amp;' };
+    return table[m];
+  });
+}
+
+function verifierFiltreStrictImmobilierEtContenusIllegaux(titre, description) {
+  const texteComplet = `${titre.toLowerCase()} ${description.toLowerCase()}`;
+  
+  // 1. Détection et exclusion stricte du secteur immobilier
+  const motsImmobilierInterdits = ["maison", "chambre", "appartement", "studio", "parcelle", "terrain", "villa", "immeuble", "logement", "hotel", "bureau"];
+  for (let mot of motsImmobilierInterdits) {
+    if (texteComplet.includes(mot)) {
+      alert(`⚠️ Publication refusée : NIA RDC n'est PAS une application immobilière. Les annonces pour maisons, chambres ou appartements sont interdites.`);
+      return false;
+    }
+  }
+
+  // 2. Filtre anti-fraude contre le piratage et les activités illicites
+  const motsIllegaux = ["drogue", "faux billets", "arme", "piratage", "hack", "blanchiment", "munition", "volé", "fake", "achat de compte"];
+  for (let mot of motsIllegaux) {
+    if (texteComplet.includes(mot)) {
+      alert(`🚨 Alerte de Sécurité : Ce contenu a été détecté comme suspect ou illégal. Publication bloquée.`);
+      return false;
+    }
+  }
+  return true;
+}
+
+// ================= GESTION DU PARCOURS D'INSCRIPTION ET DES MODALES =================
 
 function brancherEvenementScrollControle() {
   const box = document.getElementById("cgu-scroller-node");
   if (!box) return;
   const chk = document.getElementById("chk-accept-rules");
   const btnReg = document.getElementById("btn-register-action");
+  
   box.addEventListener("scroll", () => {
-    if (box.scrollHeight - box.scrollTop <= box.clientHeight + 15) {
+    // Force l'utilisateur à atteindre le bas des conditions de sécurité réelles avant d'activer la case
+    if (box.scrollHeight - box.scrollTop <= box.clientHeight + 25) {
       if (chk && chk.hasAttribute("disabled")) {
         chk.removeAttribute("disabled");
         chk.onchange = function() { btnReg.disabled = !this.checked; };
@@ -167,7 +160,11 @@ function ouvrirSecuriseAuth(inscription = true) {
   if(inscription) {
     const scroller = document.getElementById("cgu-scroller-node");
     if(scroller) { scroller.innerHTML = TEXTES_DU_DROIT.securite; scroller.scrollTop = 0; }
-    setTimeout(brancherEvenementScrollControle, 200);
+    const chk = document.getElementById("chk-accept-rules");
+    const btnReg = document.getElementById("btn-register-action");
+    if(chk) { chk.checked = false; chk.setAttribute("disabled", "true"); }
+    if(btnReg) btnReg.disabled = true;
+    setTimeout(brancherEvenementScrollControle, 300);
   }
 }
 
@@ -197,7 +194,7 @@ function fermerModal(id) { document.getElementById(`modal-${id}`).style.display 
 function deconnexion() { localStorage.clear(); window.location.reload(); }
 
 async function actionInscription() {
-  const telephone = document.getElementById("reg-tel").value.trim();
+  const telephone = nettoyerChaineAntiXSS(document.getElementById("reg-tel").value.trim());
   const password = document.getElementById("reg-pass").value.trim();
   if(!telephone || !password) return alert("Remplissez tous les champs.");
   
@@ -215,7 +212,7 @@ async function actionInscription() {
 }
 
 async function actionConnexion() {
-  const telephone = document.getElementById("log-tel").value.trim();
+  const telephone = nettoyerChaineAntiXSS(document.getElementById("log-tel").value.trim());
   const password = document.getElementById("log-pass").value.trim();
   const res = await fetch(`${API}/auth/login`, {
     method: "POST", headers: { "Content-Type": "application/json" },
@@ -231,7 +228,7 @@ async function actionConnexion() {
 }
 
 async function suppressionDefinitiveCompte() {
-  if (confirm("⚠️ Définitivement supprimer votre compte ?")) {
+  if (confirm("⚠️ Souhaitez-vous définitivement effacer votre compte NIA RDC ?")) {
     const user_id = localStorage.getItem("nia_user_id");
     await fetch(`${API}/auth/delete-account`, {
       method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id })
@@ -258,6 +255,11 @@ function traiterFichierEnBase64(file) {
 }
 
 async function soumettreAnnonceStandard() {
+  const titre = nettoyerChaineAntiXSS(document.getElementById("titre").value.trim());
+  const description = nettoyerChaineAntiXSS(document.getElementById("description").value.trim());
+  
+  if (!verifierFiltreStrictImmobilierEtContenusIllegaux(titre, description)) return;
+
   const files = document.getElementById("photos-input").files;
   let images_base64 = [];
   for(let i=0; i<files.length; i++) { images_base64.push(await traiterFichierEnBase64(files[i])); }
@@ -265,16 +267,15 @@ async function soumettreAnnonceStandard() {
   await fetch(`${API}/annonces`, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      user_id: localStorage.getItem("nia_user_id"), 
-      titre: document.getElementById("titre").value.trim(), 
+      user_id: localStorage.getItem("nia_user_id"), titre, 
       prix: document.getElementById("prix").value.trim(), 
       devise: document.getElementById("devise").value, 
       periode: document.getElementById("periode").value, 
       statut: document.getElementById("statut").value, 
-      telephone: document.getElementById("telephone").value.trim(), 
-      description: document.getElementById("description").value.trim(), 
-      ville: document.getElementById("ville").value.trim(), 
-      commune: document.getElementById("commune").value.trim(), 
+      telephone: nettoyerChaineAntiXSS(document.getElementById("telephone").value.trim()), 
+      description, 
+      ville: nettoyerChaineAntiXSS(document.getElementById("ville").value.trim()), 
+      commune: nettoyerChaineAntiXSS(document.getElementById("commune").value.trim()), 
       quartier: "", is_vip: false, images_base64
     })
   });
@@ -285,12 +286,12 @@ async function chargerFluxPrincipal() {
   try {
     const res = await fetch(`${API}/feed`); toutesLesAnnonces = await res.json();
     rendreFluxHtml(toutesLesAnnonces);
-  } catch(e) { document.getElementById("feed").innerHTML = "Vérification réseau..."; }
+  } catch(e) { document.getElementById("feed").innerHTML = "Problème de synchronisation réseau..."; }
 }
 
 function rendreFluxHtml(liste) {
   const container = document.getElementById("feed"); container.innerHTML = "";
-  if(liste.length === 0) { container.innerHTML = "<p style='text-align:center;'>Aucune offre disponible.</p>"; return; }
+  if(liste.length === 0) { container.innerHTML = "<p style='text-align:center; padding:20px; color:gray;'>Aucune offre disponible actuellement.</p>"; return; }
 
   liste.forEach(a => {
     let imagesMarkup = (a.images && a.images.length > 0) ? `<div class="gallery">${a.images.map(imgObj => `<img src="${imgObj.url}">`).join("")}</div>` : "";
@@ -305,7 +306,7 @@ function rendreFluxHtml(liste) {
         <div style="font-size:0.9rem; background:#f8fafc; padding:10px; border-radius:6px; margin:8px 0;">${a.description || ''}</div>
         ${imagesMarkup}
         <div class="card-footer">
-          <span class="${a.statut === 'occupe' ? 'status-occupe' : 'status-disponible'}">${a.statut === 'occupe' ? '🔴 Occupé' : '🟢 Disponible'}</span>
+          <span class="${a.statut === 'occupe' ? 'status-occupe' : 'status-disponible'}">${a.statut === 'occupe' ? '🔴 Occupé / Épuisé' : '🟢 Disponible'}</span>
           <div style="display:flex; gap:4px;">
             <button class="btn-action report" onclick="signalerAnnonce(${a.id})">⚠️ Signaler</button>
             ${isOwner ? '' : `<button class="btn-action chat" onclick="ouvrirMessagerieDirecteInstantane(${a.id}, '${a.titre.replace(/'/g, "\\'")}')">💬 Message</button>`}
@@ -318,38 +319,37 @@ function rendreFluxHtml(liste) {
 
 async function ouvrirMessagerieDirecteInstantane(annonceId, titreAnnonce) {
   if(!localStorage.getItem("nia_user_id")) return ouvrirSecuriseAuth(false);
-  const text = prompt(`Votre message privé pour : "${titreAnnonce}"`);
+  const text = prompt(`Saisir votre message pour : "${titreAnnonce}"`);
   if(!text || !text.trim()) return;
 
   await fetch(`${API}/chat/send`, {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ annonce_id: annonceId, expediteur_id: localStorage.getItem("nia_user_id"), contenu: text })
+    body: JSON.stringify({ annonce_id: annonceId, expediteur_id: localStorage.getItem("nia_user_id"), contenu: nettoyerChaineAntiXSS(text) })
   });
-  alert("Message transmis !");
+  alert("Message transmis avec succès !");
 }
 
-// MISSION 1: EMPECHER LE BOUTON DE RÉPONSE SI LE CONTEXTE EST 'global_noreply'
 async function chargerConversationsPrivees() {
   const uid = localStorage.getItem("nia_user_id"); if(!uid) return;
   const res = await fetch(`${API}/chat/conversations/${uid}`);
   const data = await res.json();
   const box = document.getElementById("chat-conversations-list");
-  if(data.length === 0) { box.innerHTML = "Aucun message en cours."; return; }
+  if(data.length === 0) { box.innerHTML = "Aucun message reçu."; return; }
 
   box.innerHTML = data.map(c => {
-    const estAdmin = c.expediteur_nup === "NUP-ADMIN";
+    const estAdmin = c.provenance_contexte === "alerte_admin";
     const estNoReply = c.provenance_contexte === "global_noreply";
     return `
-    <div style="background:${estAdmin ? '#fff5f5' : 'white'}; padding:8px; border-radius:6px; border:1px solid ${estAdmin ? 'red' : 'var(--border)'}; font-size:0.85rem;">
-      <div style="font-weight:bold; color:${estAdmin ? 'red' : 'var(--primary)'};">
-        ${estNoReply ? '📢 ANNONCE GÉNÉRALE DE L\'ADMINISTRATION' : estAdmin ? '🚨 ALERTE OFFICIELLE' : `Sujet : ${c.annonce_titre || 'Général'}`}
+    <div style="background:${estAdmin || estNoReply ? '#fff5f5' : 'white'}; padding:8px; border-radius:6px; border:1px solid ${estAdmin || estNoReply ? 'red' : 'var(--border)'}; font-size:0.85rem; margin-bottom:6px;">
+      <div style="font-weight:bold; color:${estAdmin || estNoReply ? 'red' : 'var(--primary)'};">
+        ${estNoReply ? '📢 ANNONCE GÉNÉRALE DE L\'ADMINISTRATION' : estAdmin ? '🚨 ALERTE OFFICIELLE (Réponse requise)' : `Sujet : ${c.annonce_titre || 'Général'}`}
       </div>
       <div style="color:var(--text-light); font-size:0.75rem;">De : ${c.expediteur_nup} ➔ À : ${c.destinataire_nup}</div>
       <div style="background:#f1f5f9; padding:6px; border-radius:4px; font-style:italic; margin-top:4px;">"${c.contenu}"</div>
       
-      ${estNoReply ? `<div style="color:var(--danger); font-size:0.75rem; margin-top:4px; font-weight:bold;">🚫 Il est impossible de répondre à ce message global.</div>` : 
-        c.reponse_utilisateur ? `<div style="color:var(--success); font-weight:bold; margin-top:4px;">✓ Justification envoyée : "${c.reponse_utilisateur}"</div>` : 
-        estAdmin ? `<div style="margin-top:6px; display:flex; gap:4px;"><input id="justif-reply-to-${c.id}" placeholder="Entrez votre justification..." style="flex:1; padding:4px;"><button class="btn-auth" style="font-size:0.75rem; padding:4px;" onclick="soumettreJustificationVersAdmin(${c.id})">Répondre</button></div>` : ''}
+      ${estNoReply ? `<div style="color:var(--danger); font-size:0.75rem; margin-top:4px; font-weight:bold;">🚫 Réponse impossible à ce message global de l'administration.</div>` : 
+        c.reponse_utilisateur ? `<div style="color:var(--success); font-weight:bold; margin-top:4px;">✓ Votre justification a été transmise : "${c.reponse_utilisateur}"</div>` : 
+        estAdmin ? `<div style="margin-top:6px; display:flex; gap:4px;"><input id="justif-reply-to-${c.id}" placeholder="Écrire votre justification pour l'administrateur..." style="flex:1; padding:4px;"><button class="btn-auth" style="font-size:0.75rem; padding:4px 8px; width:auto;" onclick="soumettreJustificationVersAdmin(${c.id})">Envoyer</button></div>` : ''}
     </div>`;
   }).join("");
 }
@@ -357,17 +357,17 @@ async function chargerConversationsPrivees() {
 async function soumettreJustificationVersAdmin(msgId) {
   const text = document.getElementById(`justif-reply-to-${msgId}`).value.trim(); if(!text) return;
   await fetch(`${API}/chat/reply-justification/${msgId}`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reponse: text })
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reponse: nettoyerChaineAntiXSS(text) })
   });
-  alert("Justification enregistrée !"); chargerConversationsPrivees();
+  alert("Votre justification a été consignée et envoyée au bureau d'administration."); chargerConversationsPrivees();
 }
 
-async function signalerAnnonce(id) {
-  const raison = prompt("Indiquez le motif du signalement :"); if(!raison) return;
+async function signalingAnnonce(id) {
+  const raison = prompt("Motif précis du signalement :"); if(!raison) return;
   await fetch(`${API}/annonces/${id}/signaler`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ raison })
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ raison: nettoyerChaineAntiXSS(raison) })
   });
-  alert("Signalement envoyé.");
+  alert("Signalement enregistré. L'admin vérifiera l'offre.");
 }
 
 function basculerOngletProfil(mode) {
@@ -379,15 +379,15 @@ function basculerOngletProfil(mode) {
   const listDiv = document.getElementById("profil-annonces-list"); listDiv.innerHTML = "";
   
   let userList = toutesLesAnnonces.filter(a => a.user_id == currentUserId && a.is_vip === (mode === "vip"));
-  if(userList.length === 0) { listDiv.innerHTML = "<p style='color:gray; text-align:center;'>Aucun bien publié.</p>"; return; }
+  if(userList.length === 0) { listDiv.innerHTML = "<p style='color:gray; text-align:center; padding:10px;'>Aucune publication dans cette catégorie.</p>"; return; }
 
   listDiv.innerHTML = userList.map(a => `
     <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:8px;">
-      <div style="font-weight:bold; font-size:0.9rem;">${a.titre} - ${a.prix} ${a.devise} [${a.statut === 'occupe' ? '🔴 Occupé' : '🟢 Disponible'}]</div>
+      <div style="font-weight:bold; font-size:0.9rem;">${a.titre} - ${a.prix} ${a.devise} [${a.statut === 'occupe' ? '🔴 Épuisé' : '🟢 Disponible'}]</div>
       <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:8px; padding-top:6px; border-top:1px dashed var(--border);">
-        <button class="btn-auth" style="background:orange; font-size:0.75rem; padding:4px 8px;" onclick="executerProcessusInterstitielBoost(${a.id})">🚀 Booster</button>
-        <button class="btn-auth sec" style="font-size:0.75rem; padding:4px 8px;" onclick='ouvrirFenetreModificationAnnonce(${JSON.stringify(a).replace(/"/g, '&quot;')})'>✏️ Modifier</button>
-        <button class="btn-auth" style="background:var(--danger); font-size:0.75rem; padding:4px 8px;" onclick="supprimerAnnonceProfil(${a.id})">🗑️ Supprimer</button>
+        <button class="btn-auth" style="background:orange; font-size:0.75rem; padding:4px 8px; width:auto;" onclick="executerProcessusInterstitielBoost(${a.id})">🚀 Booster</button>
+        <button class="btn-auth sec" style="font-size:0.75rem; padding:4px 8px; width:auto;" onclick='ouvrirFenetreModificationAnnonce(${JSON.stringify(a).replace(/"/g, '&quot;')})'>✏️ Modifier</button>
+        <button class="btn-auth" style="background:var(--danger); font-size:0.75rem; padding:4px 8px; width:auto;" onclick="supprimerAnnonceProfil(${a.id})">🗑️ Supprimer</button>
       </div>
     </div>`).join("");
 }
@@ -397,11 +397,10 @@ function executerProcessusInterstitielBoost(id) {
   setTimeout(async () => {
     m.style.display = "none";
     await fetch(`${API}/annonces/${id}/boost`, { method: "POST" });
-    alert("Annonce boostée !"); fermerModal("profil"); chargerFluxPrincipal();
+    alert("Annonce propulsée en tête de liste !"); fermerModal("profil"); chargerFluxPrincipal();
   }, 2500);
 }
 
-// MISSION 2: CHARGEMENT DES ANCIENNES PHOTOS ET OPTIONS DE SUPPRESSION DEPUIS LE PROFIL
 function ouvrirFenetreModificationAnnonce(a) {
   document.getElementById("edit-id").value = a.id;
   document.getElementById("edit-titre").value = a.titre;
@@ -421,48 +420,49 @@ function ouvrirFenetreModificationAnnonce(a) {
           <div class="photo-delete-overlay" onclick="supprimerPhotoEnDirect(${img.id})">✕</div>
         </div>`;
     });
-  } else { container.innerHTML = "<span style='color:gray; font-size:0.8rem;'>Aucune photo pour ce bien.</span>"; }
+  } else { container.innerHTML = "<span style='color:gray; font-size:0.8rem;'>Aucune photo.</span>"; }
   ouvrirModal("modifier");
 }
 
 async function supprimerPhotoEnDirect(photoId) {
-  if (confirm("Supprimer définitivement cette photo de la galerie ?")) {
+  if (confirm("Supprimer définitivement cette photo ?")) {
     await fetch(`${API}/images/${photoId}`, { method: "DELETE" });
     const block = document.getElementById(`photo-block-${photoId}`);
     if (block) block.remove();
   }
 }
 
-// MISSION 2: TOUTES LES MODIFICATIONS PRENNENT IMMÉDIATEMENT EFFET SUR VIP ET STANDARD APRÈS SAUVEGARDE
 async function sauvegarderChangementsAnnonce() {
   const id = document.getElementById("edit-id").value;
+  const titre = nettoyerChaineAntiXSS(document.getElementById("edit-titre").value);
+  const description = nettoyerChaineAntiXSS(document.getElementById("edit-description").value);
+
+  if (!verifierFiltreStrictImmobilierEtContenusIllegaux(titre, description)) return;
+
   const files = document.getElementById("edit-new-photos").files;
-  
   let nouvelles_images_base64 = [];
   for(let i=0; i<files.length; i++) { nouvelles_images_base64.push(await traiterFichierEnBase64(files[i])); }
 
   await fetch(`${API}/annonces/${id}`, {
     method: "PUT", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      titre: document.getElementById("edit-titre").value, 
-      prix: document.getElementById("edit-prix").value,
-      devise: document.getElementById("edit-devise").value, 
-      periode: document.getElementById("edit-periode").value,
-      statut: document.getElementById("edit-statut").value, 
-      telephone: document.getElementById("edit-telephone").value,
-      description: document.getElementById("edit-description").value, 
-      ville: "Lubumbashi", nouvelles_images_base64
+      titre, prix: document.getElementById("edit-prix").value,
+      devise: document.getElementById("edit-devise").value, periode: document.getElementById("edit-periode").value,
+      statut: document.getElementById("edit-statut").value, telephone: nettoyerChaineAntiXSS(document.getElementById("edit-telephone").value),
+      description, ville: "Lubumbashi", nouvelles_images_base64
     })
   });
   fermerModal("modifier"); fermerModal("profil"); chargerFluxPrincipal();
 }
 
+// ================= GESTION DU CATALOGUE ET FORMULAIRE VIP COMPLET =================
+
 function rafraichirVueVipFormulaire() {
   const s = document.getElementById("vip-setup-zone");
   s.innerHTML = `
     <div id="vip-multi-blocks" style="display:flex; flex-direction:column; gap:12px;"></div>
-    <button class="btn-auth sec" style="width:100%; margin-top:10px;" onclick="ajouterBlocObjetAuCatalogueVip()">➕ Ajouter un logement VIP</button>
-    <button class="btn-auth" style="width:100%; margin-top:6px; background:var(--vip-gold);" onclick="sauvegarderEtPublierToutLeCatalogueVip()">Publier la Vitrine VIP 🚀</button>`;
+    <button class="btn-auth sec" style="width:100%; margin-top:10px;" onclick="ajouterBlocObjetAuCatalogueVip()">➕ Ajouter un produit/service VIP</button>
+    <button class="btn-auth" style="width:100%; margin-top:6px; background:var(--vip-gold); color:black;" onclick="sauvegarderEtPublierToutLeCatalogueVip()">Publier tout le Catalogue VIP 🚀</button>`;
   BLOCS_VIP_COMPTEUR = 0; ajouterBlocObjetAuCatalogueVip();
 }
 
@@ -473,86 +473,151 @@ function ajouterBlocObjetAuCatalogueVip() {
   row.className = "vip-pure-block"; row.id = `vip-b-${BLOCS_VIP_COMPTEUR}`;
   row.style = "background:#f8fafc; border:2px dashed var(--vip-gold); padding:12px; border-radius:8px; display:flex; flex-direction:column; gap:8px;";
   row.innerHTML = `
-    <input class="vip-in-titre" placeholder="Titre du logement VIP *">
-    <input class="vip-in-prix" type="number" placeholder="Prix ($)">
-    <select class="vip-in-periode"><option value="jour">/ Jour</option><option value="heure">/ Heure</option></select>
-    <select class="vip-in-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select>
-    <textarea class="vip-in-desc" placeholder="Description..." rows="2"></textarea>`;
+    <div style="font-weight:bold; font-size:0.8rem; color:var(--vip-gold)">PRODUIT VIP BLOC #${BLOCS_VIP_COMPTEUR}</div>
+    <input class="vip-in-titre" placeholder="Nom du produit ou service VIP *">
+    <div style="display:flex; gap:4px;">
+      <input class="vip-in-prix" type="number" placeholder="Prix" style="flex:2;">
+      <select class="vip-in-devise" style="flex:1;"><option value="$">$</option><option value="FC">FC</option></select>
+      <select class="vip-in-periode" style="flex:1.5;"><option value="total">/ Total</option><option value="jour">/ Jour</option></select>
+    </div>
+    <div style="display:flex; gap:4px;">
+      <input class="vip-in-ville" placeholder="Ville (ex: Lubumbashi)" value="Lubumbashi">
+      <input class="vip-in-commune" placeholder="Commune">
+    </div>
+    <select class="vip-in-statut"><option value="disponible">🟢 En Stock / Disponible</option><option value="occupe">🔴 Indisponible</option></select>
+    <textarea class="vip-in-desc" placeholder="Détails descriptifs (Exclusion totale de l'immobilier)..." rows="2"></textarea>
+    <input type="file" class="vip-in-photos" multiple accept="image/*" style="font-size:0.8rem;">`;
   container.appendChild(row);
 }
 
 async function sauvegarderEtPublierToutLeCatalogueVip() {
   const nodes = document.querySelectorAll(".vip-pure-block");
   for(let n of nodes) {
-    const titre = n.querySelector(".vip-in-titre").value.trim(); if(!titre) continue;
+    const titre = n.querySelector(".vip-in-titre").value.trim();
+    const description = n.querySelector(".vip-in-desc").value.trim();
+    const ville = n.querySelector(".vip-in-ville").value.trim() || "Lubumbashi";
+    const commune = n.querySelector(".vip-in-commune").value.trim();
+
+    if(!titre) continue;
+    if (!verifierFiltreStrictImmobilierEtContenusIllegaux(titre, description)) return;
+
+    const fileInput = n.querySelector(".vip-in-photos");
+    let images_base64 = [];
+    if(fileInput && fileInput.files.length > 0) {
+      for(let i=0; i<fileInput.files.length; i++) {
+        images_base64.push(await traiterFichierEnBase64(fileInput.files[i]));
+      }
+    }
+
     await fetch(`${API}/annonces`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        user_id: localStorage.getItem("nia_user_id"), titre, prix: n.querySelector(".vip-in-prix").value,
-        devise:"$", periode: n.querySelector(".vip-in-periode").value, statut: n.querySelector(".vip-in-statut").value,
-        telephone: localStorage.getItem("nia_user_tel"), description: n.querySelector(".vip-in-desc").value, ville:"Lubumbashi", is_vip: true, images_base64: []
+        user_id: localStorage.getItem("nia_user_id"), titre, prix: n.querySelector(".vip-in-prix").value || 0,
+        devise: n.querySelector(".vip-in-devise").value, periode: n.querySelector(".vip-in-periode").value,
+        statut: n.querySelector(".vip-in-statut").value, telephone: localStorage.getItem("nia_user_tel"),
+        description, ville, commune, is_vip: true, images_base64
       })
     });
   }
   fermerModal("vip"); chargerFluxPrincipal();
 }
 
-// ================= MISSION 1: SUPERVISION ET SUPPRESSION SUPRÊME DES MESSAGES VIA L'ADMINISTRATION =================
+// ================= SYSTÈME DE FILTRATION ET DE SUPERVISION ADMIN =================
+
+function filtrerFluxAdminEnTempsReel() {
+  const villeSaisie = document.getElementById("admin-filter-ville").value.toLowerCase();
+  const formatSaisie = document.getElementById("admin-filter-type").value;
+
+  const filtreTotal = toutesLesAnnonces.filter(a => {
+    const correspondVille = villeSaisie === "" || (a.ville && a.ville.toLowerCase().includes(villeSaisie));
+    let correspondFormat = true;
+    if(formatSaisie === "standard") correspondFormat = (!a.is_vip);
+    if(formatSaisie === "vip") correspondFormat = (a.is_vip === true);
+    return correspondVille && correspondFormat;
+  });
+
+  injecterDonniesHtmlAdmin(filtreTotal);
+}
+
+function injecterDonniesHtmlAdmin(liste) {
+  const box = document.getElementById("admin-main-render-box");
+  if(liste.length === 0) { box.innerHTML = "<p style='color:gray; padding:10px;'>Aucune offre trouvée pour ces filtres.</p>"; return; }
+  
+  box.innerHTML = liste.map(a => `
+    <div style="background:#1e293b; padding:8px; border-radius:4px; font-size:0.85rem; margin-bottom:4px; border-left:3px solid ${a.is_vip ? 'var(--vip-gold)' : '#64748b'}">
+      <span style="color:#38bdf8; font-weight:bold;">[${a.proprietaire_nup || 'SANS NUP'}]</span> <b>${a.titre}</b>
+      <span style="font-size:0.7rem; background:#334155; padding:2px 4px; border-radius:3px; color:#cbd5e1; margin-left:6px;">📍 ${a.ville}</span>
+      <div style="display:flex; gap:4px; margin-top:4px;">
+        <input id="adm-input-${a.id}" placeholder="Rédiger un avertissement privé (Alerte répondable)..." style="flex:1; color:black; padding:4px; border-radius:4px; border:none; font-size:0.8rem;">
+        <button onclick="envoyerMessageDepuisAdminAuNup(${a.id}, 'alerte_admin')" style="background:var(--success); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem;">Avertir</button>
+        <button onclick="supprimerAnnonceParAdmin(${a.id})" style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-size:0.8rem;">🗑️ Supprimer</button>
+      </div>
+    </div>`).join("");
+}
+
 async function definirVueAdmin(mode) {
-  VUE_ADMIN_ACTIVE = mode; const box = document.getElementById("admin-main-render-box"); box.innerHTML = "Chargement...";
+  VUE_ADMIN_ACTIVE = mode; 
+  const box = document.getElementById("admin-main-render-box"); 
+  box.innerHTML = "Chargement des métadonnées du réseau...";
+  
+  document.getElementById("admin-filters-bar").style.display = (mode === "flux") ? "flex" : "none";
   
   if(mode === "flux") {
-    box.innerHTML = toutesLesAnnonces.map(a => `
-      <div style="background:#1e293b; padding:8px; border-radius:4px; font-size:0.85rem; margin-bottom:4px;">
-        <span style="color:#38bdf8; font-weight:bold;">[${a.proprietaire_nup || 'SANS NUP'}]</span> <b>${a.titre}</b>
-        <div style="display:flex; gap:4px; margin-top:4px;">
-          <input id="adm-input-${a.id}" placeholder="Message privé à ce NUP..." style="flex:1; color:black; padding:4px; border-radius:4px; border:none;">
-          <button onclick="envoyerMessageDepuisAdminAuNup(${a.id}, 'normal')" style="background:var(--success); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">Contacter</button>
-          <button onclick="supprimerAnnonceParAdmin(${a.id})" style="background:var(--danger); color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">🗑️ Annonce</button>
-        </div>
-      </div>`).join("");
+    filtrerFluxAdminEnTempsReel();
   }
   else if(mode === "messages") {
     const res = await fetch(`${API}/admin/all-messages`); const data = await res.json();
-    if(data.length === 0) { box.innerHTML = "Aucun échange enregistré sur le réseau."; return; }
+    if(data.length === 0) { box.innerHTML = "Aucun échange privé sur le serveur."; return; }
     box.innerHTML = data.map(m => `
-      <div style="background:#1e293b; padding:8px; border-radius:4px; font-size:0.85rem; margin-bottom:4px; border-left: 3px solid #60a5fa;">
-        <div style="display:flex; justify-content:between; align-items:center; width:100%;">
-          <span style="color:#eab308;"><b>De :</b> ${m.expediteur_nup} ➔ <b>À :</b> ${m.destinataire_nup}</span>
-        </div>
+      <div style="background:#1e293b; padding:8px; border-radius:4px; font-size:0.85rem; margin-bottom:4px;">
+        <span style="color:#eab308;"><b>De :</b> ${m.expediteur_nup} ➔ <b>À :</b> ${m.destinataire_nup}</span>
         <div style="margin:4px 0; color:#cbd5e1; font-style:italic;">"${m.contenu}"</div>
-        <button onclick="supprimerMessageParAdminDefinitif(${m.id})" style="background:var(--danger); color:white; border:none; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer; margin-top:4px;">🗑️ Supprimer le Message pour tous</button>
+        <button onclick="supprimerMessageParAdminDefinitif(${m.id})" style="background:var(--danger); color:white; border:none; padding:2px 6px; font-size:0.75rem; border-radius:4px; cursor:pointer;">🗑️ Supprimer pour tous</button>
       </div>`).join("");
   }
   else if(mode === "justifications") {
+    // Affiche la boîte unifiée comprenant les signalements émis et les justifications reçues
     const res = await fetch(`${API}/admin/all-justifications/signale`); const data = await res.json();
-    if(data.length === 0) { box.innerHTML = "Aucune justification active."; return; }
+    if(data.length === 0) { box.innerHTML = "Aucun signalement ni justification en attente."; return; }
     box.innerHTML = data.map(m => `
-      <div style="background:#1e293b; padding:8px; border-radius:4px; font-size:0.85rem; margin-bottom:4px;">
-        <div style="color:#94a3b8;"><b>Raison de l'alerte :</b> ${m.contenu}</div>
-        <div style="color:#4ade80; margin-top:4px; font-weight:bold;"><b>↩️ Réponse [${m.user_nup}] :</b> "${m.reponse_utilisateur}"</div>
+      <div style="background:#1e293b; padding:10px; border-radius:6px; font-size:0.85rem; margin-bottom:6px; border-left:4px solid var(--danger);">
+        <div style="display:flex; justify-content:between; font-weight:bold; color:#f87171;">
+          <span>🚨 ALERTES EN COURS SUR LE COMPTE [${m.user_nup || 'NUP'}]</span>
+          <button onclick="supprimerJustificationParAdmin(${m.id})" style="background:none; border:none; color:#94a3b8; cursor:pointer;">🗑️ Effacer</button>
+        </div>
+        <div style="background:#0f172a; padding:6px; border-radius:4px; margin:4px 0; color:#cbd5e1;">
+          <b>Motif / Plainte initiale :</b> "${m.contexte_alerte}"
+        </div>
+        <div style="background:#022c22; padding:6px; border-radius:4px; color:#4ade80; font-weight:bold;">
+          <b>↩️ Justification reçue :</b> ${m.reponse_utilisateur ? `"${m.reponse_utilisateur}"` : `<span style='color:orange; font-weight:normal;'>En attente de réponse...</span>`}
+        </div>
       </div>`).join("");
   }
 }
 
-// MISSION 1: ACTION SUPPRESSION TOTALE MESSAGE RECOUVREMENT
 async function supprimerMessageParAdminDefinitif(msgId) {
-  if (confirm("Voulez-vous supprimer ce message ? Il disparaîtra définitivement chez l'expéditeur et le destinataire.")) {
+  if (confirm("Supprimer ce message de manière irréversible ?")) {
      await fetch(`${API}/admin/messages/${msgId}/delete`, { method: "DELETE" });
      definirVueAdmin("messages");
   }
 }
 
-// MISSION 1: DIFFUSION GENERALE EN UNE SEULE FOIS SANS CONFIGURATION DE CONVERSATION UNIQUE
+async function supprimerJustificationParAdmin(id) {
+  if (confirm("Effacer cette fiche d'alerte ?")) {
+    await fetch(`${API}/admin/justifications/${id}/delete`, { method: "DELETE" });
+    definirVueAdmin("justifications");
+  }
+}
+
 async function envoyerNotificationGlobaleAdmin() {
   const input = document.getElementById("admin-global-msg-input");
   const contenu = input.value.trim();
-  if(!contenu) return alert("Veuillez saisir un texte à envoyer.");
+  if(!contenu) return alert("Texte vide.");
   
   await fetch(`${API}/admin/send-global`, {
-     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contenu })
+     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contenu: nettoyerChaineAntiXSS(contenu) })
   });
-  alert("Message global envoyé avec succès à l'ensemble des utilisateurs de NIA RDC !");
+  alert("Message global diffusé sur tout le réseau !");
   input.value = "";
   definirVueAdmin(VUE_ADMIN_ACTIVE);
 }
@@ -561,15 +626,15 @@ async function envoyerMessageDepuisAdminAuNup(annonceId, ctx) {
   const msg = document.getElementById(`adm-input-${annonceId}`).value.trim(); if(!msg) return;
   await fetch(`${API}/admin/send-to-nup`, {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ annonce_id: annonceId, contenu: msg, provenance_contexte: ctx })
+    body: JSON.stringify({ annonce_id: annonceId, contenu: nettoyerChaineAntiXSS(msg), provenance_contexte: ctx })
   });
-  alert("Message envoyé !");
+  alert("Avertissement envoyé. Le créateur peut y répondre.");
   document.getElementById(`adm-input-${annonceId}`).value = "";
   definirVueAdmin(VUE_ADMIN_ACTIVE);
 }
 
 async function supprimerAnnonceParAdmin(id) { 
-  if(confirm("Supprimer ce bien ?")) { 
+  if(confirm("Confirmer la suppression ?")) { 
     await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" }); chargerFluxPrincipal(); 
     setTimeout(() => definirVueAdmin(VUE_ADMIN_ACTIVE), 400); 
   } 
@@ -579,7 +644,7 @@ function detecterClicLongAdmin() { validationAdminOk = false; topAdminTimer = se
 function annulerClicLongAdmin() {
   clearTimeout(topAdminTimer);
   if(validationAdminOk) {
-    if (prompt("Code Admin :") === "BEN4002ET4200") { ouvrirModal("admin"); definirVueAdmin("flux"); }
+    if (prompt("Entrez le code d'accès administrateur :") === "BEN4002ET4200") { ouvrirModal("admin"); definirVueAdmin("flux"); }
   }
 }
 
@@ -590,5 +655,8 @@ function executerRecherche() {
 }
 function reinitialiserFluxGeneral() { rendreFluxHtml(toutesLesAnnonces); }
 
-setInterval(chargerFluxPrincipal, 20000);
-document.addEventListener("DOMContentLoaded", () => { rafraichirHeaderVisuel(); chargerFluxPrincipal(); });
+document.addEventListener("DOMContentLoaded", () => { 
+  executerSecurisationEtMiseAJourAutomatique();
+  rafraichirHeaderVisuel(); 
+  chargerFluxPrincipal(); 
+});

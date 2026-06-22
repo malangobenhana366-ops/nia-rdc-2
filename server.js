@@ -223,7 +223,7 @@ app.post("/annonces/:id/signaler", async (req, res) => {
   }
 });
 
--- ================= EXCLUSIVITÉS PANEL ADMIN =================
+// ================= EXCLUSIVITÉS PANEL ADMIN =================
 
 app.delete("/annonces/:id/delete", async (req, res) => {
   try {

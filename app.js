@@ -7,28 +7,67 @@ let BLOCS_VIP_COMPTEUR = 0;
 let topAdminTimer = null;
 let validationAdminOk = false;
 
+// ================= 1. TEXTES JURIDIQUES COMPLETS =================
 const TEXTES_DU_DROIT = {
-  securite: `Conditions de sécurité et d'utilisation de NIA RDC...\nAcceptation\nEn créant un compte sur NIA RDC, je reconnais avoir lu et j'accepte d'être identifié de manière unique via mon numéro de profil.`
+  securite: `POLITIQUE DE SÉCURITÉ ET CONDITIONS GÉNÉRALES D'UTILISATION (CGU) - NIA RDC
+
+1. ACCEPTATION DES CONDITIONS
+En créant un compte sur l'application NIA RDC, vous acceptez expressément d'être soumis aux présentes règles de sécurité et d'utilisation. Si vous n'acceptez pas ces termes, veuillez ne pas utiliser nos services.
+
+2. NUMÉRO DE PROFIL UNIQUE (NUP)
+Chaque utilisateur se voit attribuer automatiquement un Identifiant Unique de Profil (NUP). Cet identifiant permet à l'administration de suivre vos publications (Annonces Standards et VIP) et de vous contacter directement en cas de litige, de signalement ou d'audit de sécurité, préservant ainsi l'anonymat global tout en maintenant une traçabilité totale pour l'équipe de modération.
+
+3. SÉCURITÉ DES TRANSACTIONS ET ANTI-FRAUDE
+NIA RDC est une plateforme de mise en relation immobilière basée à Lubumbashi, RDC. L'administration ne prend aucune commission sur les transactions standards et décline toute responsabilité en cas de litige financier entre l'acheteur/locataire et le bailleur. Il est formellement interdit de publier des annonces mensongères, des biens fictifs ou d'utiliser des photos ne correspondant pas à la réalité du bien.
+
+4. SYSTÈME DE SIGNALEMENT ET MODÉRATION
+Toute annonce suspecte ou signalée par la communauté fera l'objet d'une enquête immédiate par les superviseurs. Un message officiel de l'administration sera envoyé directement dans l'Espace Privé (boîte de messages) du profil concerné. L'utilisateur dispose d'un délai requis pour fournir ses justifications directement depuis son profil sous peine de suppression définitive de l'annonce et de bannissement de son compte.
+
+5. MODIFICATIONS DES SERVICES
+L'administration se réserve le droit de modifier, suspendre ou supprimer des fonctionnalités (y compris la gestion des boosters et des suppressions d'annonces) à tout moment pour garantir la stabilité du réseau.
+
+[FIN DU DOCUMENT - VEUILLEZ COCHER LA CASE CI-DESSOUS APRÈS LECTURE TOTALE COMPLÈTE POUR ACTIVER VOTRE INSCRIPTION]`,
+
+  apropos: `À PROPOS DE NIA RDC\n\nNIA RDC est la plateforme immobilière de référence pour le marché de la République Démocratique du Congo, spécialement optimisée pour la ville de Lubumbashi.\n\nNotre mission est de simplifier la recherche et la publication de maisons, appartements, studios et espaces commerciaux grâce à un outil rapide, fluide et sécurisé par le système de Numéro de Profil Unique (NUP).`,
+
+  confidentialite: `POLITIQUE DE CONFIDENTIALITÉ\n\n1. COLLECTE DES DONNÉES\nNous collectons uniquement votre numéro de téléphone afin de sécuriser votre accès et de permettre aux clients potentiels de vous contacter.\n\n2. SÉCURITÉ DES DONNÉES\nVos mots de passe sont hautement sécurisés et cryptés via un algorithme de hachage (bcrypt) sur nos serveurs. L'administration n'a pas accès à votre mot de passe en clair.`
 };
 
+// ================= 2. GESTION DU SCROLL ET DE L'AUTHENTIFICATION =================
 function brancherEvenementScrollControle() {
   const box = document.getElementById("cgu-scroller-node");
   if (!box) return;
+  
+  const chk = document.getElementById("chk-accept-rules");
+  const btnReg = document.getElementById("btn-register-action");
+  if(chk) chk.checked = false;
+  
   box.addEventListener("scroll", () => {
-    const chk = document.getElementById("chk-accept-rules");
-    if (box.scrollHeight - box.scrollTop <= box.clientHeight + 12) {
-      if(chk) chk.removeAttribute("disabled");
+    if (box.scrollHeight - box.scrollTop <= box.clientHeight + 15) {
+      if (chk && chk.hasAttribute("disabled")) {
+        chk.removeAttribute("disabled");
+        chk.onchange = function() {
+          if(this.checked) {
+            btnReg.removeAttribute("disabled");
+          } else {
+            btnReg.setAttribute("disabled", "true");
+          }
+        };
+      }
     }
   });
 }
 
 function toggleMenuLegal() {
-  const m = document.getElementById("legal-dropdown"); m.style.display = m.style.display === "block" ? "none" : "block";
+  const m = document.getElementById("legal-dropdown"); 
+  m.style.display = m.style.display === "block" ? "none" : "block";
 }
 
 function afficherDocumentJurisEtSecu(cle) {
-  document.getElementById("legal-header-title").textContent = "Légal & Sécurité";
-  document.getElementById("legal-body-content").textContent = TEXTES_DU_DROIT.securite;
+  document.getElementById("legal-header-title").textContent = 
+    cle === "securite" ? "📜 Sécurité & CGU" : cle === "apropos" ? "ℹ️ À propos" : "🔒 Confidentialité";
+    
+  document.getElementById("legal-body-content").textContent = TEXTES_DU_DROIT[cle];
   document.getElementById("legal-dropdown").style.display = "none";
   ouvrirModal("legal-display");
 }
@@ -42,7 +81,16 @@ function ouvrirSecuriseAuth(inscription = true) {
   basculerAffichageAuthentification(inscription);
   ouvrirModal("auth");
   if(inscription) {
-    document.getElementById("cgu-scroller-node").innerHTML = TEXTES_DU_DROIT.securite;
+    const scroller = document.getElementById("cgu-scroller-node");
+    if(scroller) {
+      scroller.innerHTML = TEXTES_DU_DROIT.securite;
+      scroller.scrollTop = 0;
+    }
+    const chk = document.getElementById("chk-accept-rules");
+    const btnReg = document.getElementById("btn-register-action");
+    if(chk) chk.setAttribute("disabled", "true");
+    if(btnReg) btnReg.setAttribute("disabled", "true");
+    
     setTimeout(brancherEvenementScrollControle, 200);
   }
 }
@@ -106,6 +154,20 @@ async function actionConnexion() {
   } else alert(data.error);
 }
 
+async function suppressionDefinitiveCompte() {
+  if (confirm("⚠️ ATTENTION : Voulez-vous vraiment supprimer définitivement votre compte et toutes vos annonces ? Cette action est irréversible.")) {
+    const user_id = localStorage.getItem("nia_user_id");
+    if (!user_id) return;
+    const res = await fetch(`${API}/auth/delete-account`, {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id })
+    });
+    const data = await res.json();
+    if (data.success) { deconnexion(); }
+  }
+}
+
+// ================= 3. ENVOI ET TRAITEMENT IMAGES / ANNONCES =================
 function traiterFichierEnBase64(file) {
   return new Promise((resolve) => {
     const reader = new FileReader(); reader.readAsDataURL(file);
@@ -147,6 +209,7 @@ async function soumettreAnnonceStandard() {
   fermerModal("publier"); chargerFluxPrincipal();
 }
 
+// ================= 4. CHARGEMENT ET RENDU DU FLUX PRINCIPAL =================
 async function chargerFluxPrincipal() {
   try {
     const res = await fetch(`${API}/feed`); toutesLesAnnonces = await res.json();
@@ -182,6 +245,7 @@ function rendreFluxHtml(liste) {
   });
 }
 
+// ================= 5. GESTION DE LA MESSAGERIE PRIVÉE ET SIGNALEMENTS =================
 async function ouvrirMessagerieDirecteInstantane(annonceId, titreAnnonce) {
   if(!localStorage.getItem("nia_user_id")) return ouvrirSecuriseAuth(false);
   const text = prompt(`Votre message privé pour : "${titreAnnonce}"`);
@@ -225,7 +289,15 @@ async function soumettreJustificationVersAdmin(msgId) {
   alert("Justification enregistrée !"); chargerConversationsPrivees();
 }
 
-// CORRECTION ET ROUTAGE ROBUSTE PAR USER_ID : APPARAIT DIRECTEMENT DANS LE PROFIL (STANDARDS ET VIP)
+async function signalerAnnonce(id) {
+  const raison = prompt("Indiquez le motif du signalement :"); if(!raison) return;
+  await fetch(`${API}/annonces/${id}/signaler`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ raison })
+  });
+  alert("Signalement envoyé.");
+}
+
+// ================= 6. ESPACE PROFIL : ACTIONS SUR ANNONCES (STD ET VIP) =================
 function basculerOngletProfil(mode) {
   ONGLET_PROFIL_ACTIF = mode;
   document.getElementById("btn-tab-std").className = mode === "standard" ? "btn-auth" : "btn-auth sec";
@@ -235,7 +307,6 @@ function basculerOngletProfil(mode) {
   const listDiv = document.getElementById("profil-annonces-list");
   listDiv.innerHTML = "";
   
-  // Filtrage rigoureux par user_id pour garantir que Standard et VIP remontent immédiatement
   let userList = toutesLesAnnonces.filter(a => a.user_id == currentUserId && a.is_vip === (mode === "vip"));
   
   if(userList.length === 0) { listDiv.innerHTML = "<p style='color:gray; text-align:center; font-size:0.85rem;'>Aucun bien publié dans cet onglet.</p>"; return; }
@@ -294,14 +365,7 @@ async function supprimerAnnonceProfil(id) {
   }
 }
 
-async function signalerAnnonce(id) {
-  const raison = prompt("Indiquez le motif du signalement :"); if(!raison) return;
-  await fetch(`${API}/annonces/${id}/signaler`, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ raison })
-  });
-  alert("Signalement envoyé.");
-}
-
+// ================= 7. GESTION DE LA VITRINE MULTI-VIP =================
 function rafraichirVueVipFormulaire() {
   const s = document.getElementById("vip-setup-zone");
   s.innerHTML = `
@@ -344,7 +408,7 @@ async function sauvegarderEtPublierToutLeCatalogueVip() {
   fermerModal("vip"); chargerFluxPrincipal();
 }
 
-// INTERFACE DE CONTROLE ADMINISTRATION AVEC MARQUAGE ET ENVOI PAR NUP DIRECT
+// ================= 8. INTERFACE D'ADMINISTRATION CENTRALE =================
 async function definirVueAdmin(mode) {
   VUE_ADMIN_ACTIVE = mode; const box = document.getElementById("admin-main-render-box"); box.innerHTML = "Chargement...";
   
@@ -394,7 +458,13 @@ async function envoyerMessageDepuisAdminAuNup(annonceId, ctx) {
   definirVueAdmin(VUE_ADMIN_ACTIVE);
 }
 
-async function supprimerAnnonceParAdmin(id) { if(confirm("Supprimer ce bien ?")) { await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" }); chargerFluxPrincipal(); setTimeout(() => definirVueAdmin(VUE_ADMIN_ACTIVE), 400); } }
+async function supprimerAnnonceParAdmin(id) { 
+  if(confirm("Supprimer ce bien ?")) { 
+    await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" }); 
+    chargerFluxPrincipal(); 
+    setTimeout(() => definirVueAdmin(VUE_ADMIN_ACTIVE), 400); 
+  } 
+}
 
 function detecterClicLongAdmin() { validationAdminOk = false; topAdminTimer = setTimeout(() => { validationAdminOk = true; }, 4000); }
 function annulerClicLongAdmin() {
@@ -404,6 +474,7 @@ function annulerClicLongAdmin() {
   }
 }
 
+// ================= 9. FILTRES ET UTILITAIRES GENERALS =================
 function executerRecherche() {
   const kw = document.getElementById("search-keyword").value.toLowerCase();
   let matches = toutesLesAnnonces.filter(a => kw === "" || a.titre.toLowerCase().includes(kw));
@@ -412,5 +483,6 @@ function executerRecherche() {
 
 function reinitialiserFluxGeneral() { rendreFluxHtml(toutesLesAnnonces); }
 
+// Démarrage automatique du pooling de sécurité
 setInterval(chargerFluxPrincipal, 20000);
 document.addEventListener("DOMContentLoaded", () => { rafraichirHeaderVisuel(); chargerFluxPrincipal(); });

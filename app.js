@@ -19,7 +19,7 @@ Bienvenue sur NIA RDC.
 Avant de créer un compte, veuillez lire les présentes conditions. En utilisant la plateforme, vous acceptez les règles suivantes.
 
 1. Utilisation de la plateforme
-NIA RDC est une plateforme destinée à faciliter la publication et la consultation d'annonces de location, de vente et de services. Les utilisateurs s'engagent à utiliser la plateforme de manière honête et responsable.
+NIA RDC is une plateforme destinée à faciliter la publication et la consultation d'annonces de location, de vente et de services. Les utilisateurs s'engagent à utiliser la plateforme de manière honête et responsable.
 
 2. Exactitude des informations
 Chaque utilisateur est responsable des informations qu'il publie. Les annonces doivent être exactes et ne pas contenir d'informations trompeuses ou mensongères.
@@ -135,8 +135,10 @@ function toggleMenuLegal() {
 }
 
 function afficherDocumentJurisEtSecu(cle) {
-  document.getElementById("legal-header-title").textContent = 
-    cle === "securite" ? "📜 Sécurité & CGU" : cle === "apropos" ? "ℹ️ À propos de NIA RDC" : "🔒 Politique de confidentialité";
+  const headerNode = document.getElementById("legal-header-title");
+  if (headerNode) {
+    headerNode.textContent = cle === "securite" ? "📜 Sécurité & CGU" : cle === "apropos" ? "ℹ️ À propos de NIA RDC" : "🔒 Politique de confidentialité";
+  }
     
   document.getElementById("legal-body-content").textContent = TEXTES_DU_DROIT[cle];
   document.getElementById("legal-dropdown").style.display = "none";
@@ -166,6 +168,10 @@ function basculerAffichageAuthentification(versInscription) {
   document.getElementById("auth-main-title").textContent = versInscription ? "Inscription" : "Connexion";
   document.getElementById("form-register-block").style.display = versInscription ? "grid" : "none";
   document.getElementById("form-login-block").style.display = versInscription ? "none" : "grid";
+}
+
+function abrirModalDirecte(id) {
+  document.getElementById(`modal-${id}`).style.display = "flex";
 }
 
 function ouvrirSecuriseModal(id) {
@@ -343,7 +349,7 @@ async function chargerConversationsPrivees() {
       
       ${estNoReply ? `<div style="color:var(--danger); font-size:0.75rem; margin-top:4px; font-weight:bold;">🚫 Réponse impossible à ce message global de l'administration.</div>` : 
         c.reponse_utilisateur ? `<div style="color:var(--success); font-weight:bold; margin-top:4px;">✓ Votre justification a été transmise : "${c.reponse_utilisateur}"</div>` : 
-        estAdmin ? `<div style="margin-top:6px; display:flex; gap:4px;"><input id="justif-reply-to-${c.id}" placeholder="Écrire votre justification pour l'administrateur..." style="flex:1; padding:4px;"><button class="btn-auth" style="font-size:0.75rem; padding:4px 8px; width:auto;" onclick="soumettreJustificationVersAdmin(${c.id})">Envoyer</button></div>` : ''}
+        estAdmin ? `<div style="margin-top:6px; display:flex; gap:4px;"><input id="justif-reply-to-${c.id}" placeholder="Écrire votre justification pour l'administrateur..." style="flex:1; padding:4px;"><button class="btn-auth" style="font-size:0.75rem; padding:4px 8px; width:auto; min-width:140px;" onclick="soumettreJustificationVersAdmin(${c.id})">Envoyer</button></div>` : ''}
     </div>`;
   }).join("");
 }
@@ -379,9 +385,9 @@ function basculerOngletProfil(mode) {
     <div style="background:#f8fafc; padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:8px;">
       <div style="font-weight:bold; font-size:0.9rem;">${a.titre} - ${a.prix} ${a.devise} [${a.statut === 'occupe' ? '🔴 Épuisé' : '🟢 Disponible'}]</div>
       <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:8px; padding-top:6px; border-top:1px dashed var(--border);">
-        <button class="btn-auth" style="background:orange; font-size:0.75rem; padding:4px 8px; width:auto;" onclick="executerProcessusInterstitielBoost(${a.id})">🚀 Booster</button>
-        <button class="btn-auth sec" style="font-size:0.75rem; padding:4px 8px; width:auto;" onclick='ouvrirFenetreModificationAnnonce(${JSON.stringify(a).replace(/"/g, '&quot;')})'>✏️ Modifier</button>
-        <button class="btn-auth" style="background:var(--danger); font-size:0.75rem; padding:4px 8px; width:auto;" onclick="supprimerAnnonceProfil(${a.id})">🗑️ Supprimer</button>
+        <button class="btn-auth" style="background:orange; font-size:0.75rem; padding:4px 8px; width:auto; min-width:140px;" onclick="executerProcessusInterstitielBoost(${a.id})">🚀 Booster</button>
+        <button class="btn-auth sec" style="font-size:0.75rem; padding:4px 8px; width:auto; min-width:140px;" onclick='ouvrirFenetreModificationAnnonce(${JSON.stringify(a).replace(/"/g, '&quot;')})'>✏️ Modifier</button>
+        <button class="btn-auth" style="background:var(--danger); font-size:0.75rem; padding:4px 8px; width:auto; min-width:140px;" onclick="supprimerAnnonceProfil(${a.id})">🗑️ Supprimer</button>
       </div>
     </div>`).join("");
 }
@@ -463,8 +469,8 @@ function rafraichirVueVipFormulaire() {
   const s = document.getElementById("vip-setup-zone");
   s.innerHTML = `
     <div id="vip-multi-blocks" style="display:flex; flex-direction:column; gap:12px;"></div>
-    <button class="btn-auth sec" style="width:100%; margin-top:10px;" onclick="ajouterBlocObjetAuCatalogueVip()">➕ Ajouter un produit/service VIP</button>
-    <button class="btn-auth" style="width:100%; margin-top:6px; background:var(--vip-gold); color:black;" onclick="sauvegarderEtPublierToutLeCatalogueVip()">Publier tout le Catalogue VIP 🚀</button>`;
+    <button class="btn-auth sec" style="width:100%; margin-top:10px; min-width:140px;" onclick="ajouterBlocObjetAuCatalogueVip()">➕ Ajouter un produit/service VIP</button>
+    <button class="btn-auth" style="width:100%; margin-top:6px; background:var(--vip-gold); color:black; min-width:140px;" onclick="sauvegarderEtPublierToutLeCatalogueVip()">Publier tout le Catalogue VIP 🚀</button>`;
   BLOCS_VIP_COMPTEUR = 0; ajouterBlocObjetAuCatalogueVip();
 }
 

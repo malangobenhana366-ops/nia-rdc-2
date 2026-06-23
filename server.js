@@ -29,7 +29,7 @@ async function uploadImage(base64){
   } catch (e) { return ""; }
 }
 
-// CRÉATION DE COMPTE AVEC GÉNÉRATION AUTOMATIQUE DE NUP
+// INSCRIPTION AVEC SÉCURITÉ ET GÉNÉRATION AUTOMATIQUE DU NUP
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -49,6 +49,7 @@ app.post("/auth/register", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// CONNEXION SÉCURISÉE BCRYPT
 app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -62,6 +63,7 @@ app.post("/auth/login", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// SUPPRESSION COMPLÈTE DU COMPTE (RGPD / SÉCURITÉ)
 app.delete("/auth/delete-account", async (req, res) => {
   try {
     await pool.query("DELETE FROM users WHERE id = $1", [req.body.user_id]);
@@ -69,6 +71,7 @@ app.delete("/auth/delete-account", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// FLUX GÉNÉRAL AVEC IMAGES ET TRI VIP PRIORITAIRE
 app.get("/feed", async (req, res) => {
   try {
     const query = `
@@ -142,6 +145,7 @@ app.delete("/annonces/:id/delete", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// SIGNALEMENT SÉCURISÉ DES ANNONCES
 app.post("/annonces/:id/signaler", async (req, res) => {
   try {
     await pool.query("INSERT INTO annonce_reports (annonce_id, raison) VALUES ($1, $2)", [req.params.id, req.body.raison || "Non spécifié"]);
@@ -165,6 +169,7 @@ app.get("/admin/reports", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// MESSAGERIE CONTEXTUELLE PRIVÉE (SÉCURITÉ AVANCÉE VIA NUP)
 app.post("/chat/send", async (req, res) => {
   try {
     const { annonce_id, expediteur_id, contenu, provenance_contexte } = req.body;
@@ -244,4 +249,4 @@ app.get("/admin/all-justifications/:context", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Serveur opérationnel avec marquage NUP sur le port ${PORT}`));
+app.listen(PORT, () => console.log(`Serveur opérationnel v2 sur le port ${PORT}`));

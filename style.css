@@ -1,5 +1,5 @@
 /* ==========================================================================
-   BASES EN COMMUN & VARIABLES GENERALES
+   VARIABLES GLOBALES & RESET (Commun aux deux pages)
    ========================================================================== */
 :root {
     --primary: #0056b3;
@@ -11,8 +11,6 @@
     --text-main: #1f2937;
     --text-muted: #64748b;
     --border: #ced4da;
-    --danger: #ef4444;
-    --danger-hover: #dc2626;
     --radius: 12px;
 }
 
@@ -20,350 +18,180 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    -webkit-tap-highlight-color: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 body {
     background-color: var(--bg-app);
     color: var(--text-main);
     min-height: 100vh;
-    font-size: 15px;
-    line-height: 1.4;
 }
 
-/* INPUTS ET FORMULAIRES GENERIQUES (Partagés sans conflit) */
-input[type="text"],
-input[type="tel"],
-input[type="password"],
-input[type="number"],
-select,
-textarea {
+/* Formulaires & Modales Génériques */
+input, select, textarea {
     width: 100%;
     padding: 12px;
     border: 1px solid var(--border);
     border-radius: 8px;
-    font-size: 15px;
-    background-color: #f8fafc;
     margin-bottom: 12px;
-    color: var(--text-main);
-    transition: all 0.2s;
+    background-color: #f8fafc;
 }
 
-input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: var(--primary);
-    background-color: #fff;
-    box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.12);
-}
-
-.row-flex {
-    display: flex;
-    gap: 8px;
-}
-.row-flex input, .row-flex select {
-    flex: 1;
-}
-
-
-/* ==========================================================================
-   STRUCTURE N°1 : PAGE BLANCHE CENTRÉE (.container) - Ex: Inscription Directe
-   ========================================================================== */
-.container {
-    background-color: var(--bg-card);
-    border-radius: var(--radius);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    max-width: 500px;
-    margin: 40px auto;
-    padding: 24px;
-    display: block; /* Sécurité contre flexbox */
-}
-
-.container h1 {
-    color: var(--primary);
-    text-align: center;
-    font-size: 26px;
-    font-weight: 800;
-    margin-bottom: 16px;
-}
-
-.container h2 {
-    font-size: 20px;
-    font-weight: 700;
-    margin: 20px 0 12px 0;
-    color: var(--text-main);
-}
-
-/* Barre d'outils de la structure container */
-.toolbar {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background: #e9ecef;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    gap: 4px;
-}
-.toolbar a {
-    text-decoration: none;
-    color: #495057;
-    font-size: 13px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 6px 10px;
-    background: #fff;
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-
-/* Alerte de synchronisation réseau */
-.alert {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeeba;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    font-size: 14px;
-    text-align: center;
-}
-
-/* Bloc d'affichage des CGU fixe */
-.terms-box {
-    margin-top: 20px;
-    background-color: #f8f9fa;
-    border-left: 4px solid var(--primary);
-    padding: 14px;
-    border-radius: 4px;
-    font-size: 13px;
-    max-height: 180px;
-    overflow-y: auto;
-}
-.terms-box strong {
-    display: block;
-    margin-bottom: 6px;
-}
-
-
-/* ==========================================================================
-   STRUCTURE N°2 : APPLICATION WEB COMPLÈTE AVEC EN-TÊTE FIXE ET FLUX (FEED)
-   ========================================================================== */
-.app-header {
-    background-color: var(--bg-card);
+.modal-overlay {
     position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 60px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    z-index: 100;
-}
-
-.header-container {
-    max-width: 800px;
-    margin: 0 auto;
-    height: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 16px;
-}
-
-.logo-title {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--primary);
-    cursor: pointer;
-    user-select: none;
-}
-
-.nav-actions {
-    display: flex;
-    gap: 6px;
-}
-
-.nav-icon-btn {
-    background: #f1f5f9;
-    border: none;
-    border-radius: 8px;
-    width: 38px;
-    height: 38px;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px;
-    cursor: pointer;
+    z-index: 2000;
+    backdrop-filter: blur(3px);
 }
 
-/* Menu déroulant lié à l'icône Parchemin */
-.legal-menu-box {
-    display: none;
-    position: absolute;
-    top: 65px;
-    right: 16px;
+.modal-box {
     background: var(--bg-card);
-    border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    width: 260px;
-    overflow: hidden;
-    z-index: 105;
-}
-.legal-item {
-    padding: 12px 16px;
-    font-size: 14px;
-    cursor: pointer;
-    border-bottom: 1px solid #f1f5f9;
-}
-.legal-item:hover {
-    background: #f8fafc;
-    color: var(--primary);
+    width: 90%;
+    max-width: 480px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Zone d'affichage du flux */
+/* ==========================================================================
+   ÉLÉMENTS COMMUNS DE DISPOSITION BOUTONS (Barre du bas & Annonces)
+   ========================================================================== */
+/* Zone Centrale : Les annonces récentes */
 .feed-viewport {
-    margin-top: 75px; /* Empêche le header de cacher le flux supérieur */
-    padding: 16px;
+    padding: 75px 16px 85px 16px; /* Marges pour ne pas être caché par le haut ou le bas */
     display: flex;
     justify-content: center;
 }
+
 .feed-container {
     width: 100%;
     max-width: 550px;
 }
 
-
-/* ==========================================================================
-   SYSTÈME DE FENÊTRES POP-UP (MODALES MULTIPLES)
-   ========================================================================== */
-.modal-overlay {
+/* Barre de navigation basse (Commune en bas pour Page 1 & Page 2) */
+.bottom-nav-bar {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 12px;
-    backdrop-filter: blur(3px);
-}
-
-.modal-box {
+    bottom: 0; left: 0; right: 0;
+    height: 65px;
     background-color: var(--bg-card);
-    border-radius: var(--radius);
-    width: 100%;
-    max-width: 480px;
-    max-height: 90vh;
+    border-top: 1px solid var(--border);
     display: flex;
-    flex-direction: column;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-}
-
-.modal-header {
-    padding: 16px;
-    border-bottom: 1px solid #f1f5f9;
-    display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     align-items: center;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
 }
 
-.close-modal {
+.bottom-nav-btn {
     background: none;
     border: none;
     font-size: 20px;
-    color: var(--text-muted);
     cursor: pointer;
-}
-
-.form-scrollable-body {
-    padding: 16px;
-    overflow-y: auto;
-    flex: 1;
-}
-
-/* Éléments internes des formulaires de modale */
-.auth-form-grid {
-    padding: 16px;
-}
-.cgu-wrapper {
-    background: #f8fafc;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 12px;
-}
-.cgu-scroller-view, .legal-scroll-text {
-    max-height: 130px;
-    overflow-y: auto;
-    font-size: 12px;
-    color: var(--text-muted);
-}
-.cgu-checkbox-label {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    font-size: 12px;
+    color: var(--text-muted);
 }
 
 
 /* ==========================================================================
-   BOUTONS ET BANNIÈRES DE SÉCURITÉ
+   STRUCTURE PAGE 1 : BOUTONS EN HAUT À DROITE
    ========================================================================== */
-.btn-auth, .btn-primary {
+.page-1 .app-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background-color: var(--bg-card);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    z-index: 1000;
+}
+
+/* Boutons S'inscrire & Connexion regroupés en haut à droite */
+.page-1 .header-auth-right {
+    display: flex;
+    gap: 8px;
+}
+
+.page-1 .btn-top-auth {
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid var(--primary);
+    cursor: pointer;
+}
+
+.page-1 .btn-top-auth.primary {
     background-color: var(--primary);
     color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    width: 100%;
-}
-.btn-auth:disabled {
-    background-color: #cbd5e1;
-    cursor: not-allowed;
 }
 
-.btn-container {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-}
-.btn-secondary { background-color: #6c757d; color: white; }
-.btn-danger-action { background-color: var(--danger); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; font-weight: 600; }
-
-.switch-auth-link { font-size: 13px; color: var(--primary); text-align: center; cursor: pointer; margin-top: 12px; }
-
-/* Bannière flottante d'authentification */
-.floating-auth-banner {
-    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-    color: white;
-    padding: 14px;
-    border-radius: var(--radius);
-    text-align: center;
-    margin: 10px auto;
-    max-width: 550px;
+.page-1 .btn-top-auth.secondary {
+    background-color: transparent;
+    color: var(--primary);
 }
 
 
 /* ==========================================================================
-   OPTIONS SPÉCIFIQUES (VIP, ACCELERATEUR, ET PANEL ADMIN)
+   STRUCTURE PAGE 2 : MENU BURGER (3 TRAITS HORIZONTAUX) EN HAUT À GAUCHE
    ========================================================================== */
-.tabs-navigation { display: flex; background: #e2e8f0; padding: 4px; border-radius: 8px; margin-bottom: 12px; }
-.btn-tab { flex: 1; background: none; border: none; padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px; color: var(--text-muted); }
+.page-2 .app-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background-color: var(--bg-card);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    z-index: 1000;
+}
 
-.photo-upload-zone { border: 2px dashed var(--border); padding: 14px; border-radius: 8px; text-align: center; background: #f8fafc; }
+/* Bouton 3 traits horizontaux en haut à gauche */
+.page-2 .burger-menu-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-main);
+    padding: 4px 8px;
+}
 
-/* Loader propulsion */
-.speed-boost-box { align-items: center; text-align: center; padding: 30px; }
-.spinner { width: 36px; height: 36px; border: 4px solid #f1f5f9; border-top: 4px solid var(--vip-gold); border-radius: 50%; animation: spin 0.9s linear infinite; margin: 0 auto 15px auto; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+/* Le menu latéral ou déroulant contenant À propos, Sécurité... */
+.page-2 .burger-dropdown {
+    display: none; /* Géré par votre JavaScript lors du clic */
+    position: absolute;
+    top: 60px;
+    left: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    width: 250px;
+    z-index: 1100;
+}
 
-/* Panel d'administration */
-.admin-panel-box { max-width: 650px !important; }
-.admin-menu-tabs { display: flex; background: #1e293b; padding: 4px; }
-.admin-menu-tabs button { flex: 1; background: none; border: none; color: #94a3b8; padding: 10px; font-size: 12px; cursor: pointer; }
-.admin-render-viewport { background: #0f172a; min-height: 220px; max-height: 350px; overflow-y: auto; padding: 12px; }
-.admin-global-broadcast-zone { padding: 12px; background: #1e293b; border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
+.page-2 .burger-item {
+    padding: 12px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.page-2 .burger-item:last-child {
+    border-bottom: none;
+}
+
+.page-2 .burger-item:hover {
+    background-color: #f8fafc;
+    color: var(--primary);
+}

@@ -8,17 +8,10 @@
 </head>
 <body>
 
+  <!-- EN-TÊTE DE L'APPLICATION (LOGO EN HAUT) -->
   <header class="app-header">
     <div class="header-container">
       <h1 class="logo-title" onmousedown="detecterClicLongAdmin()" onmouseup="annulerClicLongAdmin()" ontouchstart="detecterClicLongAdmin()" ontouchend="annulerClicLongAdmin()">NIA RDC</h1>
-      
-      <div class="nav-actions">
-        <button class="nav-icon-btn" onclick="ouvrirModal('rechercher')">🔍</button>
-        <button class="nav-icon-btn" onclick="ouvrirSecuriseModal('publier')">➕</button>
-        <button class="nav-icon-btn" onclick="ouvrirSecuriseModal('vip')">👑 VIP</button>
-        <button class="nav-icon-btn" onclick="ouvrirSecuriseModal('profil')">👤</button>
-        <button class="nav-icon-btn" onclick="toggleMenuLegal()">📜</button>
-      </div>
     </div>
 
     <div id="legal-dropdown" class="legal-menu-box">
@@ -28,6 +21,16 @@
     </div>
   </header>
 
+  <!-- BARRE DE NAVIGATION APPLICATIVE FIXÉE STRICTEMENT EN BAS -->
+  <nav class="bottom-nav-bar">
+    <button class="nav-icon-btn" onclick="ouvrirModal('rechercher')">🔍</button>
+    <button class="nav-icon-btn" onclick="ouvrirSecuriseModal('publier')">➕</button>
+    <button class="nav-icon-btn" onclick="ouvrirSecuriseModal('vip')">👑 VIP</button>
+    <button class="nav-icon-btn" onclick="ouvrirSecuriseModal('profil')">👤</button>
+    <button class="nav-icon-btn" onclick="toggleMenuLegal()">📜</button>
+  </nav>
+
+  <!-- CONTENU PRINCIPAL (FLUX D'ANNONCES) -->
   <main class="feed-viewport">
     <div id="feed" class="feed-container">
       <p style="text-align:center; color:gray; padding:20px;">Initialisation sécurisée du flux...</p>
@@ -192,7 +195,7 @@
   <div id="modal-legal-display" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <div class="modal-header">
-        <h2 id="legal-header-title">📜 Document Officiel</h2>
+        <h2>📜 Document Officiel</h2>
         <button class="close-modal" onclick="fermerModal('legal-display')">✕</button>
       </div>
       <div id="legal-body-content" class="legal-scroll-text"></div>

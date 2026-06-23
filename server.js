@@ -110,7 +110,7 @@ app.post("/annonces", async (req, res) => {
     const newAnnonce = await pool.query(
       `INSERT INTO annonces (user_id, titre, prix, devise, periode, statut, telephone, description, ville, commune, is_vip) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
-      [user_id, titre, prix || 0, devise, periode, statut, telephone, description, ville, commune, is_vip || false]
+      [user_id, titre, prix || 0, DEVise, periode, statut, telephone, description, ville, commune, is_vip || false]
     );
     
     const annonceId = newAnnonce.rows[0].id;

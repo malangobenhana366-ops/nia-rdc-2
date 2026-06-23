@@ -29,7 +29,7 @@ async function uploadImage(base64){
   } catch (e) { return ""; }
 }
 
-// INSCRIPTION AVEC SÉCURITÉ ET GÉNÉRATION AUTOMATIQUE DU NUP
+// INSCRIPTION
 app.post("/auth/register", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -49,7 +49,7 @@ app.post("/auth/register", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// CONNEXION SÉCURISÉE BCRYPT
+// CONNEXION
 app.post("/auth/login", async (req, res) => {
   try {
     const { telephone, password } = req.body;
@@ -63,7 +63,7 @@ app.post("/auth/login", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// SUPPRESSION COMPLÈTE DU COMPTE (RGPD / SÉCURITÉ)
+// SUPPRESSION DU COMPTE
 app.delete("/auth/delete-account", async (req, res) => {
   try {
     await pool.query("DELETE FROM users WHERE id = $1", [req.body.user_id]);
@@ -71,7 +71,7 @@ app.delete("/auth/delete-account", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// FLUX GÉNÉRAL AVEC IMAGES ET TRI VIP PRIORITAIRE
+// FLUX GÉNÉRAL
 app.get("/feed", async (req, res) => {
   try {
     const query = `
@@ -88,6 +88,21 @@ app.get("/feed", async (req, res) => {
   } catch (e) { res.json([]); }
 });
 
+// STATISTIQUES ADMIN
+app.get("/admin/stats", async (req, res) => {
+  try {
+    const total = await pool.query("SELECT COUNT(*) FROM annonces");
+    const standard = await pool.query("SELECT COUNT(*) FROM annonces WHERE is_vip = FALSE");
+    const vip = await pool.query("SELECT COUNT(*) FROM annonces WHERE is_vip = TRUE");
+    res.json({
+      total: parseInt(total.rows[0].count),
+      standard: parseInt(standard.rows[0].count),
+      vip: parseInt(vip.rows[0].count)
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// CREATION ANNONCE
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
@@ -109,31 +124,11 @@ app.post("/annonces", async (req,res)=>{
 
 app.put("/annonces/:id", async (req, res) => {
   try {
-    const { titre, prix, devise, periode, description, statut, ville, commune, telephone, nouvelles_images_base64 } = req.body;
+    const { titre, prix, devise, periode, description, statut, ville, commune, telephone } = req.body;
     await pool.query(
       `UPDATE annonces SET titre=$1, prix=$2, devise=$3, periode=$4, description=$5, statut=$6, ville=$7, commune=$8, telephone=$9 WHERE id=$10`,
       [titre, prix, devise, periode, description, statut, ville, commune, telephone, req.params.id]
     );
-    if(nouvelles_images_base64 && Array.isArray(nouvelles_images_base64)){
-      for(let b64 of nouvelles_images_base64){
-        const url = await uploadImage(b64);
-        if(url) await pool.query("INSERT INTO annonce_images (annonce_id, image_url) VALUES ($1, $2)", [req.params.id, url]);
-      }
-    }
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.delete("/images/:id", async (req, res) => {
-  try {
-    await pool.query("DELETE FROM annonce_images WHERE id = $1", [req.params.id]);
-    res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post("/annonces/:id/boost", async (req, res) => {
-  try {
-    await pool.query("UPDATE annonces SET created_at = NOW() WHERE id = $1", [req.params.id]);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -145,7 +140,7 @@ app.delete("/annonces/:id/delete", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// SIGNALEMENT SÉCURISÉ DES ANNONCES
+// SIGNALEMENT SÉCURISÉ
 app.post("/annonces/:id/signaler", async (req, res) => {
   try {
     await pool.query("INSERT INTO annonce_reports (annonce_id, raison) VALUES ($1, $2)", [req.params.id, req.body.raison || "Non spécifié"]);
@@ -156,20 +151,38 @@ app.post("/annonces/:id/signaler", async (req, res) => {
 app.get("/admin/reports", async (req, res) => {
   try {
     const query = `
-      SELECT r.id as report_id, r.raison, r.created_at as reported_at, a.*, u.nup as proprietaire_nup,
-             COALESCE(JSON_AGG(JSON_BUILD_OBJECT('id', ai.id, 'url', ai.image_url)) FILTER (WHERE ai.id IS NOT NULL), '[]') as images
+      SELECT r.id as report_id, r.raison, r.created_at as reported_at, a.*, u.nup as proprietaire_nup
       FROM annonce_reports r
       JOIN annonces a ON r.annonce_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
-      LEFT JOIN annonce_images ai ON a.id = ai.annonce_id
-      GROUP BY r.id, a.id, u.nup ORDER BY r.created_at DESC;
+      ORDER BY r.created_at DESC;
     `;
     const result = await pool.query(query);
     res.json(result.rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// MESSAGERIE CONTEXTUELLE PRIVÉE (SÉCURITÉ AVANCÉE VIA NUP)
+// ENVOI MESSAGE COLLECTIF (BROADCAST NON-REPONDABLE)
+app.post("/admin/broadcast", async (req, res) => {
+  try {
+    const { contenu } = req.body;
+    const adminRes = await pool.query("SELECT id FROM users WHERE is_admin = TRUE LIMIT 1");
+    if(adminRes.rows.length === 0) return res.status(404).json({ error: "Aucun admin trouvé" });
+    const adminId = adminRes.rows[0].id;
+
+    const allUsers = await pool.query("SELECT id FROM users WHERE is_admin = FALSE");
+    
+    for (let u of allUsers.rows) {
+      await pool.query(
+        "INSERT INTO messages_priveis (annonce_id, expediteur_id, destinataire_id, contenu, provenance_contexte) VALUES (NULL, $1, $2, $3, 'broadcast')",
+        [adminId, u.id, contenu]
+      );
+    }
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// MESSAGERIE
 app.post("/chat/send", async (req, res) => {
   try {
     const { annonce_id, expediteur_id, contenu, provenance_contexte } = req.body;
@@ -233,17 +246,17 @@ app.get("/chat/conversations/:user_id", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get("/admin/all-justifications/:context", async (req, res) => {
+app.get("/admin/all-justifications", async (req, res) => {
   try {
     const query = `
       SELECT m.*, a.titre as annonce_titre, u.nup as user_nup
       FROM messages_priveis m
       LEFT JOIN annonces a ON m.annonce_id = a.id
       JOIN users u ON m.destinataire_id = u.id
-      WHERE m.provenance_contexte = $1 AND m.reponse_utilisateur IS NOT NULL
+      WHERE m.reponse_utilisateur IS NOT NULL
       ORDER BY m.created_at DESC;
     `;
-    const result = await pool.query(query, [req.params.context]);
+    const result = await pool.query(query);
     res.json(result.rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

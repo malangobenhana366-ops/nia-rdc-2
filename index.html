@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>NIA RDC - Version Sécurisée Pro</title>
+  <title>NIA RDC - Version Pro Sécurisée</title>
   <style>
     :root {
       --primary: #1e40af; --primary-hover: #1e3a8a; --bg: #f8fafc; --card-bg: #ffffff;
@@ -25,7 +25,6 @@
     .menu-burger-container { position: relative; display: flex; align-items: center; gap: 12px; }
     .btn-burger { background: #f1f5f9; border: none; font-size: 1.1rem; cursor: pointer; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
     
-    /* STYLE SÉCURISÉ DU MENU DÉROULANT (DROPDOWN ANCIEN AGENCEMENT) */
     .dropdown-legal { display: none; position: absolute; top: 46px; left: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 250px; z-index: 1000; overflow: hidden; }
     .dropdown-legal button { background: none; border: none; width: 100%; text-align: left; padding: 12px 16px; font-size: 0.85rem; font-weight: 500; color: var(--text); cursor: pointer; border-bottom: 1px solid var(--border); }
     .dropdown-legal button:hover { background: #f8fafc; color: var(--primary); }
@@ -43,14 +42,14 @@
     .gallery { display: flex; overflow-x: auto; gap: 8px; margin: 12px 0; padding-bottom: 6px; }
     .gallery img { width: 190px; height: 130px; object-fit: cover; background: #f1f5f9; border-radius: 10px; flex-shrink: 0; }
     
-    /* ALIGNEMENT DES ACTIONS */
-    .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; flex-wrap: wrap; gap: 8px; }
     .status-disponible { color: var(--success); font-weight: 600; font-size: 0.85rem; }
     .status-occupe { color: var(--danger); font-weight: 600; font-size: 0.85rem; }
     
     .btn-action { border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s; }
     .btn-action:hover { opacity: 0.9; }
     .btn-action.call { background: var(--success); color: white; }
+    .btn-action.shop { background: var(--vip-gold); color: white; }
     .btn-action.chat { background: var(--primary); color: white; }
     .btn-action.report { background: #f1f5f9; color: var(--text-light); }
     
@@ -64,17 +63,17 @@
     .full-width { grid-column: span 2; }
     .form-box { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 0.8rem; color: var(--text-light); }
     .form-box input, .form-box select, .form-box textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-weight: normal; font-size: 0.9rem; color: var(--text); background: #f8fafc; }
-    .form-box input:focus, .form-box select:focus, .form-box textarea:focus { outline: none; border-color: var(--primary); background: #fff; }
     
-    .cgu-box { height: 150px; overflow-y: scroll; border: 1px solid var(--border); padding: 12px; font-size: 0.8rem; font-weight: normal; background: #f8fafc; border-radius: 8px; margin-bottom: 10px; line-height: 1.5; color: var(--text-light); }
-    
+    .legal-box-scrollable { max-height: 65vh; overflow-y: auto; padding: 15px; background: #fafafa; border: 1px solid var(--border); border-radius: 12px; line-height: 1.6; font-size: 0.95rem; text-align: justify; }
+
     .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); border-top: 1px solid var(--border); z-index: 1500; box-shadow: 0 -2px 10px rgba(0,0,0,0.03); }
     .bottom-grid { display: grid; grid-template-columns: repeat(5, 1fr); text-align: center; max-width: 600px; margin: 0 auto; }
     .bottom-btn { background: none; border: none; padding: 10px 2px; font-size: 0.7rem; font-weight: 600; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .bottom-btn span { font-size: 1.1rem; }
     .bottom-btn.vip { color: var(--vip-gold); }
     
-    .nup-badge-header { background: #f0f4ff; border: 1px solid #dbeafe; color: #1e40af; padding: 14px; border-radius: 10px; text-align: center; font-size: 1rem; font-weight: 700; margin-bottom: 20px; }
+    .stats-container { display: flex; gap: 10px; background: #1e293b; padding: 10px; border-radius: 8px; margin-bottom: 15px; color: white; font-size: 0.8rem; justify-content: space-around; }
+    .stat-item span { color: var(--vip-gold); font-weight: bold; }
   </style>
 </head>
 <body>
@@ -82,13 +81,10 @@
   <header>
     <div class="menu-burger-container">
       <button class="btn-burger" onclick="toggleMenuLegal()">☰</button>
-      <!-- INTERFACE DE SÉCURITÉ EN MENU DÉROULANT (DROPDOWN COMPACT) -->
       <div class="dropdown-legal" id="legal-dropdown">
-        <button onclick="afficherDocumentJurisEtSecu('securite')">📜 Sécurité & CGU</button>
-        <button onclick="afficherDocumentJurisEtSecu('apropos')">ℹ️ À propos de nous</button>
-        <button onclick="afficherDocumentJurisEtSecu('confidentialite')">🔒 Confidentialité</button>
+        <button onclick="afficherDocumentJurisEtSecu('apropos')">ℹ️ À propos de NIA RDC</button>
+        <button onclick="afficherDocumentJurisEtSecu('confidentialite')">🔒 Politique de Confidentialité</button>
         <button onclick="deconnexion()" style="color:var(--danger)">🚪 Se déconnecter</button>
-        <button onclick="suppressionDefinitiveCompte()" style="color:var(--danger); background:#fef2f2;">⚠️ Supprimer mon compte</button>
       </div>
       <a href="#" class="logo">NIA RDC</a>
     </div>
@@ -106,37 +102,24 @@
     <div id="feed">Chargement du flux...</div>
   </main>
 
-  <!-- MODAL AUTHENTIFICATION AVEC ZONE DE DEFILEMENT CGU ANTI-FRAUDE -->
+  <div class="modal" id="modal-legal-display">
+    <div class="modal-content" style="max-width:650px;">
+      <div class="modal-header"><h3 id="legal-header-title" style="margin:0">Document Officiel</h3><button onclick="fermerModal('legal-display')">✕</button></div>
+      <div id="legal-body-content" class="legal-box-scrollable"></div>
+    </div>
+  </div>
+
   <div class="modal" id="modal-auth">
     <div class="modal-content" style="max-width:400px;">
-      <div class="modal-header"><h3 id="auth-main-title" style="margin:0">Inscription</h3><button onclick="fermerModal('auth')">✕</button></div>
-      
-      <div class="grid-2" id="form-register-block">
-        <div class="form-box full-width"><label style="color:var(--danger)">⚠️ Défilez les CGU pour activer l'inscription :</label><div class="cgu-box" id="cgu-scroller-node"></div></div>
-        <div class="form-box full-width" style="flex-direction:row; align-items:center; gap:8px;"><input type="checkbox" id="chk-accept-rules" disabled style="width:auto; margin:0;"> <label for="chk-accept-rules" style="cursor:pointer; margin:0;">J'ai lu et j'accepte les conditions</label></div>
-        <div class="form-box full-width"><label>Téléphone</label><input id="reg-tel" type="tel" placeholder="0820000000"></div>
-        <div class="form-box full-width"><label>Mot de passe</label><input id="reg-pass" type="password" placeholder="••••••••"></div>
-        <div class="form-box full-width"><button class="btn-auth" id="btn-register-action" style="padding:12px;" onclick="actionInscription()" disabled>Créer mon compte</button></div>
-        <div class="form-box full-width" style="text-align:center; font-size:0.85rem;"><a href="#" style="color:var(--primary); text-decoration:none;" onclick="basculerAffichageAuthentification(false)">Déjà inscrit ? Connexion</a></div>
-      </div>
-
-      <div class="grid-2" id="form-login-block" style="display:none;">
+      <div class="modal-header"><h3 id="auth-main-title" style="margin:0">Connexion</h3><button onclick="fermerModal('auth')">✕</button></div>
+      <div class="grid-2" id="form-login-block">
         <div class="form-box full-width"><label>Téléphone</label><input id="log-tel" type="tel" placeholder="0820000000"></div>
         <div class="form-box full-width"><label>Mot de passe</label><input id="log-pass" type="password" placeholder="••••••••"></div>
         <div class="form-box full-width"><button class="btn-auth" style="padding:12px;" onclick="actionConnexion()">Se connecter</button></div>
-        <div class="form-box full-width" style="text-align:center; font-size:0.85rem;"><a href="#" style="color:var(--primary); text-decoration:none;" onclick="basculerAffichageAuthentification(true)">Pas de compte ? Créer un profil</a></div>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="modal-legal-display">
-    <div class="modal-content" style="max-width:600px;">
-      <div class="modal-header"><h3 id="legal-header-title" style="margin:0"></h3><button onclick="fermerModal('legal-display')">✕</button></div>
-      <div id="legal-body-content" style="white-space:pre-wrap; font-size:0.85rem; line-height:1.6; color:var(--text); max-height:60vh; overflow-y:auto; padding:14px; background:#f8fafc; border-radius:8px; border:1px solid var(--border);"></div>
-    </div>
-  </div>
-
-  <!-- PUBLIER UNE OFFRE -->
   <div class="modal" id="modal-publier">
     <div class="modal-content">
       <div class="modal-header"><h3 style="margin:0">📢 Déposer une annonce</h3><button onclick="fermerModal('publier')">✕</button></div>
@@ -145,115 +128,92 @@
         <div class="form-box"><label>Prix</label><input id="prix" type="number" placeholder="150"></div>
         <div class="form-box"><label>Devise & Période</label>
           <div style="display:flex; gap:6px;">
-            <select id="devise" style="flex:1;"><option value="$">$</option><option value="FC">FC</option></select>
-            <select id="periode" style="flex:1;"><option value="jour">/ Jour</option><option value="heure">/ Heure</option></select>
+            <select id="devise"><option value="$">$</option><option value="FC">FC</option></select>
+            <select id="periode"><option value="jour">/ Jour</option><option value="heure">/ Heure</option></select>
           </div>
         </div>
-        <div class="form-box"><label>Disponibilité</label><select id="statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div>
         <div class="form-box"><label>Numéro de Contact</label><input id="telephone" type="tel"></div>
-        <div class="form-box full-width"><label>Description</label><textarea id="description" rows="3" placeholder="Caractéristiques, détails..."></textarea></div>
+        <div class="form-box"><label>Disponibilité</label><select id="statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div>
         <div class="form-box"><label>Ville</label><input id="ville" value="Lubumbashi"></div>
         <div class="form-box"><label>Commune</label><input id="commune" placeholder="Ex: Commune de la Kenya"></div>
-        <div class="form-box full-width"><label>Images (Max 5)</label><input id="photos-input" type="file" multiple accept="image/*" style="background:transparent; padding:0; border:none;"></div>
+        <div class="form-box full-width"><label>Description</label><textarea id="description" rows="3"></textarea></div>
+        <div class="form-box full-width"><label>Images</label><input id="photos-input" type="file" multiple accept="image/*"></div>
         <div class="form-box full-width"><button class="btn-auth" style="padding:12px;" onclick="soumettreAnnonceStandard()">Mettre en ligne</button></div>
       </div>
     </div>
   </div>
 
-  <!-- MODIFIER UNE ANNONCE -->
-  <div class="modal" id="modal-modifier">
-    <div class="modal-content">
-      <div class="modal-header"><h3 style="margin:0;">✏️ Éditer la publication</h3><button onclick="fermerModal('modifier')">✕</button></div>
-      <input type="hidden" id="edit-id">
-      <div class="grid-2">
-        <div class="form-box full-width"><label>Titre</label><input id="edit-titre"></div>
-        <div class="form-box"><label>Prix</label><input id="edit-prix" type="number"></div>
-        <div class="form-box"><label>Période & Devise</label>
-          <div style="display:flex; gap:6px;">
-            <select id="edit-devise"><option value="$">$</option><option value="FC">FC</option></select>
-            <select id="edit-periode"><option value="jour">/ Jour</option><option value="heure">/ Heure</option></select>
-          </div>
-        </div>
-        <div class="form-box"><label>Disponibilité</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div>
-        <div class="form-box"><label>Téléphone</label><input id="edit-telephone" type="tel"></div>
-        <div class="form-box full-width"><label>Description</label><textarea id="edit-description" rows="3"></textarea></div>
-        <div class="form-box full-width"><label style="color:var(--primary)">🖼️ Galerie actuelle (cliquez pour conserver) :</label><div id="edit-photos-container" style="background:#f1f5f9; padding:10px; border-radius:8px; min-height:40px; display:flex; flex-wrap:wrap; gap:6px;"></div></div>
-        <div class="form-box full-width"><label>Ajouter de nouvelles photos</label><input id="edit-new-photos" type="file" multiple accept="image/*" style="background:transparent; padding:0; border:none;"></div>
-        <div class="form-box full-width"><button class="btn-auth" style="padding:12px; background:var(--success);" onclick="sauvegarderChangementsAnnonce()">Enregistrer les modifications</button></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MULTI-VIP VITRINE MODERNE -->
   <div class="modal" id="modal-vip">
-    <div class="modal-content" style="max-width:500px;">
+    <div class="modal-content" style="max-width:550px;">
       <div class="modal-header"><h3 style="margin:0; color:var(--vip-gold);">👑 Vitrine Multi-VIP Express</h3><button onclick="fermerModal('vip')">✕</button></div>
       <div id="vip-setup-zone"></div>
     </div>
   </div>
 
-  <!-- RECHERCHER FILTRER -->
   <div class="modal" id="modal-rechercher">
     <div class="modal-content" style="max-width:380px;">
       <div class="modal-header"><h3 style="margin:0">🔍 Filtrer les offres</h3><button onclick="fermerModal('rechercher')">✕</button></div>
       <div class="grid-2">
-        <div class="form-box full-width"><label>Mot-clé</label><input id="search-keyword" placeholder="Chambre, Salon, Studio..."></div>
+        <div class="form-box full-width"><label>Mot-clé</label><input id="search-keyword" placeholder="Chambre, Studio..."></div>
         <div class="form-box full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div>
         <div class="form-box full-width"><button class="btn-auth" style="padding:12px;" onclick="executerRecherche()">Rechercher</button></div>
       </div>
     </div>
   </div>
 
-  <!-- MON ESPACE PROFIL PRIVÉ ET BOÎTE DE DIALOGUE SÉCURISÉE -->
   <div class="modal" id="modal-profil">
     <div class="modal-content" style="max-width:550px;">
       <div class="modal-header"><h3 style="margin:0">👤 Mon Profil</h3><button onclick="fermerModal('profil')">✕</button></div>
-      <div class="nup-badge-header" id="user-profile-nup-title">NUMÉRO DE PROFIL : CHARGEMENT...</div>
-      
-      <div style="margin-bottom:20px;">
-        <h4 style="margin:0 0 8px 0; color:var(--primary); font-size:0.9rem;">💬 Ma Boîte de Messages (Bailleurs / Modération)</h4>
-        <div id="chat-conversations-list" style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:10px; padding:12px; background:#f8fafc; display:flex; flex-direction:column; gap:8px;"></div>
-      </div>
-
-      <div style="display:flex; gap:8px; margin-bottom:16px;">
-        <button id="btn-tab-std" class="btn-auth" style="flex:1;" onclick="basculerOngletProfil('standard')">Mes Offres Standards</button>
-        <button id="btn-tab-vip" class="btn-auth sec" style="flex:1;" onclick="basculerOngletProfil('vip')">Mes Catalogues VIP 👑</button>
-      </div>
+      <div id="chat-conversations-list" style="margin-bottom:15px; max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
       <div id="profil-annonces-list"></div>
     </div>
   </div>
 
-  <!-- INTERFACE SUPERVISEUR CENTRALISÉE -->
   <div class="modal" id="modal-admin">
-    <div class="modal-content" style="background:#0f172a; color:white; max-width:550px;">
+    <div class="modal-content" style="background:#0f172a; color:white; max-width:600px;">
       <div class="modal-header" style="border-bottom:1px solid #334155;"><h3 style="margin:0; color:#ef4444;">Supervision Centrale</h3><button onclick="fermerModal('admin')" style="background:#1e293b; color:white; border:none;">✕</button></div>
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:16px;">
-        <button class="btn-auth" style="font-size:0.75rem; padding:8px 4px;" onclick="definirVueAdmin('flux')">Flux Global</button>
-        <button class="btn-auth" style="background:var(--danger); font-size:0.75rem; padding:8px 4px;" onclick="definirVueAdmin('signaux')">Signalements</button>
-        <button class="btn-auth" style="background:#b45309; font-size:0.75rem; padding:8px 4px;" onclick="definirVueAdmin('justifications')">Justifications</button>
+      
+      <div class="stats-container">
+        <div class="stat-item">Total : <span id="stat-total">0</span></div>
+        <div class="stat-item">Standards : <span id="stat-standard">0</span></div>
+        <div class="stat-item">VIP : <span id="stat-vip">0</span></div>
       </div>
-      <div id="admin-main-render-box" style="max-height:350px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+
+      <div style="display:flex; gap:6px; margin-bottom:12px;">
+        <input id="admin-filter-city" placeholder="Filtrer par Ville" style="flex:1; padding:6px; border-radius:6px; font-size:0.8rem; color:black;">
+        <select id="admin-filter-type" style="padding:6px; border-radius:6px; font-size:0.8rem; color:black;">
+          <option value="tous">Tous les statuts</option>
+          <option value="standard">Standard Uniquement</option>
+          <option value="vip">VIP Uniquement</option>
+        </select>
+        <button class="btn-auth" style="font-size:0.8rem; padding:6px;" onclick="appliquerFiltresAdmin()">Filtrer</button>
+      </div>
+
+      <div style="background:#1e293b; padding:10px; border-radius:8px; margin-bottom:15px;">
+        <label style="font-size:0.8rem; color:var(--vip-gold); font-weight:bold;">Message Collectif Flash (Impossible de répondre)</label>
+        <div style="display:flex; gap:6px; margin-top:5px;">
+          <input id="broadcast-msg" placeholder="Texte de l'alerte générale..." style="flex:1; padding:6px; border-radius:6px; color:black;">
+          <button class="btn-auth" style="background:var(--success);" onclick="envoyerMessageGlobalFlash()">Envoyer à Tous</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:16px;">
+        <button class="btn-auth" onclick="definirVueAdmin('flux')">Flux Global</button>
+        <button class="btn-auth" style="background:var(--danger);" onclick="definirVueAdmin('signaux')">Signalements ⚠️</button>
+        <button class="btn-auth" style="background:#b45309;" onclick="definirVueAdmin('justifications')">Justifications ↩️</button>
+      </div>
+      <div id="admin-main-render-box" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
     </div>
   </div>
 
-  <!-- SYSTÈME INTERSTITIEL DE SPONSORISATION (BOOST ANTI-BOT) -->
-  <div class="modal" id="modal-adsense-interstitiel" style="background:rgba(15,23,42,0.9); z-index:10000;">
-    <div class="modal-content" style="max-width:360px; text-align:center; background:#1e293b; color:white; border:1px solid var(--vip-gold);">
-      <h3 style="color:var(--vip-gold); margin-top:0; font-size:1.1rem;">🚀 BOOST VIA NIA RDC ALGORITHME</h3>
-      <div style="padding:20px; background:#0f172a; border-radius:10px; margin:16px 0; font-weight:600; color:#94a3b8; font-size:0.9rem;" id="adsense-timer-node">Calcul de la remontée algorithmique...</div>
-    </div>
-  </div>
-
-  <!-- ACCÈS EN BARRE INFÉRIEURE -->
   <div class="bottom-bar">
     <div class="bottom-grid">
       <button class="bottom-btn" onclick="ouvrirSecuriseModal('publier')"><span>📢</span>Publier</button>
       <button class="bottom-btn" onclick="ouvrirSecuriseModal('rechercher')"><span>🔍</span>Filtrer</button>
       <button class="bottom-btn vip" onclick="ouvrirSecuriseModal('vip')"><span>👑</span>VIP</button>
       <button class="bottom-btn" onclick="ouvrirSecuriseModal('profil')"><span>👤</span>Profil</button>
-      <button class="bottom-btn" style="color:var(--danger)" onmousedown="detecterClicLongAdmin()" onmouseup="annulerClicLongAdmin()" ontouchstart="detecterClicLongAdmin()" ontouchend="annulerClicLongAdmin()"><span>⚙️</span>Admin</button>
+      <button class="bottom-btn" style="color:var(--danger)" onmousedown="detecterClicLongAdmin()" onmouseup="annulerClicLongAdmin()"><span>⚙️</span>Admin</button>
     </div>
-    <div style="background:#0f172a; color:#f59e0b; text-align:center; font-size:0.65rem; padding:5px 0; font-weight:700; letter-spacing:0.5px;">SYSTEM SECURITY COMPAGNON NUP</div>
   </div>
 
   <script src="app.js"></script>

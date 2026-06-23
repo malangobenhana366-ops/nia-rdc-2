@@ -38,7 +38,6 @@ app.post("/auth/register", async (req, res) => {
     const userExist = await pool.query("SELECT id FROM users WHERE telephone = $1", [telephone]);
     if (userExist.rows.length > 0) return res.status(400).json({ error: "Ce numéro est déjà utilisé." });
 
-    // Génération d'un NUP unique aléatoire à 4 chiffres (ex: NUP-4819)
     const nupAleatoire = "NUP-" + Math.floor(1000 + Math.random() * 9000);
     const hashedPassword = await bcrypt.hash(password, 10);
     
@@ -70,7 +69,6 @@ app.delete("/auth/delete-account", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// REJOINDRE LE FLUX GENERAL INCLUANT LE NUP DU VENDEUR POUR L'ADMIN
 app.get("/feed", async (req, res) => {
   try {
     const query = `
@@ -167,7 +165,6 @@ app.get("/admin/reports", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ================= GESTION DES APPELS CHAT ET ALERTES ADMIN VIA MESSAGERIE PRIVÉE RESTRUCTURÉE =================
 app.post("/chat/send", async (req, res) => {
   try {
     const { annonce_id, expediteur_id, contenu, provenance_contexte } = req.body;
@@ -191,7 +188,6 @@ app.post("/chat/send", async (req, res) => {
 app.post("/admin/send-to-nup", async (req, res) => {
   try {
     const { annonce_id, contenu, provenance_contexte } = req.body;
-    
     const adminRes = await pool.query("SELECT id FROM users WHERE is_admin = TRUE LIMIT 1");
     const adminId = adminRes.rows[0].id;
 

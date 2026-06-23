@@ -11,25 +11,22 @@ const TEXTES_DU_DROIT = {
   securite: `POLITIQUE DE SÉCURITÉ ET CONDITIONS GÉNÉRALES D'UTILISATION (CGU) - NIA RDC
 
 1. ACCEPTATION DES CONDITIONS
-En créant un compte sur l'application NIA RDC, vous acceptez expressément d'être soumis aux présentes règles de sécurité et d'utilisation. Si vous n'avez pas l'intention de respecter ces dispositions, nous vous invitons à quitter le service.
+En créant un compte sur l'application NIA RDC, vous acceptez expressément d'être soumis aux présentes règles de sécurité et d'utilisation.
 
 2. NUMÉRO DE PROFIL UNIQUE (NUP)
-Chaque utilisateur se voit attribuer automatiquement un Identifiant Unique de Profil (NUP). Cet identifiant permet à l'administration de suivre vos publications (Annonces Standards et VIP) et de vous contacter directement en cas de litige, de signalement ou d'audit de sécurité, préservant ainsi l'anonymat global tout en maintenant une traçabilité totale pour l'équipe de modération.
+Chaque utilisateur se voit attribuer automatiquement un Identifiant Unique de Profil (NUP). Cet identifiant permet à l'administration de suivre vos publications (Annonces Standards et VIP) et de vous contacter directement en cas de litige, préservant ainsi l'anonymat global.
 
 3. SÉCURITÉ DES TRANSACTIONS ET ANTI-FRAUDE
-NIA RDC est une plateforme de mise en relation immobilière basée à Lubumbashi, RDC. L'administration ne prend aucune commission sur les transactions standards et décline toute responsabilité en cas de litige financier entre l'acheteur/locataire et le bailleur. Il est formellement interdit de publier des annonces mensongères, des biens fictifs ou d'utiliser des photos ne correspondant pas à la réalité du bien.
+NIA RDC est une plateforme de mise en relation immobilière basée à Lubumbashi, RDC. L'administration ne prend aucune commission sur les transactions standards et décline toute responsabilité en cas de litige financier entre le bailleur et le preneur. Il est interdit de publier des biens fictifs.
 
 4. SYSTÈME DE SIGNALEMENT ET MODÉRATION
-Toute annonce suspecte ou signalée par la communauté fera l'objet d'une enquête immédiate par les superviseurs. Un message officiel de l'administration sera envoyé directement dans l'Espace Privé (boîte de messages) du profil concerné. L'utilisateur dispose d'un délai requis pour fournir ses justifications directement depuis son profil sous peine de suppression définitive de l'annonce et de bannissement de son compte.
+Toute annonce suspecte ou signalée fera l'objet d'une enquête immédiate. Un message officiel de l'administration sera envoyé directement dans l'Espace Privé du profil concerné. L'utilisateur doit fournir ses justifications sous peine de suppression et de bannissement.
 
-5. MODIFICATIONS DES SERVICES
-L'administration se réserve le droit de modifier, suspendre ou supprimer des fonctionnalités (y compris la gestion des boosters et des suppressions d'annonces) à tout moment pour garantir la stabilité du réseau.
+[FIN DU DOCUMENT - DEFILEZ VERS LE BAS POUR VALIDER L'INSCRIPTION]`,
 
-[FIN DU DOCUMENT - VEUILLEZ COCHER LA CASE CI-DESSOUS APRÈS LECTURE TOTALE COMPLÈTE POUR ACTIVER VOTRE INSCRIPTION]`,
+  apropos: `À PROPOS DE NIA RDC\n\nNIA RDC est la plateforme immobilière de référence pour le marché de la République Démocratique du Congo, optimisée pour la ville de Lubumbashi.\n\nNotre mission est de simplifier la recherche et la publication de biens immobiliers avec une sécurité renforcée (NUP).`,
 
-  apropos: `À PROPOS DE NIA RDC\n\nNIA RDC est la plateforme immobilière de référence pour le marché de la République Démocratique du Congo, spécialement optimisée pour la ville de Lubumbashi.\n\nNotre mission est de simplifier la recherche et la publication de maisons, appartements, studios et espaces commerciaux grâce à un outil rapide, fluide et sécurisé par le système de Numéro de Profil Unique (NUP).`,
-
-  confidentialite: `POLITIQUE DE CONFIDENTIALITÉ\n\n1. COLLECTE DES DONNÉES\nNous collectons uniquement votre numéro de téléphone afin de sécuriser votre accès et de permettre aux clients potentiels de vous contacter.\n\n2. SÉCURITÉ DES DONNÉES\nVos mots de passe sont hautement sécurisés et cryptés via un algorithme de hachage (bcrypt) sur nos serveurs. L'administration n'a pas accès à votre mot de passe en clair.`
+  confidentialite: `POLITIQUE DE CONFIDENTIALITÉ\n\n1. COLLECTE DES DONNÉES\nNous collectons uniquement votre numéro de téléphone afin de sécuriser votre accès.\n\n2. SÉCURITÉ DES DONNÉES\nVos mots de passe sont cryptés via un algorithme de hachage (bcrypt) sur nos serveurs.`
 };
 
 function brancherEvenementScrollControle() {
@@ -150,7 +147,7 @@ async function actionConnexion() {
 }
 
 async function suppressionDefinitiveCompte() {
-  if (confirm("⚠️ ATTENTION : Voulez-vous supprimer définitivement votre compte ainsi que l'ensemble de vos annonces ?")) {
+  if (confirm("⚠️ Voulez-vous supprimer définitivement votre compte et vos publications ?")) {
     const user_id = localStorage.getItem("nia_user_id");
     if (!user_id) return;
     const res = await fetch(`${API}/auth/delete-account`, {
@@ -210,6 +207,7 @@ async function chargerFluxPrincipal() {
   } catch(e) { document.getElementById("feed").innerHTML = "Erreur de synchronisation..."; }
 }
 
+// FORMAT DE RENDU NET ET ALIGNÉ
 function rendreFluxHtml(liste) {
   const container = document.getElementById("feed"); container.innerHTML = "";
   if(liste.length === 0) { container.innerHTML = "<p style='text-align:center; color:gray;'>Aucune offre disponible.</p>"; return; }
@@ -240,7 +238,7 @@ function rendreFluxHtml(liste) {
 
 async function ouvrirMessagerieDirecteInstantane(annonceId, titreAnnonce) {
   if(!localStorage.getItem("nia_user_id")) return ouvrirSecuriseAuth(false);
-  const text = prompt(`Votre message privé pour : "${titreAnnonce}"`);
+  const text = prompt(`Votre message pour : "${titreAnnonce}"`);
   if(!text || !text.trim()) return;
 
   await fetch(`${API}/chat/send`, {
@@ -255,20 +253,20 @@ async function chargerConversationsPrivees() {
   const res = await fetch(`${API}/chat/conversations/${uid}`);
   const data = await res.json();
   const box = document.getElementById("chat-conversations-list");
-  if(data.length === 0) { box.innerHTML = "<p style='color:gray; font-size:0.8rem; margin:0;'>Aucun message en cours.</p>"; return; }
+  if(data.length === 0) { box.innerHTML = "<p style='color:gray; font-size:0.8rem; margin:0;'>Aucun message.</p>"; return; }
 
   box.innerHTML = data.map(c => {
     const estAdmin = c.expediteur_nup === "NUP-ADMIN";
     return `
     <div style="background:${estAdmin ? '#fef2f2' : 'white'}; padding:10px; border-radius:8px; border:1px solid ${estAdmin ? 'var(--danger)' : 'var(--border)'}; font-size:0.85rem; display:flex; flex-direction:column; gap:4px;">
       <div style="font-weight:700; color:${estAdmin ? 'var(--danger)' : 'var(--primary)'};">
-        ${estAdmin ? '🚨 ALERTE OFFICIELLE DE L\'ADMINISTRATION' : `Sujet : ${c.annonce_titre || 'Général'}`}
+        ${estAdmin ? '🚨 MODÉRATION ADMINISTRATIVE' : `Sujet : ${c.annonce_titre || 'Général'}`}
       </div>
       <div style="color:var(--text-light); font-size:0.75rem;">De : ${c.expediteur_nup} ➔ À : ${c.destinataire_nup}</div>
       <div style="background:#f1f5f9; padding:8px; border-radius:6px; font-style:italic; margin-top:4px; color:var(--text)">"${c.contenu}"</div>
       
-      ${c.reponse_utilisateur ? `<div style="color:var(--success); font-weight:700; margin-top:4px;">✓ Justification fournie : "${c.reponse_utilisateur}"</div>` : 
-        estAdmin ? `<div style="margin-top:6px; display:flex; gap:6px;"><input id="justif-reply-to-${c.id}" placeholder="Entrez votre justification..." style="flex:1; padding:8px; border:1px solid var(--border); border-radius:6px; font-size:0.8rem;"><button class="btn-auth" style="font-size:0.75rem; padding:8px 12px;" onclick="soumettreJustificationVersAdmin(${c.id})">Répondre</button></div>` : ''}
+      ${c.reponse_utilisateur ? `<div style="color:var(--success); font-weight:700; margin-top:4px;">✓ Justification : "${c.reponse_utilisateur}"</div>` : 
+        estAdmin ? `<div style="margin-top:6px; display:flex; gap:6px;"><input id="justif-reply-to-${c.id}" placeholder="Entrez votre explication..." style="flex:1; padding:8px; border:1px solid var(--border); border-radius:6px; font-size:0.8rem;"><button class="btn-auth" style="font-size:0.75rem; padding:8px 12px;" onclick="soumettreJustificationVersAdmin(${c.id})">Envoyer</button></div>` : ''}
     </div>`;
   }).join("");
 }
@@ -282,11 +280,11 @@ async function soumettreJustificationVersAdmin(msgId) {
 }
 
 async function signalerAnnonce(id) {
-  const raison = prompt("Indiquez le motif du signalement :"); if(!raison) return;
+  const raison = prompt("Indiquez le motif de l'alerte :"); if(!raison) return;
   await fetch(`${API}/annonces/${id}/signaler`, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ raison })
   });
-  alert("Signalement envoyé.");
+  alert("Signalement enregistré.");
 }
 
 function basculerOngletProfil(mode) {
@@ -300,14 +298,14 @@ function basculerOngletProfil(mode) {
   
   let userList = toutesLesAnnonces.filter(a => a.user_id == currentUserId && a.is_vip === (mode === "vip"));
   
-  if(userList.length === 0) { listDiv.innerHTML = "<p style='color:gray; text-align:center; font-size:0.85rem;'>Aucune publication enregistrée.</p>"; return; }
+  if(userList.length === 0) { listDiv.innerHTML = "<p style='color:gray; text-align:center; font-size:0.85rem;'>Aucun bien.</p>"; return; }
 
   listDiv.innerHTML = userList.map(a => `
     <div style="background:#f8fafc; padding:14px; border-radius:10px; border:1px solid var(--border); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
       <div style="font-weight:600; font-size:0.85rem;">${a.titre} <span style="color:var(--primary); font-weight:700;">(${a.prix} ${a.devise})</span></div>
       <div style="display:flex; gap:4px;">
         <button class="btn-auth" style="background:#f59e0b; font-size:0.75rem; padding:6px 10px;" onclick="executerProcessusInterstitielBoost(${a.id})">🚀 Booster</button>
-        <button class="btn-auth sec" style="font-size:0.75rem; padding:6px 10px;" onclick='ouvrirFenetreModificationAnnonce(${JSON.stringify(a).replace(/"/g, '&quot;')})'>✏️ Modifier</button>
+        <button class="btn-auth sec" style="font-size:0.75rem; padding:6px 10px;" onclick='ouvrirFenetreModificationAnnonce(${JSON.stringify(a).replace(/"/g, '&quot;')})'>✏️ Éditer</button>
         <button class="btn-auth" style="background:var(--danger); font-size:0.75rem; padding:6px 10px;" onclick="supprimerAnnonceProfil(${a.id})">🗑️</button>
       </div>
     </div>`).join("");
@@ -319,7 +317,7 @@ function executerProcessusInterstitielBoost(id) {
   setTimeout(async () => {
     m.style.display = "none";
     await fetch(`${API}/annonces/${id}/boost`, { method: "POST" });
-    alert("Annonce remontée au sommet de l'algorithme !"); fermerModal("profil"); chargerFluxPrincipal();
+    alert("Annonce boostée !"); fermerModal("profil"); chargerFluxPrincipal();
   }, 2500);
 }
 
@@ -421,14 +419,14 @@ async function definirVueAdmin(mode) {
         <div style="color:#f87171; font-weight:700;">⚠️ MOTIF : "${r.raison}"</div>
         <div style="color:#cbd5e1;">Cible : ${r.titre} | Propriétaire : <b>${r.proprietaire_nup || 'Inconnu'}</b></div>
         <div style="display:flex; gap:6px;">
-          <input id="adm-input-${r.id}" placeholder="Exiger une explication requise..." style="flex:1; color:black; border-radius:6px; padding:6px; border:none; font-size:0.8rem;">
+          <input id="adm-input-${r.id}" placeholder="Explication requise..." style="flex:1; color:black; border-radius:6px; padding:6px; border:none; font-size:0.8rem;">
           <button onclick="envoyerMessageDepuisAdminAuNup(${r.id}, 'signale')" style="background:#f59e0b; color:white; border:none; border-radius:6px; padding:0 10px; font-weight:600;">Exiger Justif</button>
         </div>
       </div>`).join("");
   }
   else if(mode === "justifications") {
     const res = await fetch(`${API}/admin/all-justifications/signale`); const data = await res.json();
-    if(data.length === 0) { box.innerHTML = "<p style='color:gray; font-size:0.8rem;'>Aucune réponse reçue.</p>"; return; }
+    if(data.length === 0) { box.innerHTML = "<p style='color:gray; font-size:0.8rem;'>Aucune justification.</p>"; return; }
     box.innerHTML = data.map(m => `
       <div style="background:#1e293b; padding:10px; border-radius:8px; font-size:0.8rem; display:flex; flex-direction:column; gap:4px;">
         <div style="color:#94a3b8;"><b>Alerte envoyée :</b> ${m.contenu}</div>
@@ -443,13 +441,13 @@ async function envoyerMessageDepuisAdminAuNup(annonceId, ctx) {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ annonce_id: annonceId, contenu: msg, provenance_contexte: ctx })
   });
-  alert("Notification envoyée avec succès sur l'espace privé de l'utilisateur !");
+  alert("Message envoyé !");
   document.getElementById(`adm-input-${annonceId}`).value = "";
   definirVueAdmin(VUE_ADMIN_ACTIVE);
 }
 
 async function supprimerAnnonceParAdmin(id) { 
-  if(confirm("Confirmer le retrait de ce bien ?")) { 
+  if(confirm("Retirer cette annonce du serveur ?")) { 
     await fetch(`${API}/annonces/${id}/delete`, { method: "DELETE" }); 
     chargerFluxPrincipal(); 
     setTimeout(() => definirVueAdmin(VUE_ADMIN_ACTIVE), 400); 

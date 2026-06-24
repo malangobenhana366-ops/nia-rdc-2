@@ -2,285 +2,263 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>NIA RDC - Version Sécurisée Pro</title>
-  <style>
-    :root {
-      --primary: #1e40af; --primary-hover: #1e3a8a; --bg: #f8fafc; --card-bg: #ffffff;
-      --text: #0f172a; --text-light: #64748b; --border: #e2e8f0; --success: #10b981;
-      --danger: #ef4444; --vip-gold: #f59e0b; --vip-bg: #fffbeb;
-    }
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); margin:0; padding:0; display: flex; flex-direction: column; min-height: 100vh; }
-    
-    header { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    header .logo { font-size: 1.4rem; font-weight: 800; color: var(--primary); text-decoration: none; letter-spacing: -0.5px; }
-    
-    .header-actions { display: flex; align-items: center; gap: 10px; }
-    .btn-auth { background: var(--primary); color: white; border: none; padding: 9px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .btn-auth:hover { background: var(--primary-hover); }
-    .btn-auth.sec { background: #f1f5f9; color: var(--text); }
-    .btn-auth.sec:hover { background: #e2e8f0; }
-    
-    .menu-burger-container { position: relative; display: flex; align-items: center; gap: 12px; }
-    .btn-burger { background: #f1f5f9; border: none; font-size: 1.1rem; cursor: pointer; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-    
-    .dropdown-legal { display: none; position: absolute; top: 46px; left: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 250px; z-index: 1000; overflow: hidden; }
-    .dropdown-legal button { background: none; border: none; width: 100%; text-align: left; padding: 12px 16px; font-size: 0.85rem; font-weight: 500; color: var(--text); cursor: pointer; border-bottom: 1px solid var(--border); }
-    .dropdown-legal button:hover { background: #f8fafc; color: var(--primary); }
-
-    main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 20px 16px 140px 16px; }
-    .section-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .title-area { font-size: 1.1rem; font-weight: 700; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; }
-    
-    #feed { display: flex; flex-direction: column; gap: 16px; }
-    .annonce-card { border: 1px solid var(--border); border-radius: 14px; padding: 18px; background: var(--card-bg); position: relative; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-    .annonce-card.vip-premium { border: 2px solid var(--vip-gold); background: var(--vip-bg); }
-    .badge-vip { position: absolute; top: 16px; right: 16px; background: var(--vip-gold); color: white; font-size: 0.65rem; font-weight: 800; padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px; }
-    .price-tag { font-size: 1.5rem; font-weight: 700; color: var(--primary); margin: 8px 0; }
-    
-    /* MODIFICATION : PHOTOS ENTIÈRES SANS ÊTRE COUPÉES */
-    .gallery { display: flex; overflow-x: auto; gap: 8px; margin: 12px 0; padding-bottom: 6px; }
-    .gallery img { width: 190px; height: 130px; object-fit: contain; background: #ebeef2; border-radius: 10px; flex-shrink: 0; border: 1px solid var(--border); }
-    
-    /* MODIFICATION : STYLE TEXTE CLIC-EXPANSIBLE SÉCURISÉ */
-    .expandable-desc { font-size: 0.85rem; background: #f8fafc; padding: 12px; border-radius: 8px; margin: 10px 0; line-height: 1.5; cursor: pointer; max-height: 72px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; transition: max-height 0.3s ease; }
-    .expandable-desc.expanded { max-height: 2000px; display: block; overflow: visible; }
-
-    .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; flex-wrap: wrap; gap: 10px; }
-    .status-disponible { color: var(--success); font-weight: 600; font-size: 0.85rem; }
-    .status-occupe { color: var(--danger); font-weight: 600; font-size: 0.85rem; }
-    
-    .btn-action { border: none; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s; }
-    .btn-action:hover { opacity: 0.9; }
-    .btn-action.call { background: var(--success); color: white; }
-    .btn-action.shop { background: var(--vip-gold); color: white; }
-    .btn-action.chat { background: var(--primary); color: white; }
-    .btn-action.report { background: #f1f5f9; color: var(--text-light); }
-    .btn-action.share { background: #25d366; color: white; } /* Bouton WhatsApp */
-    
-    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(4px); z-index: 2000; justify-content: center; align-items: center; padding: 16px; }
-    .modal-content { background: var(--card-bg); border-radius: 16px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 20px; }
-    .modal-header h3 { font-size: 1.2rem; font-weight: 700; }
-    .modal-header button { background: #f1f5f9; border: none; font-size: 0.9rem; cursor: pointer; font-weight: 600; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    
-    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    .full-width { grid-column: span 2; }
-    .form-box { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 0.8rem; color: var(--text-light); }
-    .form-box input, .form-box select, .form-box textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-weight: normal; font-size: 0.9rem; color: var(--text); background: #f8fafc; }
-    .form-box input:focus, .form-box select:focus, .form-box textarea:focus { outline: none; border-color: var(--primary); background: #fff; }
-    
-    .cgu-box { height: 150px; overflow-y: scroll; border: 1px solid var(--border); padding: 12px; font-size: 0.8rem; font-weight: normal; background: #f8fafc; border-radius: 8px; margin-bottom: 10px; line-height: 1.5; color: var(--text-light); }
-    
-    .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); border-top: 1px solid var(--border); z-index: 1500; box-shadow: 0 -2px 10px rgba(0,0,0,0.03); }
-    .bottom-grid { display: grid; grid-template-columns: repeat(5, 1fr); text-align: center; max-width: 600px; margin: 0 auto; }
-    .bottom-btn { background: none; border: none; padding: 10px 2px; font-size: 0.7rem; font-weight: 600; color: var(--text-light); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .bottom-btn span { font-size: 1.1rem; }
-    .bottom-btn.vip { color: var(--vip-gold); }
-    
-    .nup-badge-header { background: #f0f4ff; border: 1px solid #dbeafe; color: #1e40af; padding: 14px; border-radius: 10px; text-align: center; font-size: 1rem; font-weight: 700; margin-bottom: 20px; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NIA RDC - Location & Services</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <header>
-    <div class="menu-burger-container">
-      <button class="btn-burger" onclick="toggleMenuLegal()">☰</button>
-      <div class="dropdown-legal" id="legal-dropdown">
-        <button onclick="afficherDocumentJurisEtSecu('securite')">📜 Sécurité & CGU</button>
-        <button onclick="afficherDocumentJurisEtSecu('apropos')">ℹ️ À propos de NIA RDC</button>
-        <button onclick="afficherDocumentJurisEtSecu('confidentialite')">🔒 Politique de Confidentialité</button>
-        <button onclick="deconnexion()" style="color:var(--danger)">🚪 Se déconnecter</button>
-        <button onclick="suppressionDefinitiveCompte()" style="color:var(--danger); background:#fef2f2;">⚠️ Supprimer mon compte</button>
+  <!-- EN-TÊTE FIXE -->
+  <header class="main-header">
+    <div class="header-container">
+      <div class="logo-zone" onmousedown="detecterClicLongAdmin()" onmouseup="annulerClicLongAdmin()" ontouchstart="detecterClicLongAdmin()" ontouchend="annulerClicLongAdmin()">
+        <span class="logo-emoji">🏢</span>
+        <div class="logo-text">
+          <h1>NIA RDC</h1>
+          <p>Le réseau d'annonces de confiance</p>
+        </div>
       </div>
-      <a href="#" class="logo">NIA RDC</a>
-    </div>
-    <div class="header-actions" id="header-auth-zone">
-      <button class="btn-auth sec" onclick="ouvrirSecuriseAuth(false)">Connexion</button>
-      <button class="btn-auth" onclick="ouvrirSecuriseAuth(true)">S'inscrire</button>
+      
+      <div class="nav-actions">
+        <button class="btn-menu-legal" onclick="toggleMenuLegal()">📜 Règlements & Textes ▾</button>
+        <div id="legal-dropdown" class="dropdown-content-legal">
+          <a href="#" onclick="afficherDocumentJurisEtSecu('securite')">Conditions de Sécurité</a>
+          <a href="#" onclick="afficherDocumentJurisEtSecu('apropos')">À propos</a>
+          <a href="#" onclick="afficherDocumentJurisEtSecu('confidentialite')">Confidentialité</a>
+        </div>
+        
+        <div id="header-auth-zone" class="auth-buttons">
+          <button class="btn-auth sec" onclick="ouvrirSecuriseAuth(false)">Connexion</button>
+          <button class="btn-auth" onclick="ouvrirSecuriseAuth(true)">Inscription</button>
+        </div>
+      </div>
     </div>
   </header>
 
-  <main>
-    <div class="section-flex">
-      <div class="title-area" id="feed-current-title">Annonces récentes</div>
-      <button class="btn-auth sec" id="btn-clear-search" style="display:none;" onclick="reinitialiserFluxGeneral()">Voir tout 🔄</button>
+  <!-- CONTENU PRINCIPAL -->
+  <main class="app-layout">
+    <div class="actions-bar">
+      <button class="btn-bar-main search" onclick="ouvrirModal('rechercher')">🔍 Rechercher</button>
+      <button class="btn-bar-main publish" onclick="ouvrirSecuriseModal('publier')">➕ Déposer une Annonce</button>
+      <button class="btn-bar-main vip" onclick="ouvrirSecuriseModal('vip')">👑 Créer Vitrine VIP</button>
+      <button class="btn-bar-main profile" onclick="ouvrirSecuriseModal('profil')">👤 Mon Espace Profil</button>
     </div>
-    <div id="feed">Chargement du flux...</div>
+
+    <!-- ZONE PUBLICITAIRE ADSENNSE -->
+    <div class="adsense-banner-placeholder">
+      <span class="ad-label">PUBLICITÉ BANDEAU</span>
+    </div>
+
+    <!-- FLUX PRINCIPAL D'ANNONCES -->
+    <section id="feed" class="feed-container">
+      <p style="text-align: center; color: gray;">Chargement des offres en cours...</p>
+    </section>
   </main>
 
-  <div class="modal" id="modal-auth">
-    <div class="modal-content" style="max-width:400px;">
-      <div class="modal-header"><h3 id="auth-main-title" style="margin:0">Inscription</h3><button onclick="fermerModal('auth')">✕</button></div>
-      
-      <div class="grid-2" id="form-register-block">
-        <div class="form-box full-width"><label style="color:var(--danger)">⚠️ Défilez les CGU pour activer l'inscription :</label><div class="cgu-box" id="cgu-scroller-node"></div></div>
-        <div class="form-box full-width" style="flex-direction:row; align-items:center; gap:8px;"><input type="checkbox" id="chk-accept-rules" disabled style="width:auto; margin:0;"> <label for="chk-accept-rules" style="cursor:pointer; margin:0;">J'ai lu et j'accepte les conditions</label></div>
-        <div class="form-box full-width"><label>Téléphone</label><input id="reg-tel" type="tel" placeholder="0820000000"></div>
-        <div class="form-box full-width"><label>Mot de passe</label><input id="reg-pass" type="password" placeholder="••••••••"></div>
-        <div class="form-box full-width"><button class="btn-auth" id="btn-register-action" style="padding:12px;" onclick="actionInscription()" disabled>Créer mon compte</button></div>
-        <div class="form-box full-width" style="text-align:center; font-size:0.85rem;"><a href="#" style="color:var(--primary); text-decoration:none;" onclick="basculerAffichageAuthentification(false)">Déjà inscrit ? Connexion</a></div>
+  <!-- INTERSTITIEL PUBLICITAIRE TIMED (BOOST) -->
+  <div id="modal-adsense-interstitiel" class="modal-overlay modal-interstitiel">
+    <div class="interstitiel-box">
+      <h3>🚀 PRÉPARATION DU BOOSTER NIA RDC...</h3>
+      <p style="font-size:0.85rem; color:gray; margin-bottom:12px;">Votre annonce va remonter en haut du fil d'actualité.</p>
+      <div class="adsense-box-interstitiel">
+        <p style="font-size:0.75rem; color:#94a3b8; letter-spacing:1px; margin-bottom:6px;">SPONSORISÉ</p>
+        <div style="background:#e2e8f0; height:140px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#475569;">
+          Espace Publicitaire Partenaire Google
+        </div>
       </div>
+      <p class="loader-txt">Chargement et validation réseau en cours (2.5s)...</p>
+    </div>
+  </div>
 
-      <div class="grid-2" id="form-login-block" style="display:none;">
-        <div class="form-box full-width"><label>Téléphone</label><input id="log-tel" type="tel" placeholder="0820000000"></div>
-        <div class="form-box full-width"><label>Mot de passe</label><input id="log-pass" type="password" placeholder="••••••••"></div>
-        <div class="form-box full-width"><button class="btn-auth" style="padding:12px;" onclick="actionConnexion()">Se connecter</button></div>
-        <div class="form-box full-width" style="text-align:center; font-size:0.85rem;"><a href="#" style="color:var(--primary); text-decoration:none;" onclick="basculerAffichageAuthentification(true)">Pas de compte ? Créer un profil</a></div>
+  <!-- LIGHTBOX / ZOOM DE PHOTO FLUIDE -->
+  <div id="photo-lightbox" class="lightbox-overlay" onclick="fermerZoomPhoto()">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightbox-img" class="lightbox-content" alt="Photo agrandie">
+  </div>
+
+  <!-- MODAL : RECHERCHER -->
+  <div id="modal-rechercher" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header"><h3>Recherche précise</h3><button onclick="fermerModal('rechercher')">✕</button></div>
+      <div class="modal-body">
+        <input id="search-keyword" placeholder="Que recherchez-vous ?">
+        <button class="btn-auth" onclick="executerRecherche()" style="width:100%; margin-top:10px;">Filtrer le flux</button>
+        <button class="btn-auth sec" onclick="reinitialiserFluxGeneral(); fermerModal('rechercher');" style="width:100%; margin-top:6px;">Afficher Tout</button>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="modal-legal-display">
-    <div class="modal-content" style="max-width:600px;">
-      <div class="modal-header"><h3 id="legal-header-title" style="margin:0"></h3><button onclick="fermerModal('legal-display')">✕</button></div>
-      <div id="legal-body-content" style="white-space:pre-wrap; font-size:0.9rem; line-height:1.6; color:var(--text); max-height:60vh; overflow-y:auto; padding:14px; background:#f8fafc; border-radius:8px; border:1px solid var(--border);"></div>
+  <!-- MODAL : TEXTES JURIDIQUES ET SÉCURITÉ -->
+  <div id="modal-legal-display" class="modal-overlay">
+    <div class="modal-box legal-wide-box">
+      <div class="modal-header"><h3 id="legal-header-title">📜 Document Légal</h3><button onclick="fermerModal('legal-display')">✕</button></div>
+      <div class="modal-body">
+        <div id="legal-body-content" class="legal-scrollable-viewer"></div>
+      </div>
     </div>
   </div>
 
-  <div class="modal" id="modal-publier">
-    <div class="modal-content">
-      <div class="modal-header"><h3 style="margin:0">📢 Déposer une annonce Standard</h3><button onclick="fermerModal('publier')">✕</button></div>
-      <div class="grid-2">
-        <div class="form-box full-width"><label>Titre de l'annonce</label><input id="titre" placeholder="Ex: Groupe électrogène 15 KVA ou Location Véhicule"></div>
-        <div class="form-box"><label>Prix</label><input id="prix" type="number" placeholder="150"></div>
-        <div class="form-box"><label>Devise & Période</label>
+  <!-- MODAL : SÉCURISÉ AUTHENTIFICATION (CONNEXION / INSCRIPTION) -->
+  <div id="modal-auth" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header"><h3 id="auth-main-title">Authentification</h3><button onclick="fermerModal('auth')">✕</button></div>
+      <div class="modal-body">
+        
+        <div style="margin-bottom: 12px;">
+          <label style="font-size:0.8rem; font-weight:bold;">Téléphone :</label>
+          <input id="reg-tel" type="tel" placeholder="Ex: +243..." style="width:100%; margin-top:4px;">
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="font-size:0.8rem; font-weight:bold;">Mot de passe :</label>
+          <input id="reg-pass" type="password" placeholder="••••••••" style="width:100%; margin-top:4px;">
+        </div>
+
+        <!-- BLOC SPECIFIQUE INSCRIPTION AVEC SCROLLER DE SÉCURITÉ OBLIGATOIRE -->
+        <div id="form-register-block">
+          <p style="font-size:0.75rem; color:var(--text-light); margin-bottom:4px;">Veuillez lire et faire défiler l'accord de sécurité ci-dessous entièrement :</p>
+          <div id="cgu-scroller-node" class="scroller-cgu-reglement"></div>
+          
+          <label class="chk-container" style="font-size:0.8rem; display:flex; align-items:center; gap:6px; margin:8px 0;">
+            <input type="checkbox" id="chk-accept-rules" disabled> J'accepte les conditions de sécurité de NIA RDC.
+          </label>
+          
+          <button id="btn-register-action" class="btn-auth" style="width:100%;" onclick="actionInscription()" disabled>Créer mon compte officiel</button>
+          <p style="text-align:center; font-size:0.8rem; margin-top:10px; color:var(--text-light);">Déjà inscrit ? <a href="#" onclick="basculerAffichageAuthentification(false)">Se connecter</a></p>
+        </div>
+
+        <!-- BLOC SPECIFIQUE CONNEXION -->
+        <div id="form-login-block" style="display:none;">
+          <button class="btn-auth" style="width:100%;" onclick="actionConnexion()">Accéder à l'application</button>
+          <p style="text-align:center; font-size:0.8rem; margin-top:10px; color:var(--text-light);">Nouveau ? <a href="#" onclick="basculerAffichageAuthentification(true)">Créer un compte</a></p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL : PUBLIER ANNONCE STANDARD -->
+  <div id="modal-publier" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header"><h3>Publier une offre standard</h3><button onclick="fermerModal('publier')">✕</button></div>
+      <div class="modal-body input-grid">
+        <input id="titre" placeholder="Titre (Ex: Studio meublé...) *">
+        <div style="display:flex; gap:4px;">
+          <input id="prix" type="number" placeholder="Prix" style="flex:2;">
+          <select id="devise" style="flex:1;"><option value="$">$ USD</option><option value="FC">FC</option></select>
+        </div>
+        <select id="periode"><option value="mois">Par Mois</option><option value="jour">Par Jour</option><option value="heure">Par Heure</option></select>
+        <select id="statut"><option value="disponible">🟢 Disponible Immédiatement</option><option value="occupe">🔴 Occupé actuellement</option></select>
+        <input id="telephone" placeholder="Téléphone de contact *">
+        <input id="ville" value="Lubumbashi" placeholder="Ville *">
+        <input id="commune" placeholder="Commune *">
+        <textarea id="description" placeholder="Description complète (équipements, charges, etc.)" rows="3"></textarea>
+        <div>
+          <label style="font-size:0.75rem; font-weight:bold; color:gray;">Galerie Photos (Max 500px, compressé auto) :</label>
+          <input type="file" id="photos-input" multiple accept="image/*" style="margin-top:4px;">
+        </div>
+        <button class="btn-auth" onclick="soumettreAnnonceStandard()" style="width:100%; margin-top:6px;">Mettre en ligne</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL : FORMULAIRE VITRINE MULTI-BLOCS VIP -->
+  <div id="modal-vip" class="modal-overlay">
+    <div class="modal-box legal-wide-box">
+      <div class="modal-header"><h3>👑 Espace Vitrine Logements VIP</h3><button onclick="fermerModal('vip')">✕</button></div>
+      <div class="modal-body">
+         <p style="font-size:0.8rem; color:gray; margin-bottom:8px;">Ajoutez un ou plusieurs biens de standing haut de gamme pour votre vitrine exclusive.</p>
+         <div id="vip-setup-zone"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL : ESPACE PROFIL & MESSAGERIE PRIVÉE ET SIGNALEMENTS -->
+  <div id="modal-profil" class="modal-overlay">
+    <div class="modal-box legal-wide-box">
+      <div class="modal-header">
+         <div style="display:flex; flex-direction:column; gap:2px;">
+           <h3 style="margin:0;">Mon Compte Utilisateur</h3>
+           <span id="user-profile-nup-title" style="font-size:0.75rem; background:#cbd5e1; padding:2px 6px; border-radius:4px; font-weight:bold; color:#334155;">NUP : Chargement...</span>
+         </div>
+         <button onclick="fermerModal('profil')">✕</button>
+      </div>
+      <div class="modal-body tabbed-layout">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-bottom:10px;">
+          <button id="btn-tab-std" class="btn-auth" onclick="basculerOngletProfil('standard')">Mes Biens Standards</button>
+          <button id="btn-tab-vip" class="btn-auth sec" onclick="basculerOngletProfil('vip')">Mes Vitrines VIP</button>
+        </div>
+        
+        <div id="profil-annonces-list" style="max-height:200px; overflow-y:auto; background:#f1f5f9; padding:8px; border-radius:6px;"></div>
+        
+        <hr style="border:none; border-top:1px solid #cbd5e1; margin:12px 0;">
+        <h4 style="margin:0 0 6px 0;">📨 Messagerie Privée & Réponses de Sécurité :</h4>
+        <div id="chat-conversations-list" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;"></div>
+
+        <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center;">
+          <button class="btn-auth" style="background:#475569;" onclick="deconnexion()">Se Déconnecter</button>
+          <button class="btn-action report" style="padding:6px 12px; font-size:0.8rem;" onclick="suppressionDefinitiveCompte()">✕ Supprimer mon compte</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL : COMPTOIR D'ADMINISTRATION GÉNÉRALE -->
+  <div id="modal-admin" class="modal-overlay">
+    <div class="modal-box legal-wide-box" style="background:#0f172a; color:white;">
+      <div class="modal-header" style="border-bottom:1px solid #334155;"><h3 style="color:#f43f5e;">⚡ ADMINISTRATION NIA RDC (SUPERVISEUR)</h3><button onclick="fermerModal('admin')" style="color:white;">✕</button></div>
+      <div class="modal-body">
+        
+        <div style="background:#1e293b; padding:10px; border-radius:6px; margin-bottom:10px;">
+          <label style="font-size:0.8rem; font-weight:bold; color:#e2e8f0; display:block; margin-bottom:4px;">📢 DIFFUSION D'UNE ANNONCE GÉNÉRALE (TOUT LE RÉSEAU) :</label>
           <div style="display:flex; gap:6px;">
-            <select id="devise" style="flex:1;"><option value="$">$</option><option value="FC">FC</option></select>
-            <select id="periode" style="flex:1;"><option value="jour">/ Jour</option><option value="heure">/ Heure</option></select>
+            <input id="admin-global-msg-input" placeholder="Écrire un message d'intérêt public..." style="flex:1; color:black; border-radius:4px; border:none; padding:6px;">
+            <button onclick="envoyerNotificationGlobaleAdmin()" style="background:#f43f5e; color:white; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer;">Diffuser</button>
           </div>
+          <span style="font-size:0.7rem; color:#94a3b8; display:block; margin-top:4px;">* Note : Ce message s'affichera chez tout le monde sans possibilité d'y répondre (Mode Bloqué).</span>
         </div>
-        <div class="form-box"><label>Disponibilité</label><select id="statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div>
-        <div class="form-box"><label>Numéro de Contact</label><input id="telephone" type="tel"></div>
-        <div class="form-box full-width"><label>Description</label><textarea id="description" rows="3" placeholder="Caractéristiques de l'objet ou matériel..."></textarea></div>
-        <div class="form-box"><label>Ville</label><input id="ville" value="Lubumbashi"></div>
-        <div class="form-box"><label>Commune</label><input id="commune" placeholder="Ex: Commune de la Kenya"></div>
-        <div class="form-box full-width"><label>Images (Max 5)</label><input id="photos-input" type="file" multiple accept="image/*" style="background:transparent; padding:0; border:none;"></div>
-        <div class="form-box full-width"><button class="btn-auth" style="padding:12px;" onclick="soumettreAnnonceStandard()">Mettre en ligne</button></div>
-      </div>
-    </div>
-  </div>
 
-  <div class="modal" id="modal-modifier">
-    <div class="modal-content">
-      <div class="modal-header"><h3 style="margin:0;">✏️ Éditer la publication</h3><button onclick="fermerModal('modifier')">✕</button></div>
-      <input type="hidden" id="edit-id">
-      <div class="grid-2">
-        <div class="form-box full-width"><label>Titre</label><input id="edit-titre"></div>
-        <div class="form-box"><label>Prix</label><input id="edit-prix" type="number"></div>
-        <div class="form-box"><label>Période & Devise</label>
-          <div style="display:flex; gap:6px;">
-            <select id="edit-devise"><option value="$">$</option><option value="FC">FC</option></select>
-            <select id="edit-periode"><option value="jour">/ Jour</option><option value="heure">/ Heure</option></select>
-          </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-bottom:8px;">
+          <button onclick="definirVueAdmin('flux')" style="padding:6px; cursor:pointer; font-weight:bold;">Contrôle Annonces</button>
+          <button onclick="definirVueAdmin('messages')" style="padding:6px; cursor:pointer; font-weight:bold;">Tous les Messages</button>
+          <button onclick="definirVueAdmin('justifications')" style="padding:6px; cursor:pointer; font-weight:bold;">Justifications Alerte</button>
         </div>
-        <div class="form-box"><label>Disponibilité</label><select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select></div>
-        <div class="form-box"><label>Téléphone</label><input id="edit-telephone" type="tel"></div>
-        <div class="form-box full-width"><label>Description</label><textarea id="edit-description" rows="3"></textarea></div>
-        <div class="form-box full-width"><label style="color:var(--primary)">🖼️ Galerie actuelle :</label><div id="edit-photos-container" style="background:#f1f5f9; padding:10px; border-radius:8px; min-height:40px; display:flex; flex-wrap:wrap; gap:6px;"></div></div>
-        <div class="form-box full-width"><label>Ajouter de nouvelles photos</label><input id="edit-new-photos" type="file" multiple accept="image/*" style="background:transparent; padding:0; border:none;"></div>
-        <div class="form-box full-width"><button class="btn-auth" style="padding:12px; background:var(--success);" onclick="sauvegarderChangementsAnnonce()">Enregistrer les modifications</button></div>
+
+        <div id="admin-main-render-box" style="background:#111827; min-height:250px; max-height:300px; overflow-y:auto; padding:8px; border-radius:4px; border:1px solid #334155;"></div>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="modal-vip">
-    <div class="modal-content" style="max-width:500px;">
-      <div class="modal-header"><h3 style="margin:0; color:var(--vip-gold);">👑 Créer Annonce VIP</h3><button onclick="fermerModal('vip')">✕</button></div>
-      <div id="vip-setup-zone"></div>
-    </div>
-  </div>
-
-  <div class="modal" id="modal-rechercher">
-    <div class="modal-content" style="max-width:380px;">
-      <div class="modal-header"><h3 style="margin:0">🔍 Filtrer les offres</h3><button onclick="fermerModal('rechercher')">✕</button></div>
-      <div class="grid-2">
-        <div class="form-box full-width"><label>Mot-clé</label><input id="search-keyword" placeholder="Matériel, Sonorisation, Ordinateur..."></div>
-        <div class="form-box full-width"><label>Ville</label><input id="search-ville" value="Lubumbashi"></div>
-        <div class="form-box full-width"><button class="btn-auth" style="padding:12px;" onclick="executerRecherche()">Rechercher</button></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal" id="modal-profil">
-    <div class="modal-content" style="max-width:550px;">
-      <div class="modal-header"><h3 style="margin:0">👤 Mon Profil</h3><button onclick="fermerModal('profil')">✕</button></div>
-      <div class="nup-badge-header" id="user-profile-nup-title">NUMÉRO DE PROFIL : CHARGEMENT...</div>
-      
-      <button class="btn-action share" style="width:100%; padding:12px; margin-bottom:15px; font-size:0.9rem;" onclick="partagerLienApplicationWhatsApp()">➕ Inviter des amis sur WhatsApp 💬</button>
-
-      <div style="margin-bottom:20px;">
-        <h4 style="margin:0 0 8px 0; color:var(--primary); font-size:0.9rem;">💬 Ma Boîte de Messages & Notifications</h4>
-        <div id="chat-conversations-list" style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:10px; padding:12px; background:#f8fafc; display:flex; flex-direction:column; gap:8px;"></div>
-      </div>
-
-      <div style="display:flex; gap:8px; margin-bottom:16px;">
-        <button id="btn-tab-std" class="btn-auth" style="flex:1;" onclick="basculerOngletProfil('standard')">Mes Offres Standards</button>
-        <button id="btn-tab-vip" class="btn-auth sec" style="flex:1;" onclick="basculerOngletProfil('vip')">Mes Catalogues VIP 👑</button>
-      </div>
-      <div id="profil-annonces-list"></div>
-    </div>
-  </div>
-
-  <div class="modal" id="modal-admin">
-    <div class="modal-content" style="background:#0f172a; color:white; max-width:550px;">
-      <div class="modal-header" style="border-bottom:1px solid #334155;">
-        <h3 style="margin:0; color:#ef4444;">Supervision Centrale NIA RDC</h3>
-        <button onclick="fermerModal('admin')" style="background:#1e293b; color:white; border:none;">✕</button>
-      </div>
-      
-      <div style="background:#1e293b; padding:10px; border-radius:8px; margin-bottom:12px; font-size:0.85rem;">
-        📊 Total Annonces Plateforme : <span id="admin-total-count" style="color:var(--vip-gold); font-weight:bold; font-size:1rem;">0</span>
-      </div>
-
-      <div style="background:#1e293b; padding:12px; border-radius:8px; margin-bottom:12px; border:1px solid #334155; display:flex; flex-direction:column; gap:8px;">
-        <div style="font-weight:bold; font-size:0.8rem; color:#94a3b8; text-transform:uppercase;">🎛️ Filtres Administrateur</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-          <input id="admin-filter-ville" placeholder="Filtrer par Ville" style="padding:6px; font-size:0.8rem; border-radius:4px; border:none;">
-          <select id="admin-filter-type" style="padding:6px; font-size:0.8rem; border-radius:4px; border:none;">
-            <option value="all">Tous les types</option>
-            <option value="standard">Standard Uniquement</option>
-            <option value="vip">VIP Uniquement</option>
-          </select>
+  <!-- MODAL : MODIFIER ANNONCE COMPLÈTE -->
+  <div id="modal-modifier" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header"><h3>Modifier l'annonce</h3><button onclick="fermerModal('modifier')">✕</button></div>
+      <div class="modal-body input-grid">
+        <input type="hidden" id="edit-id">
+        <input id="edit-titre" placeholder="Titre *">
+        <div style="display:flex; gap:4px;">
+          <input id="edit-prix" type="number" placeholder="Prix" style="flex:2;">
+          <select id="edit-devise" style="flex:1;"><option value="$">$ USD</option><option value="FC">FC</option></select>
         </div>
-        <button class="btn-auth" style="padding:6px; font-size:0.8rem;" onclick="appliquerFiltresAdmin()">Filtrer la vue</button>
-      </div>
+        <select id="edit-periode"><option value="mois">Par Mois</option><option value="jour">Par Jour</option><option value="heure">Par Heure</option></select>
+        <select id="edit-statut"><option value="disponible">🟢 Disponible</option><option value="occupe">🔴 Occupé</option></select>
+        <input id="edit-telephone" placeholder="Téléphone *">
+        <textarea id="edit-description" placeholder="Description..." rows="3"></textarea>
+        
+        <div>
+          <label style="font-size:0.75rem; font-weight:bold; color:gray;">Photos en ligne actuellement (Cliquez sur ✕ pour en supprimer une) :</label>
+          <div id="edit-photos-container" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; background:#f1f5f9; padding:6px; border-radius:4px;"></div>
+        </div>
 
-      <div style="background:#1e293b; padding:12px; border-radius:8px; margin-bottom:12px; border:1px solid #334155; display:flex; flex-direction:column; gap:6px;">
-        <div style="font-weight:bold; font-size:0.8rem; color:#f43f5e; text-transform:uppercase;">📣 Message Collectif (Sans réponse)</div>
-        <textarea id="admin-broadcast-text" rows="2" placeholder="Écrire le message d'alerte ou d'information à tous les utilisateurs..." style="width:100%; color:black; padding:8px; border-radius:6px; font-size:0.85rem; border:none;"></textarea>
-        <button class="btn-auth" style="background:var(--danger); padding:8px; font-size:0.8rem;" onclick="envoyerMessageGlobalBroadcast()">Transmettre à tout le monde</button>
-      </div>
+        <div>
+          <label style="font-size:0.75rem; font-weight:bold; color:gray;">Ajouter de nouvelles photos :</label>
+          <input type="file" id="edit-new-photos" multiple accept="image/*" style="margin-top:4px;">
+        </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:4px; margin-bottom:16px;">
-        <button class="btn-auth" style="font-size:0.72rem; padding:8px 2px;" onclick="definirVueAdmin('flux')">Flux Offres</button>
-        <button class="btn-auth" style="background:#6366f1; font-size:0.72rem; padding:8px 2px;" onclick="definirVueAdmin('chat-moderation')">Modérer Chats</button>
-        <button class="btn-auth" style="background:var(--danger); font-size:0.72rem; padding:8px 2px;" onclick="definirVueAdmin('signaux')">Signalements</button>
-        <button class="btn-auth" style="background:#b45309; font-size:0.72rem; padding:8px 2px;" onclick="definirVueAdmin('justifications')">Justif</button>
+        <button class="btn-auth" onclick="sauvegarderChangementsAnnonce()" style="width:100%; margin-top:6px; background:green;">Enregistrer les modifications</button>
       </div>
-      <div id="admin-main-render-box" style="max-height:250px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
     </div>
   </div>
 
-  <div class="modal" id="modal-adsense-interstitiel" style="background:rgba(15,23,42,0.9); z-index:10000;">
-    <div class="modal-content" style="max-width:360px; text-align:center; background:#1e293b; color:white; border:1px solid var(--vip-gold);">
-      <h3 style="color:var(--vip-gold); margin-top:0; font-size:1.1rem;">🚀 BOOST VIA NIA RDC ALGORITHME</h3>
-      <div style="padding:20px; background:#0f172a; border-radius:10px; margin:16px 0; font-weight:600; color:#94a3b8; font-size:0.9rem;" id="adsense-timer-node">Calcul de la remontée algorithmique...</div>
-    </div>
-  </div>
-
-  <div class="bottom-bar">
-    <div class="bottom-grid">
-      <button class="bottom-btn" onclick="ouvrirSecuriseModal('publier')"><span>📢</span>Publier</button>
-      <button class="bottom-btn" onclick="ouvrirSecuriseModal('rechercher')"><span>🔍</span>Filtrer</button>
-      <button class="bottom-btn vip" onclick="ouvrirSecuriseModal('vip')"><span>👑</span>VIP</button>
-      <button class="bottom-btn" onclick="ouvrirSecuriseModal('profil')"><span>👤</span>Profil</button>
-      <button class="bottom-btn" style="color:var(--danger)" onmousedown="detecterClicLongAdmin()" onmouseup="annulerClicLongAdmin()" ontouchstart="detecterClicLongAdmin()" ontouchend="annulerClicLongAdmin()"><span>⚙️</span>Admin</button>
-    </div>
-    <div style="background:#0f172a; color:#f59e0b; text-align:center; font-size:0.65rem; padding:5px 0; font-weight:700; letter-spacing:0.5px;">SYSTEM SECURITY COMPAGNON NUP</div>
-  </div>
-
-  <script src="app.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

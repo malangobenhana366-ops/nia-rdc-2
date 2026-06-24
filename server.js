@@ -21,6 +21,22 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+// LISTE NOIRE ANTI-IMMOBILIER ET TERMES ILLICITES
+const MOTS_INTERDITS = [
+  "maison", "appartement", "studio", "parcelle", "chambre à louer", "terrain", 
+  "villa", "immeuble", "bail", "loyer", "bailleurs", "drogue", "arme", "pirate", "faux billets"
+];
+
+function verifierContenuSecurise(titre, description) {
+  const texteAAnalyser = `${titre} ${description}`.toLowerCase();
+  for (let mot of MOTS_INTERDITS) {
+    if (texteAAnalyser.includes(mot)) {
+      return { valide: false, raison: `Le terme "${mot}" n'est pas autorisé. L'application est strictement réservée aux objets, matériels et services (Non-Immobilier).` };
+    }
+  }
+  return { valide: true };
+}
+
 async function uploadImage(base64){
   try {
     if (!base64 || !base64.startsWith("data:image")) return "";
@@ -91,6 +107,13 @@ app.get("/feed", async (req, res) => {
 app.post("/annonces", async (req,res)=>{
   try {
     let { user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, images_base64 } = req.body;
+    
+    // FILTRAGE ET VÉRIFICATION DE SÉCURITÉ DU CONTENU
+    const securiteCheck = verifierContenuSecurise(titre, description);
+    if(!securiteCheck.valide) {
+      return res.status(400).json({ error: securiteCheck.raison });
+    }
+
     const fields = await pool.query(
       `INSERT INTO annonces (user_id, titre, description, prix, devise, periode, ville, commune, quartier, telephone, statut, is_vip, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW()) RETURNING id`,
@@ -110,6 +133,10 @@ app.post("/annonces", async (req,res)=>{
 app.put("/annonces/:id", async (req, res) => {
   try {
     const { titre, prix, devise, periode, description, statut, ville, commune, telephone, nouvelles_images_base64 } = req.body;
+    
+    const securiteCheck = verifierContenuSecurise(titre, description);
+    if(!securiteCheck.valide) return res.status(400).json({ error: securiteCheck.raison });
+
     await pool.query(
       `UPDATE annonces SET titre=$1, prix=$2, devise=$3, periode=$4, description=$5, statut=$6, ville=$7, commune=$8, telephone=$9 WHERE id=$10`,
       [titre, prix, devise, periode, description, statut, ville, commune, telephone, req.params.id]
@@ -145,7 +172,6 @@ app.delete("/annonces/:id/delete", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// SIGNALEMENT SÉCURISÉ DES ANNONCES
 app.post("/annonces/:id/signaler", async (req, res) => {
   try {
     await pool.query("INSERT INTO annonce_reports (annonce_id, raison) VALUES ($1, $2)", [req.params.id, req.body.raison || "Non spécifié"]);
@@ -190,14 +216,35 @@ app.post("/chat/send", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ENVOI GLOBAL (MESSAGES IMPOSSIBLES À RÉPONDRE)
+// RÉCUPÉRATION DE TOUS LES MESSAGES POUR L'ADMINISTRATION
+app.get("/admin/all-messages", async (req, res) => {
+  try {
+    const query = `
+      SELECT m.*, u1.nup as expediteur_nup, u2.nup as destinataire_nup 
+      FROM messages_priveis m
+      JOIN users u1 ON m.expediteur_id = u1.id
+      JOIN users u2 ON m.destinataire_id = u2.id
+      ORDER BY m.created_at DESC;
+    `;
+    const result = await pool.query(query);
+    res.json(result.rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// SUPPRESSION RADICALE D'UN MESSAGE PAR L'ADMIN
+app.delete("/admin/messages/:id", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM messages_priveis WHERE id = $1", [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.post("/admin/broadcast", async (req, res) => {
   try {
     const { contenu } = req.body;
     const adminRes = await pool.query("SELECT id FROM users WHERE is_admin = TRUE LIMIT 1");
     if(adminRes.rows.length === 0) return res.status(403).json({ error: "Pas d'admin configuré." });
     const adminId = adminRes.rows[0].id;
-
     const allUsers = await pool.query("SELECT id FROM users WHERE is_admin = FALSE");
     
     for (let u of allUsers.rows) {
